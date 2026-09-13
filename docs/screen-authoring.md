@@ -34,7 +34,7 @@ The fragment contains, in this order:
 
 - **Fragment only.** No `<!doctype>`, `<html>`, `<head>`, or `<body>` tags. No `<meta>`, `<title>`,
   or `<link>` tags.
-- **Self-contained.** No external requests of any kind: no CDNs, web fonts, remote images, iframes,
+- **Self-contained.** No external requests of any kind: no CDNs, external web fonts, remote images, iframes,
   or `fetch()` to other hosts. The display may have no internet access. Use inline SVG, CSS, emoji,
   or `data:` URIs for graphics.
 - **No `<script src>`** and no ES module imports. Inline classic scripts only.
@@ -92,17 +92,41 @@ Chromium 139 supports modern features. All of these are safe to use:
 
 ### Fonts
 
-Only fonts installed on the device can be used. Always end with a generic family.
+Use only the fonts below. Nothing else is available and web fonts can't be loaded from the internet.
+Always end a `font-family` list with a generic family.
 
-| CSS `font-family` | Renders as | Notes |
+**Served by ShowKiosk** (already declared with `@font-face` on every screen; just name them). Files are
+only downloaded when used, so pick one or two per screen.
+
+| `font-family` | Weights | Character |
 |---|---|---|
-| `system-ui`, `sans-serif`, `Roboto` | Roboto | Default. Weights 100–900 available. Best choice for numbers and UI text. |
+| `"Inter"` | 100–900 (variable) | Neutral UI sans; excellent numerals |
+| `"Outfit"` | 100–900 (variable) | Clean geometric sans; friendly large type |
+| `"Space Grotesk"` | 300–700 (variable) | Techy geometric display |
+| `"Nunito"` | 200–1000 (variable) | Rounded, soft and casual |
+| `"Oswald"` | 200–700 (variable) | Condensed; fits big numbers in narrow space |
+| `"Bebas Neue"` | 400 only | Tall condensed all-caps display (lowercase renders as caps) |
+| `"Playfair Display"` | 400–900 (variable) | High-contrast serif display |
+| `"JetBrains Mono"` | 100–800 (variable) | Monospace; dashboards and code-like readouts |
+
+These fonts cover Latin text (English and Western European languages, common punctuation and
+symbols such as `°`, `·`, `—`). Emoji and other scripts fall back to the device fonts.
+
+Example: `font-family: "Outfit", system-ui, sans-serif;`
+
+**Installed on the device:**
+
+| `font-family` | Renders as | Notes |
+|---|---|---|
+| `system-ui`, `sans-serif`, `Roboto` | Roboto | Default. Weights 100–900. |
 | `serif` | Noto Serif | Regular and bold. |
 | `monospace` | Droid Sans Mono | Single weight. |
 | `"Noto Color Emoji"` | Color emoji | Used automatically for emoji characters. |
 
 Use `font-variant-numeric: tabular-nums;` on anything that ticks (clocks, countdowns) so digits
-don't shift.
+don't shift. Oswald, Inter, Outfit, and JetBrains Mono support it; Bebas Neue digits are already
+nearly uniform width. Playfair Display uses old-style (descending) figures by default; add
+`font-variant-numeric: lining-nums tabular-nums;` for clocks and temperatures.
 
 ## 3. Designing for across the room
 
@@ -429,7 +453,7 @@ Set text with `textContent`, never by interpolating data into `innerHTML`.
 Before a screen is done, confirm:
 
 - [ ] Output is a single fragment: `<style>`, markup, optional trailing `<script>`. No document tags.
-- [ ] No external URLs, fonts, images, scripts, or network calls.
+- [ ] No external URLs, fonts, images, scripts, or network calls. Fonts come only from section 2.
 - [ ] Laid out for exactly 1280 × 800 with ≥ 48 px margins; nothing overflows.
 - [ ] Primary element ≥ 160 px; nothing smaller than 24 px; high contrast on a dark background.
 - [ ] Every data path used exists in section 6, spelled exactly.

@@ -1,4 +1,5 @@
 import type { KioskDataPayload } from "@/lib/providers/payload";
+import { fontFaceCss } from "./fonts";
 
 /** Changes on every server start so WebViews pick up a new runtime without cache tricks. */
 export const RUNTIME_VERSION = Date.now().toString(36);
@@ -31,6 +32,7 @@ export function deviceUrls(deviceId: string): KioskBoot["urls"] {
 }
 
 const BASE_CSS = `
+${fontFaceCss()}
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;color:#fff}
 body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
