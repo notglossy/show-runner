@@ -281,6 +281,9 @@
     recentReports.set(key, now);
     if (boot.viewer !== "device") {
       console[level === "info" ? "log" : level]("[kiosk:log]", message, extra);
+      if (boot.viewer === "preview" && window.parent !== window) {
+        window.parent.postMessage({ type: "kiosk:log", level, message: String(message), line: extra.line ?? null }, "*");
+      }
       return;
     }
     if (++reportCount > 50) return;

@@ -51,10 +51,9 @@ export function updateScreen(id: string, input: UpdateScreenRequest): Screen {
   return screen;
 }
 
-/** Refuses (409) while the screen is assigned to a device or used by a playlist. */
-export function deleteScreen(id: string): void {
+/** Devices assigned this screen directly, and playlists that include it. */
+export function screenUsage(id: string) {
   const db = getDb();
-  getScreenOr404(id);
   const assigned = db.select({ id: devices.id, name: devices.name }).from(devices).where(eq(devices.screenId, id)).all();
   const inPlaylists = db
     .selectDistinct({ id: playlists.id, name: playlists.name })
@@ -62,6 +61,14 @@ export function deleteScreen(id: string): void {
     .innerJoin(playlists, eq(playlists.id, playlistItems.playlistId))
     .where(eq(playlistItems.screenId, id))
     .all();
+  return { devices: assigned, playlists: inPlaylists };
+}
+
+/** Refuses (409) while the screen is assigned to a device or used by a playlist. */
+export function deleteScreen(id: string): void {
+  const db = getDb();
+  getScreenOr404(id);
+  const { devices: assigned, playlists: inPlaylists } = screenUsage(id);
   if (assigned.length || inPlaylists.length) {
     const parts = [
       ...assigned.map((d) => `device "${d.name ?? d.id}"`),

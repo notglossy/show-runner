@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api, ApiClientError } from "@/lib/client/api";
-import { Button, ErrorText, inputClass } from "./ui";
+import { Button, ErrorText, inputBase } from "./ui";
 
 /** Claim by pairing code. Pass `pairingCode` to pre-fill (unclaimed device card) or omit for manual entry. */
 export function ClaimDevice({ pairingCode, defaultName }: { pairingCode?: string; defaultName?: string }) {
@@ -31,7 +31,7 @@ export function ClaimDevice({ pairingCode, defaultName }: { pairingCode?: string
       <div className="flex flex-wrap gap-2">
         {!pairingCode && (
           <input
-            className={`${inputClass} w-32 font-mono uppercase`}
+            className={`${inputBase} w-28 font-mono uppercase`}
             placeholder="Code"
             value={code}
             maxLength={6}
@@ -39,7 +39,7 @@ export function ClaimDevice({ pairingCode, defaultName }: { pairingCode?: string
             required
           />
         )}
-        <input className={`${inputClass} min-w-40 flex-1`} placeholder="Name, e.g. Kitchen" value={name} onChange={(e) => setName(e.target.value)} required />
+        <input className={`${inputBase} min-w-40 flex-1`} placeholder="Name, e.g. Kitchen" value={name} onChange={(e) => setName(e.target.value)} required />
         <Button type="submit" variant="primary" disabled={pending}>
           {pending ? "Claiming…" : "Claim"}
         </Button>

@@ -5,7 +5,7 @@ import { useState } from "react";
 import type { DeviceCommandRequest } from "@/lib/api/types";
 import { api, ApiClientError } from "@/lib/client/api";
 import type { Option } from "./assignment-select";
-import { Button, ErrorText, inputClass } from "./ui";
+import { Button, ErrorText, inputBase, inputClass } from "./ui";
 
 export function DeviceCommands({ deviceId, screens, claimed }: { deviceId: string; screens: Option[]; claimed: boolean }) {
   const router = useRouter();
@@ -33,7 +33,7 @@ export function DeviceCommands({ deviceId, screens, claimed }: { deviceId: strin
       </div>
       {claimed && screens.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          <select className={`${inputClass} w-auto min-w-48 flex-1`} value={screenId} onChange={(e) => setScreenId(e.target.value)}>
+          <select className={`${inputBase} min-w-48 flex-1`} value={screenId} onChange={(e) => setScreenId(e.target.value)}>
             {screens.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}

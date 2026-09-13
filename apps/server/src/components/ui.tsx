@@ -45,8 +45,10 @@ export function Button({ variant = "secondary", size = "md", className, ...props
   );
 }
 
-export const inputClass =
-  "w-full rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none disabled:bg-neutral-100";
+/** Input styling without a width, for inputs that size themselves. */
+export const inputBase =
+  "rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none disabled:bg-neutral-100";
+export const inputClass = `${inputBase} w-full`;
 
 export function Field({ label, hint, children, className }: { label: string; hint?: ReactNode; children: ReactNode; className?: string }) {
   return (
