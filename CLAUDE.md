@@ -11,7 +11,7 @@ See `docs/architecture.md` for the diagram and request/event flow.
 ```
 apps/server/    Next.js 16 App Router, TS strict, Tailwind 4, SQLite via Drizzle, Zod
 apps/android/   Kotlin kiosk shell (AGP 9.4 built-in Kotlin, Gradle 9.7.1), app id com.notglossy.showrunner
-docs/           architecture.md, device-setup.md, screen-authoring.md (Phase 1), glossary.md
+docs/           architecture.md, api.md, device-setup.md, screen-authoring.md, glossary.md
 scripts/        delegate.sh (OMP delegation), install.sh (Phase 2)
 .claude/agents/ local-worker.md (delegation subagent)
 ```
@@ -31,6 +31,28 @@ scripts/        delegate.sh (OMP delegation), install.sh (Phase 2)
   generation (Phase 4). Keep it precise and complete when data fields change.
 - Target browser is **AOSP WebView 139** (Chromium 139). Anything Chromium 139 supports is fine.
 
+## Server code map (`apps/server/src`)
+
+```
+app/device/[deviceId]/route.ts   the page the WebView loads (pairing / unassigned / screen + runtime)
+app/api/**/route.ts              thin handlers: auth check -> parseJson(schema) -> service -> JSON
+lib/api/                         http.ts (ApiError, route(), parseJson), types.ts + schemas.ts (kept in sync
+                                 by schemas.typecheck.ts), request.ts
+lib/auth/                        admin.ts (session/Bearer), device.ts (secret, token), crypto.ts, session.ts (pages)
+lib/db/                          schema.ts, client.ts (opens + migrates once); migrations in apps/server/drizzle
+lib/devices|screens|playlists/   services (business logic); playlists/scheduler.ts rotates via navigate
+lib/events/bus.ts                in-memory SSE pub/sub (single process)
+lib/providers/                   DataProvider interface, cache, time/weather/device, registry.ts, payload.ts,
+                                 sample.ts (browser-shaped sample kiosk.data for previews/tests)
+lib/render/                      document shell + system screens
+lib/seed/screens.ts              built-in screens, inserted when the screens table is empty
+public/kiosk/runtime.js          window.kiosk runtime (plain JS); its contract is docs/screen-authoring.md
+instrumentation.ts -> lib/startup.ts   env check, migrate, seed, start scheduler
+```
+
+Adding a data provider: new file in `lib/providers/`, add to `registry.ts`, document the fields in
+`docs/screen-authoring.md` §6, and extend `sample.ts`.
+
 ## Running
 
 ### Server
@@ -39,6 +61,8 @@ scripts/        delegate.sh (OMP delegation), install.sh (Phase 2)
 pnpm install
 pnpm dev                 # http://localhost:3000
 pnpm typecheck && pnpm lint && pnpm build
+pnpm --filter @showkiosk/server test        # vitest, in-memory SQLite
+pnpm --filter @showkiosk/server db:generate # after editing lib/db/schema.ts (commit the SQL)
 
 cp .env.example .env     # set ADMIN_PASSWORD, DEVICE_SHARED_SECRET
 docker compose up --build -d   # http://localhost:${SHOWKIOSK_PORT:-3000}, health: /api/health

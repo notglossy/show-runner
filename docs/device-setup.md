@@ -26,6 +26,18 @@ Notes:
 - Wi-Fi ping is 5–30 ms while awake, but was 100–2000 ms while the screen was off
   (Wi-Fi power save). Keep the screen on and use generous watchdog timeouts.
 
+## Open questions to verify on the device (Phase 2)
+
+- **Viewport scale.** Density is 213, so a default WebView lays pages out at ~961 CSS px wide.
+  Screens are authored for a 1280×800 CSS canvas (`<meta name="viewport" content="width=1280">`), so
+  the shell must enable `useWideViewPort` + `loadWithOverviewMode`. Check after install with
+  `window.innerWidth` via `chrome://inspect` or `adb shell` + a log line.
+- **Fonts.** `/system/fonts` has Roboto, Noto Serif, Droid Sans Mono, Noto Color Emoji (plus Roboto
+  Condensed, Source Sans Pro, Cutive Mono, Coming Soon, Dancing Script). The authoring doc only
+  promises the generic families; confirm Roboto weights 100–900 render (variable font).
+- **Wi-Fi sleep.** Very slow pings when the screen was off. Confirm keep-screen-on prevents it:
+  `adb shell dumpsys wifi | grep -i "power\|sleep"`.
+
 ## 1. Enable adb over the network (one time)
 
 1. Settings → About → tap **Build number** 7 times to unlock Developer options.

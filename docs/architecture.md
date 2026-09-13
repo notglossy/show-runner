@@ -36,7 +36,7 @@ sequenceDiagram
     participant D as Dashboard (admin)
 
     App->>S: POST /api/devices/register {deviceId, model, …} + shared secret
-    S-->>App: registered (claimed? pairing code)
+    S-->>App: device token (+ cookie), claimed?, pairing code
     App->>WV: load /device/:id
     WV->>S: GET /device/:id
     S-->>WV: screen HTML (template + injected runtime) or pairing screen
@@ -46,7 +46,7 @@ sequenceDiagram
         S-->>WV: {time, weather, device}
     end
     loop every 30s
-        App->>S: POST /api/devices/:id/heartbeat {battery, wifi, screen}
+        App->>S: POST /api/devices/:id/heartbeat {battery, wifi, screen} + token
         S-->>App: ack
     end
     D->>S: claim device / assign screen or playlist
@@ -61,14 +61,15 @@ sequenceDiagram
   never knows about screens or playlists; it just loads `/device/:id` and obeys SSE commands.
 - **Playlists rotate on the server.** The server sends `navigate` when a dwell time expires.
 - **Data binding.** Templates use `data-bind="weather.temp"` and `kiosk.on('data', fn)`.
-  The full contract is in [`screen-authoring.md`](screen-authoring.md) (written in Phase 1), which also serves as
+  The full contract is in [`screen-authoring.md`](screen-authoring.md) which also serves as
   the system prompt for AI screen generation (Phase 4).
 - **Providers.** One file per provider (`fetch()` + TTL) plus one registry entry.
-- **Auth.** One admin password (env var) for the dashboard session. Native device calls
-  (register, heartbeat) send the shared secret header. Registration returns a **per-device
-  token**, which the shell stores as a cookie for the server origin via `CookieManager`, so
-  every WebView request (page, data, SSE, log) carries it. `EventSource` can't set headers,
-  which is why this uses a cookie.
+- **Auth.** One admin password (env var): dashboard session cookie, or `Bearer <password>` for
+  scripting. Devices send the shared secret **only to register**. Registration returns a
+  **per-device token** (rotated on every registration). Native calls such as heartbeat send it as a
+  Bearer header. The shell also stores it as a cookie for the server origin via `CookieManager`, so
+  every WebView request (page, data, SSE, log) carries it; `EventSource` can't set headers. Details
+  are in [`api.md`](api.md).
 - **Config over rebuilds.** Server config is env vars. Device config is
   `/sdcard/showkiosk/config.json` or `am start` intent extras.
 
