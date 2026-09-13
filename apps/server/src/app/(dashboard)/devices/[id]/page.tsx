@@ -1,0 +1,106 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { AssignmentSelect } from "@/components/assignment-select";
+import { AutoRefresh } from "@/components/auto-refresh";
+import { ClaimDevice } from "@/components/claim-device";
+import { DeleteDevice, DeviceCommands, RenameDevice } from "@/components/device-actions";
+import { DeviceLogs } from "@/components/device-logs";
+import { DeviceStatus } from "@/components/device-status";
+import { TimeAgo } from "@/components/time-ago";
+import { Card, PageHeader } from "@/components/ui";
+import { requireAdminPage } from "@/lib/auth/session";
+import { duration } from "@/lib/client/format";
+import { findDevice, toDeviceView } from "@/lib/devices/service";
+import { wifiBars } from "@/lib/providers/device";
+import { getPlaylistOr404, listPlaylists } from "@/lib/playlists/service";
+import { listScreens } from "@/lib/screens/service";
+
+export const dynamic = "force-dynamic";
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex justify-between gap-4 py-1.5 text-sm">
+      <dt className="text-neutral-500">{label}</dt>
+      <dd className="text-right text-neutral-900">{children}</dd>
+    </div>
+  );
+}
+
+export default async function DevicePage({ params }: PageProps<"/devices/[id]">) {
+  const { id } = await params;
+  await requireAdminPage(`/devices/${id}`);
+  const row = findDevice(id);
+  if (!row) notFound();
+  const device = toDeviceView(row);
+  const screens = listScreens().map(({ id, name }) => ({ id, name }));
+  const playlists = listPlaylists().map(({ id, name }) => ({ id, name }));
+  const screenNames = Object.fromEntries(screens.map((s) => [s.id, s.name]));
+  const playlist = device.assignment.type === "playlist" ? getPlaylistOr404(device.assignment.playlistId) : null;
+  const { battery, wifi, uptimeSeconds } = device.status;
+
+  return (
+    <>
+      <AutoRefresh seconds={10} />
+      <PageHeader title={device.name ?? `Unclaimed display ${device.pairingCode ?? ""}`}>
+        <Link href={`/device/${device.id}`} target="_blank" className="text-sm text-neutral-600 underline underline-offset-2">
+          Open live page ↗
+        </Link>
+      </PageHeader>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="flex flex-col gap-6 lg:col-span-1">
+          <Card title="Status">
+            <dl className="divide-y divide-neutral-100">
+              <Row label="State"><DeviceStatus device={device} /></Row>
+              <Row label="Last heartbeat"><TimeAgo iso={device.lastSeenAt} /></Row>
+              <Row label="Showing">{device.currentScreenId ? (screenNames[device.currentScreenId] ?? device.currentScreenId) : "—"}</Row>
+              {playlist && (
+                <Row label="Playlist">
+                  {playlist.name} ({playlist.items.length ? `${device.playlistPosition + 1}/${playlist.items.length}` : "empty"})
+                </Row>
+              )}
+              <Row label="Wi-Fi">{wifi ? `${wifi.ssid ?? "connected"} · ${wifi.rssi} dBm · ${"▮".repeat(wifiBars(wifi.rssi))}${"▯".repeat(4 - wifiBars(wifi.rssi))}` : "—"}</Row>
+              <Row label="Battery">{battery ? `${battery.level}%${battery.charging ? " (charging)" : ""}` : "—"}</Row>
+              <Row label="App uptime">{typeof uptimeSeconds === "number" ? duration(uptimeSeconds) : "—"}</Row>
+              <Row label="IP">{device.lastIp ?? "—"}</Row>
+              <Row label="Model">{device.model}</Row>
+              <Row label="Android / app">{device.androidVersion} / {device.appVersion}</Row>
+              <Row label="Screen">{device.screenWidth}×{device.screenHeight}</Row>
+              <Row label="Registered"><TimeAgo iso={device.registeredAt} /></Row>
+              <Row label="Device ID"><span className="font-mono text-xs">{device.id}</span></Row>
+            </dl>
+          </Card>
+        </div>
+
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          {device.claimed ? (
+            <>
+              <Card title="Assignment">
+                <AssignmentSelect deviceId={device.id} assignment={device.assignment} screens={screens} playlists={playlists} />
+              </Card>
+              <Card title="Commands">
+                <DeviceCommands deviceId={device.id} screens={screens} claimed={device.claimed} />
+              </Card>
+              <Card title="Name">
+                <RenameDevice deviceId={device.id} name={device.name} />
+              </Card>
+            </>
+          ) : (
+            <Card title="Claim this display">
+              <p className="mb-3 text-sm text-neutral-600">
+                Pairing code <span className="font-mono font-semibold">{device.pairingCode}</span>
+              </p>
+              <ClaimDevice pairingCode={device.pairingCode ?? ""} />
+            </Card>
+          )}
+          <Card title="Log">
+            <DeviceLogs deviceId={device.id} screenNames={screenNames} />
+          </Card>
+          <div className="flex justify-end">
+            <DeleteDevice deviceId={device.id} name={device.name ?? device.id} />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
