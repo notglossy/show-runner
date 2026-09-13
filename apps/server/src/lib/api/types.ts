@@ -133,3 +133,27 @@ export interface UpdatePlaylistRequest {
   name?: string;
   items?: PlaylistItemInput[];
 }
+
+// ---- Admin: settings ---------------------------------------------------------
+
+/**
+ * Overrides for env-var defaults (WEATHER_LAT, WEATHER_LON, WEATHER_UNITS, KIOSK_TIMEZONE).
+ * Every field optional; `null` clears the override (back to the env default). At least one field required.
+ */
+export interface UpdateSettingsRequest {
+  /** Number -90..90, or null. */
+  weatherLatitude?: number | null;
+  /** Number -180..180, or null. */
+  weatherLongitude?: number | null;
+  /** "imperial" | "metric", or null. */
+  weatherUnits?: "imperial" | "metric" | null;
+  /** Display label for the location, e.g. "Los Angeles, California". Trimmed, 1-100 chars, or null. */
+  weatherLocationName?: string | null;
+  /** IANA timezone accepted by Intl.DateTimeFormat (e.g. "America/Los_Angeles"), or null. */
+  timezone?: string | null;
+}
+
+export interface GeocodeQuery {
+  /** Place name to search. Trimmed, 2-100 chars. */
+  q: string;
+}
