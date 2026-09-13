@@ -82,8 +82,8 @@ Device: `adb connect 192.168.1.203:5555` (network adb persists across reboots). 
 `scripts/delegate.sh <task-file> [model]` runs `omp -p` (thinking off, auto-approve, no session) with the task
 file as the prompt. It refuses to run on a dirty tree and prints only the reply tail, changed files / diff stat,
 and the tail of the acceptance check (the task file's `CHECK:` line, or an inferred typecheck/build). Exit codes:
-0 ok, 1 omp failed, 2 usage, 3 dirty tree, 4 check failed. Default model: `meta/muse-spark-1.3-contributor`
-(via OpenRouter, override with the 2nd arg or `DELEGATE_MODEL`).
+0 ok, 1 omp failed, 2 usage, 3 dirty tree, 4 check failed. Default model: `openrouter/meta/muse-spark-1.3-contributor`
+(always use the provider-qualified id: a bare `meta/...` resolves to the unconfigured `meta` provider; override with the 2nd arg or `DELEGATE_MODEL`).
 
 Dispatch through the `local-worker` subagent (`.claude/agents/local-worker.md`). **The loop, every time:**
 

@@ -21,7 +21,7 @@ task_file=$1
 [[ -f "$task_file" ]] || { echo "delegate: task file not found: $task_file" >&2; exit 2; }
 task_file=$(cd "$(dirname "$task_file")" && pwd)/$(basename "$task_file")
 
-model=${2:-${DELEGATE_MODEL:-meta/muse-spark-1.3-contributor}}
+model=${2:-${DELEGATE_MODEL:-openrouter/meta/muse-spark-1.3-contributor}}
 max_time=${DELEGATE_MAX_TIME:-15m}
 summary_lines=${DELEGATE_SUMMARY_LINES:-8}
 
