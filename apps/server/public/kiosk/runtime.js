@@ -74,11 +74,10 @@
     return value === undefined || value === null ? fallback : value;
   }
 
+  const isMissing = (value) => value === undefined || value === null || value === "" || typeof value === "object";
+
   function toText(value, el) {
-    if (value === undefined || value === null || typeof value === "object" || value === "") {
-      return el.getAttribute("data-fallback") ?? MISSING;
-    }
-    return String(value);
+    return isMissing(value) ? (el.getAttribute("data-fallback") ?? MISSING) : String(value);
   }
 
   function applyBindings(root = document) {
@@ -86,7 +85,7 @@
       const value = get(el.getAttribute("data-bind"));
       const text = toText(value, el);
       if (el.textContent !== text) el.textContent = text;
-      el.toggleAttribute("data-bind-missing", value === undefined || value === null || typeof value === "object");
+      el.toggleAttribute("data-bind-missing", isMissing(value));
     }
     for (const el of root.querySelectorAll("[data-bind-attr]")) {
       for (const pair of el.getAttribute("data-bind-attr").split(";")) {
@@ -94,7 +93,7 @@
         if (idx < 1) continue;
         const attr = pair.slice(0, idx).trim();
         const value = get(pair.slice(idx + 1).trim());
-        if (value === undefined || value === null || typeof value === "object") {
+        if (isMissing(value) && value !== "") {
           el.removeAttribute(attr);
         } else if (el.getAttribute(attr) !== String(value)) {
           el.setAttribute(attr, String(value));
