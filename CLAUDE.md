@@ -50,6 +50,23 @@ public/kiosk/runtime.js          window.kiosk runtime (plain JS); its contract i
 instrumentation.ts -> lib/startup.ts   env check, migrate, seed, start scheduler
 ```
 
+## Android code map (`apps/android/app/src/main/java/com/notglossy/showrunner`)
+
+```
+MainActivity.kt           session state machine: SETUP / CONNECTING / SHOWING / RECONNECTING; WebView setup,
+                          register -> cookie -> load /device/:id, heartbeat loop + watchdog, overlay, setup screen
+KioskConfig.kt            ConfigStore: /sdcard/showrunner/config.json or am start extras (most recent wins)
+ServerClient.kt           HttpURLConnection + org.json client for register / heartbeat
+KioskMode.kt              device owner -> lock task, keyguard/status bar off, stay awake, persistent HOME; else immersive
+NativeBridge.kt           window.KioskNative (getDeviceInfo, get/setBrightness, reload): keep it small
+DeviceStatus.kt           heartbeat body (battery, wifi); DeviceIdentity.kt: UUID + device info
+BootReceiver.kt           BOOT_COMPLETED / MY_PACKAGE_REPLACED -> start activity
+KioskDeviceAdminReceiver.kt   device admin component for dpm set-device-owner
+```
+
+Device quirks and every adb step: `docs/device-setup.md`. Install with `scripts/install.sh` (prefer USB).
+Inspect the running page via WebView DevTools (debug builds), see the troubleshooting table there.
+
 Adding a data provider: new file in `lib/providers/`, add to `registry.ts`, document the fields in
 `docs/screen-authoring.md` §6, and extend `sample.ts`.
 

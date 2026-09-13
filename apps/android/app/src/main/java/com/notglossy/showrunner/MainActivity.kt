@@ -249,6 +249,7 @@ class MainActivity : android.app.Activity() {
 
     private fun onHeartbeatFailed(error: String) {
         lastError = error
+        if (state == State.RECONNECTING) nextRetryAt = SystemClock.elapsedRealtime() + heartbeatIntervalMs
         val silentFor = SystemClock.elapsedRealtime() - lastAckAt
         if (silentFor >= WATCHDOG_TIMEOUT_MS && state != State.RECONNECTING) {
             Log.w(TAG, "No heartbeat ack for ${silentFor / 1000}s; entering reconnecting state")
@@ -408,7 +409,7 @@ class MainActivity : android.app.Activity() {
             appendLine()
             appendLine("Server  ${config?.serverUrl ?: "—"}")
             appendLine("Device  ${deviceInfo.deviceId}")
-            append(if (seconds > 0) "Retrying in ${seconds}s (attempt ${retryAttempt})" else "Retrying…")
+            append(if (seconds > 0) "Retrying in ${seconds}s" else "Retrying…")
         }
     }
 
