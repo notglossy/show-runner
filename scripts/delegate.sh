@@ -59,7 +59,7 @@ omp -p \
   --auto-approve \
   --max-time="$max_time" \
   --cwd="$repo_root" \
-  "$prompt" >"$out" 2>&1
+  "$prompt" </dev/null >"$out" 2>&1   # stdin closed: omp otherwise blocks reading piped input
 omp_status=$?
 set -e
 
