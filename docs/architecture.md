@@ -64,9 +64,11 @@ sequenceDiagram
   The full contract is in [`screen-authoring.md`](screen-authoring.md) (written in Phase 1), which also serves as
   the system prompt for AI screen generation (Phase 4).
 - **Providers.** One file per provider (`fetch()` + TTL) plus one registry entry.
-- **Auth.** One admin password (env var) for the dashboard; a shared device secret for
-  device endpoints. How the WebView authenticates its own requests (it can't set headers on
-  `EventSource`) is decided in Phase 1.
+- **Auth.** One admin password (env var) for the dashboard session. Native device calls
+  (register, heartbeat) send the shared secret header. Registration returns a **per-device
+  token**, which the shell stores as a cookie for the server origin via `CookieManager`, so
+  every WebView request (page, data, SSE, log) carries it. `EventSource` can't set headers,
+  which is why this uses a cookie.
 - **Config over rebuilds.** Server config is env vars. Device config is
   `/sdcard/showkiosk/config.json` or `am start` intent extras.
 

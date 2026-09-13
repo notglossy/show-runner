@@ -70,6 +70,10 @@ adb shell appops set com.notglossy.showrunner MANAGE_EXTERNAL_STORAGE allow
 
 ## 4. Kiosk lock (device owner)
 
+Planned behavior once the app is device owner: keyguard disabled (`setKeyguardDisabled`),
+screen kept on, lock task mode. When built with the launcher flag, choose ShowKiosk as the
+default Home app once (Nova is currently default).
+
 _Written in Phase 2._ Planned command (requires **zero accounts** on the device):
 
 ```sh
