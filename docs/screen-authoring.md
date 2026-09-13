@@ -1,6 +1,6 @@
 # Screen authoring guide
 
-This document is the complete contract for writing a ShowKiosk **screen template**. It is written
+This document is the complete contract for writing a ShowRunner **screen template**. It is written
 for whoever writes templates: a person in the dashboard editor, or a model generating a screen from
 a plain-English description. If something isn't described here, don't rely on it.
 
@@ -95,7 +95,7 @@ Chromium 139 supports modern features. All of these are safe to use:
 Use only the fonts below. Nothing else is available and web fonts can't be loaded from the internet.
 Always end a `font-family` list with a generic family.
 
-**Served by ShowKiosk** (already declared with `@font-face` on every screen; just name them). Files are
+**Served by ShowRunner** (already declared with `@font-face` on every screen; just name them). Files are
 only downloaded when used, so pick one or two per screen.
 
 | `font-family` | Weights | Character |

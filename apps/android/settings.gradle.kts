@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ShowKiosk"
+rootProject.name = "ShowRunner"
 include(":app")

@@ -8,8 +8,8 @@ import { playlistItemsFor } from "./queries";
  * Rotates playlist-assigned devices: one timer per device, fired after the current item's dwell.
  * State (position, current screen) lives in the devices table so a restart resumes where it was.
  */
-const globalForScheduler = globalThis as unknown as { __showkioskTimers?: Map<string, NodeJS.Timeout> };
-const timers = (globalForScheduler.__showkioskTimers ??= new Map());
+const globalForScheduler = globalThis as unknown as { __showrunnerTimers?: Map<string, NodeJS.Timeout> };
+const timers = (globalForScheduler.__showrunnerTimers ??= new Map());
 
 function clearTimer(deviceId: string) {
   const t = timers.get(deviceId);

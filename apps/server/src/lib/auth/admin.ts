@@ -2,11 +2,11 @@ import { env } from "@/lib/env";
 import { hmacSha256, safeEqual, sha256 } from "./crypto";
 import { unauthorized } from "@/lib/api/http";
 
-export const ADMIN_COOKIE = "showkiosk_admin";
+export const ADMIN_COOKIE = "showrunner_admin";
 export const ADMIN_SESSION_MS = 30 * 24 * 60 * 60 * 1000;
 
 // Derived from the password, so changing ADMIN_PASSWORD invalidates every session.
-const sessionKey = () => sha256(`showkiosk-admin-session:${env().ADMIN_PASSWORD}`);
+const sessionKey = () => sha256(`showrunner-admin-session:${env().ADMIN_PASSWORD}`);
 
 export function checkAdminPassword(candidate: string): boolean {
   return safeEqual(candidate, env().ADMIN_PASSWORD);

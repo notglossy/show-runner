@@ -20,7 +20,7 @@ describe("admin auth", () => {
 
   it("recognises the session cookie or the Bearer password", () => {
     const { value } = createAdminSession();
-    expect(isAdminRequest(req({ cookie: `other=1; showkiosk_admin=${encodeURIComponent(value)}` }))).toBe(true);
+    expect(isAdminRequest(req({ cookie: `other=1; showrunner_admin=${encodeURIComponent(value)}` }))).toBe(true);
     expect(isAdminRequest(req({ authorization: "Bearer test-admin-password" }))).toBe(true);
     expect(isAdminRequest(req({ authorization: "Bearer wrong" }))).toBe(false);
     expect(isAdminRequest(req())).toBe(false);
@@ -44,9 +44,9 @@ describe("device auth", () => {
     const a = register();
     const b = register();
     expect(requireDeviceOrAdmin(req({ authorization: `Bearer ${a.token}` }), a.device.id).kind).toBe("device");
-    expect(requireDeviceOrAdmin(req({ cookie: `showkiosk_device=${a.device.id}.${a.token}` }), a.device.id).kind).toBe("device");
+    expect(requireDeviceOrAdmin(req({ cookie: `showrunner_device=${a.device.id}.${a.token}` }), a.device.id).kind).toBe("device");
     expect(() => requireDeviceOrAdmin(req({ authorization: `Bearer ${a.token}` }), b.device.id)).toThrow(/token/);
-    expect(() => requireDeviceOrAdmin(req({ cookie: `showkiosk_device=${b.device.id}.${a.token}` }), b.device.id)).toThrow();
+    expect(() => requireDeviceOrAdmin(req({ cookie: `showrunner_device=${b.device.id}.${a.token}` }), b.device.id)).toThrow();
   });
 
   it("invalidates the old token when the device re-registers", () => {

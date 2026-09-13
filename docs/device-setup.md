@@ -73,7 +73,7 @@ _Written in Phase 2 (`scripts/install.sh`)._
 
 ## 3. Configure the server URL and secret
 
-_Written in Phase 2._ Planned: `/sdcard/showkiosk/config.json`, which requires granting
+_Written in Phase 2._ Planned: `/sdcard/showrunner/config.json`, which requires granting
 all-files access once:
 
 ```sh
@@ -83,7 +83,7 @@ adb shell appops set com.notglossy.showrunner MANAGE_EXTERNAL_STORAGE allow
 ## 4. Kiosk lock (device owner)
 
 Planned behavior once the app is device owner: keyguard disabled (`setKeyguardDisabled`),
-screen kept on, lock task mode. When built with the launcher flag, choose ShowKiosk as the
+screen kept on, lock task mode. When built with the launcher flag, choose ShowRunner as the
 default Home app once (Nova is currently default).
 
 _Written in Phase 2._ Planned command (requires **zero accounts** on the device):

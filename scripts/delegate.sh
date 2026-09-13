@@ -96,7 +96,7 @@ check=$(grep -m1 -E '^CHECK:' "$task_file" | sed -E 's/^CHECK:[[:space:]]*//' ||
 if [[ -z "$check" ]]; then
   changed=$( { git diff --name-only; git ls-files --others --exclude-standard; } )
   if grep -q '^apps/server/' <<<"$changed"; then
-    check="pnpm --filter @showkiosk/server typecheck && pnpm --filter @showkiosk/server lint"
+    check="pnpm --filter @showrunner/server typecheck && pnpm --filter @showrunner/server lint"
   elif grep -q '^apps/android/' <<<"$changed"; then
     check="cd apps/android && ./gradlew assembleDebug --console=plain"
   fi

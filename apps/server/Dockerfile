@@ -19,12 +19,12 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 FROM deps AS build
 COPY apps/server apps/server
-RUN pnpm --filter @showkiosk/server build
+RUN pnpm --filter @showrunner/server build
 
 FROM node:${NODE_VERSION}-bookworm-slim AS runtime
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 HOSTNAME=0.0.0.0 \
-    DATABASE_PATH=/data/showkiosk.db \
+    DATABASE_PATH=/data/showrunner.db \
     MIGRATIONS_DIR=/app/apps/server/drizzle
 WORKDIR /app
 COPY --from=build --chown=node:node /repo/apps/server/.next/standalone ./

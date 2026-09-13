@@ -15,9 +15,9 @@ Codes: `bad_request` 400, `validation_failed` 400, `unauthorized` 401, `forbidde
 
 | Caller | How |
 |---|---|
-| **Admin** | `showkiosk_admin` session cookie from `POST /api/auth/login`, **or** `Authorization: Bearer <ADMIN_PASSWORD>`. |
+| **Admin** | `showrunner_admin` session cookie from `POST /api/auth/login`, **or** `Authorization: Bearer <ADMIN_PASSWORD>`. |
 | **Device, registration** | `X-Kiosk-Secret: <DEVICE_SHARED_SECRET>` header. |
-| **Device, everything else** | The per-device token returned by registration, as `Authorization: Bearer <token>` (native calls) **or** the cookie `showkiosk_device=<deviceId>.<token>` set for the server origin (WebView page, data, SSE, log). Registering again rotates the token; the old one stops working immediately. |
+| **Device, everything else** | The per-device token returned by registration, as `Authorization: Bearer <token>` (native calls) **or** the cookie `showrunner_device=<deviceId>.<token>` set for the server origin (WebView page, data, SSE, log). Registering again rotates the token; the old one stops working immediately. |
 
 Per-device read endpoints (`/device/:id`, `data`, `events`) also accept an admin so the owner can
 preview a device in a browser. For non-admins an unknown device and a bad token both return 401.
@@ -32,7 +32,7 @@ Header `X-Kiosk-Secret`. Body:
 ```
 200:
 ```json
-{ "deviceId": "3f2b…", "token": "DhGT…", "cookie": { "name": "showkiosk_device", "value": "3f2b….DhGT…" },
+{ "deviceId": "3f2b…", "token": "DhGT…", "cookie": { "name": "showrunner_device", "value": "3f2b….DhGT…" },
   "claimed": false, "name": null, "pairingCode": "3382FP", "pageUrl": "/device/3f2b…",
   "heartbeatIntervalSeconds": 30 }
 ```

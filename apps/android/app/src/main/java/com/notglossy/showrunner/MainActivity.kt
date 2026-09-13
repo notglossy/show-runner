@@ -11,7 +11,7 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(
             TextView(this).apply {
-                text = "ShowKiosk ${BuildConfig.VERSION_NAME}"
+                text = "ShowRunner ${BuildConfig.VERSION_NAME}"
                 textSize = 48f
                 gravity = Gravity.CENTER
             },

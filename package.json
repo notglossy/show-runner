@@ -1,14 +1,14 @@
 {
-  "name": "showkiosk",
+  "name": "show-runner",
   "private": true,
   "packageManager": "pnpm@10.6.2",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "dev": "pnpm --filter @showkiosk/server dev",
-    "build": "pnpm --filter @showkiosk/server build",
-    "lint": "pnpm --filter @showkiosk/server lint",
-    "typecheck": "pnpm --filter @showkiosk/server typecheck"
+    "dev": "pnpm --filter @showrunner/server dev",
+    "build": "pnpm --filter @showrunner/server build",
+    "lint": "pnpm --filter @showrunner/server lint",
+    "typecheck": "pnpm --filter @showrunner/server typecheck"
   }
 }

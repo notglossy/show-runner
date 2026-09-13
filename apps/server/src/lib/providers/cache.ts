@@ -9,8 +9,8 @@ interface Entry {
   inflight?: Promise<unknown>;
 }
 
-const globalForCache = globalThis as unknown as { __showkioskProviderCache?: Map<string, Entry> };
-const entries = (globalForCache.__showkioskProviderCache ??= new Map());
+const globalForCache = globalThis as unknown as { __showrunnerProviderCache?: Map<string, Entry> };
+const entries = (globalForCache.__showrunnerProviderCache ??= new Map());
 
 export function clearProviderCache() {
   entries.clear();

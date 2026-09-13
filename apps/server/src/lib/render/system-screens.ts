@@ -22,7 +22,7 @@ export function pairingScreen(pairingCode: string, deviceId: string): string {
   <main>
     <p class="sys-label">Pairing code</p>
     <p class="sys-code">${escapeHtml(pairingCode)}</p>
-    <p class="sys-hint">Claim this display in the ShowKiosk dashboard</p>
+    <p class="sys-hint">Claim this display in the ShowRunner dashboard</p>
   </main>
   <div class="sys-id">${escapeHtml(deviceId)}</div>
 </div>`;

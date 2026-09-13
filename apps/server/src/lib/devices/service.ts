@@ -264,8 +264,8 @@ export function currentScreenOf(device: Device): Screen | null {
 // ---- Logs --------------------------------------------------------------------
 
 const LOG_RATE_PER_MINUTE = 60;
-const globalForLogs = globalThis as unknown as { __showkioskLogRate?: Map<string, { windowStart: number; count: number }> };
-const logRate = (globalForLogs.__showkioskLogRate ??= new Map());
+const globalForLogs = globalThis as unknown as { __showrunnerLogRate?: Map<string, { windowStart: number; count: number }> };
+const logRate = (globalForLogs.__showrunnerLogRate ??= new Map());
 
 /** Stores a device log line. Returns false when rate-limited (the line is dropped). */
 export function appendLog(device: Device, input: DeviceLogRequest, userAgent: string | null): boolean {

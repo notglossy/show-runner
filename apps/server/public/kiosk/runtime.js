@@ -1,4 +1,4 @@
-// ShowKiosk runtime — injected into every rendered screen. Contract: docs/screen-authoring.md.
+// ShowRunner runtime — injected into every rendered screen. Contract: docs/screen-authoring.md.
 // Plain ES2022 for Chromium/Android WebView 139. No dependencies.
 (() => {
   "use strict";

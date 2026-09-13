@@ -3,7 +3,7 @@ import { z } from "zod";
 const EnvSchema = z.object({
   ADMIN_PASSWORD: z.string().min(1, "ADMIN_PASSWORD is required"),
   DEVICE_SHARED_SECRET: z.string().min(1, "DEVICE_SHARED_SECRET is required"),
-  DATABASE_PATH: z.string().min(1).default("./data/showkiosk.db"),
+  DATABASE_PATH: z.string().min(1).default("./data/showrunner.db"),
   WEATHER_LAT: z.coerce.number().min(-90).max(90).default(34.0522),
   WEATHER_LON: z.coerce.number().min(-180).max(180).default(-118.2437),
   WEATHER_UNITS: z.enum(["imperial", "metric"]).default("imperial"),

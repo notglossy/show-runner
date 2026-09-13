@@ -6,7 +6,7 @@ import { env } from "@/lib/env";
 import { isAdminRequest, bearerToken, readCookie } from "./admin";
 import { safeEqual, sha256 } from "./crypto";
 
-export const DEVICE_COOKIE = "showkiosk_device";
+export const DEVICE_COOKIE = "showrunner_device";
 export const SHARED_SECRET_HEADER = "x-kiosk-secret";
 
 export function requireSharedSecret(req: Request): void {

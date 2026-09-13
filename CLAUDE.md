@@ -1,4 +1,4 @@
-# ShowKiosk
+# ShowRunner
 
 Self-hosted dashboard kiosk for a rooted Echo Show 8 (2nd gen) running LineageOS 18.1 / Android 11.
 A thin Android WebView shell displays whatever a Next.js server on the LAN tells it to.
@@ -61,16 +61,16 @@ Adding a data provider: new file in `lib/providers/`, add to `registry.ts`, docu
 pnpm install
 pnpm dev                 # http://localhost:3000
 pnpm typecheck && pnpm lint && pnpm build
-pnpm --filter @showkiosk/server test        # vitest, in-memory SQLite
-pnpm --filter @showkiosk/server db:generate # after editing lib/db/schema.ts (commit the SQL)
+pnpm --filter @showrunner/server test        # vitest, in-memory SQLite
+pnpm --filter @showrunner/server db:generate # after editing lib/db/schema.ts (commit the SQL)
 
 cp .env.example .env     # set ADMIN_PASSWORD, DEVICE_SHARED_SECRET
-docker compose up --build -d   # http://localhost:${SHOWKIOSK_PORT:-3000}, health: /api/health
+docker compose up --build -d   # http://localhost:${SHOWRUNNER_PORT:-3000}, health: /api/health
 ```
 
 Config is env vars only: `ADMIN_PASSWORD`, `DEVICE_SHARED_SECRET`, `WEATHER_LAT`, `WEATHER_LON`,
 `WEATHER_UNITS` (imperial|metric), `KIOSK_TIMEZONE`, `ANTHROPIC_API_KEY` (Phase 4), `DATABASE_PATH`
-(image default `/data/showkiosk.db`). Prod host is amd64, built by Komodo from `apps/server/Dockerfile`
+(image default `/data/showrunner.db`). Prod host is amd64, built by Komodo from `apps/server/Dockerfile`
 with the repo root as the build context.
 
 ### Android

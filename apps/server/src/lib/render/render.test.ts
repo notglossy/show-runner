@@ -23,7 +23,7 @@ describe("renderKioskDocument", () => {
     expect(html.indexOf("__KIOSK_BOOT__")).toBeLessThan(html.indexOf("/kiosk/runtime.js"));
     expect(html.indexOf("/kiosk/runtime.js")).toBeLessThan(html.indexOf("<body"));
     expect(html).toContain('<p data-bind="time.hhmm"></p>');
-    expect(html).toContain("<title>Clock · ShowKiosk</title>");
+    expect(html).toContain("<title>Clock · ShowRunner</title>");
   });
 
   it("embeds boot JSON that cannot break out of the script tag", () => {
@@ -31,7 +31,7 @@ describe("renderKioskDocument", () => {
     const html = renderKioskDocument({ title: "<b>", body: "", boot: boot({ data }) });
     const script = html.slice(html.indexOf("window.__KIOSK_BOOT__="), html.indexOf(";</script>"));
     expect(script).not.toContain("</script>");
-    expect(html).toContain("<title>&lt;b&gt; · ShowKiosk</title>");
+    expect(html).toContain("<title>&lt;b&gt; · ShowRunner</title>");
     const parsed = JSON.parse(script.replace("window.__KIOSK_BOOT__=", ""));
     expect(parsed.data.screen.name).toBe("</script><script>alert(1)</script>");
   });

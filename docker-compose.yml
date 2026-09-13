@@ -1,13 +1,13 @@
 services:
-  showkiosk:
+  showrunner:
     build:
       context: .
       dockerfile: apps/server/Dockerfile
-    image: showkiosk-server:latest
-    container_name: showkiosk
+    image: showrunner-server:latest
+    container_name: showrunner
     restart: unless-stopped
     ports:
-      - "${SHOWKIOSK_PORT:-3000}:3000"
+      - "${SHOWRUNNER_PORT:-3000}:3000"
     environment:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
       DEVICE_SHARED_SECRET: ${DEVICE_SHARED_SECRET:?set DEVICE_SHARED_SECRET in .env}
@@ -17,7 +17,7 @@ services:
       KIOSK_TIMEZONE: ${KIOSK_TIMEZONE:-America/Los_Angeles}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     volumes:
-      - showkiosk-data:/data
+      - showrunner-data:/data
 
 volumes:
-  showkiosk-data:
+  showrunner-data:
