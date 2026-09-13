@@ -17,7 +17,7 @@ Codes: `bad_request` 400, `validation_failed` 400, `unauthorized` 401, `forbidde
 |---|---|
 | **Admin** | `showrunner_admin` session cookie from `POST /api/auth/login`, **or** `Authorization: Bearer <ADMIN_PASSWORD>`. |
 | **Device, registration** | `X-Kiosk-Secret: <DEVICE_SHARED_SECRET>` header. |
-| **Device, everything else** | The per-device token returned by registration, as `Authorization: Bearer <token>` (native calls) **or** the cookie `showrunner_device=<deviceId>.<token>` set for the server origin (WebView page, data, SSE, log). Registering again rotates the token; the old one stops working immediately. |
+| **Device, everything else** | The per-device token returned by registration, as `Authorization: Bearer <token>` (native calls) **or** the cookie `showrunner_device=<deviceId>.<token>` set for the server origin (WebView page, data, SSE, log). Registering again rotates the token; the previous token keeps working for 10 minutes (covers HTTP stacks that silently retry the registration POST), and older ones stop working. |
 
 Per-device read endpoints (`/device/:id`, `data`, `events`) also accept an admin so the owner can
 preview a device in a browser. For non-admins an unknown device and a bad token both return 401.
@@ -36,7 +36,8 @@ Header `X-Kiosk-Secret`. Body:
   "claimed": false, "name": null, "pairingCode": "3382FP", "pageUrl": "/device/3f2b…",
   "heartbeatIntervalSeconds": 30 }
 ```
-The shell should set `cookie` for the server origin, then load `pageUrl`. Unclaimed devices keep
+The shell should set `cookie` for the server origin, then load `pageUrl`. On any 401 from
+heartbeat or the page, register again. Unclaimed devices keep
 their pairing code across re-registrations.
 
 ### `POST /api/devices/:id/heartbeat`
