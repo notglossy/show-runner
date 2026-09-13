@@ -1,9 +1,12 @@
 import type { Device } from "@/lib/db/schema";
 import type { Env } from "@/lib/env";
 
+/** Env config with dashboard settings applied (see lib/settings/service.ts). */
+export type ProviderConfig = Env & { WEATHER_LOCATION_NAME: string | null };
+
 export interface ProviderContext {
   device: Device;
-  config: Env;
+  config: ProviderConfig;
   now: Date;
 }
 

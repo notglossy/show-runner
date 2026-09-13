@@ -10,7 +10,7 @@ import { cardinal, openMeteoUrl, toWeatherData, weatherProvider, type OpenMeteoR
 import { describeWeatherCode } from "./weather-codes";
 
 const device = { id: "dev-1" } as Device;
-const ctx = (now = new Date(fixture.current.time * 1000)) => ({ device, config: env(), now });
+const ctx = (now = new Date(fixture.current.time * 1000)) => ({ device, config: { ...env(), WEATHER_LOCATION_NAME: "LA" }, now });
 
 describe("weather", () => {
   it("builds the Open-Meteo URL from config", () => {
@@ -25,6 +25,7 @@ describe("weather", () => {
   it("transforms a real response", () => {
     const data = toWeatherData(fixture as OpenMeteoResponse, ctx());
     expect(data.available).toBe(true);
+    expect(data.location).toEqual({ name: "LA", latitude: 34.0522, longitude: -118.2437 });
     expect(data.units).toEqual({ temperature: "°F", windSpeed: "mph", precipitation: "in" });
     expect(data.current).toMatchObject({ temperature: 84, feelsLike: 89, humidity: 59, windDirectionCardinal: "W", isDay: true });
     expect(data.current?.condition).toBe("Clear");

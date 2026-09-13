@@ -274,9 +274,11 @@ noted. Units follow the server setting (imperial shown).
 
 | Path | Type | Example | Notes |
 |---|---|---|---|
-| `weather.available` | boolean | `true` | `false` if weather has never loaded; then `current` and `today` are `null` and `daily`/`hourly` are empty. |
+| `weather.available` | boolean | `true` | `false` if weather has never loaded; then `current` and `today` are `null` and `daily`/`hourly` are empty (`units` and `location` are still present). |
 | `weather.error` | string \| null | `null` | Error message when unavailable. |
 | `weather.fetchedAt` | string \| null | `"2026-09-13T21:30:00.000Z"` | When the data was fetched. |
+| `weather.location.name` | string \| null | `"Los Angeles, California"` | Place label from dashboard settings; may be `null`. |
+| `weather.location.latitude` / `.longitude` | number | `34.0522` / `-118.2437` | Forecast coordinates. |
 | `weather.units.temperature` | string | `"°F"` | `"°F"` or `"°C"`. Includes the degree sign. |
 | `weather.units.windSpeed` | string | `"mph"` | `"mph"` or `"km/h"`. |
 | `weather.units.precipitation` | string | `"in"` | `"in"` or `"mm"`. |
