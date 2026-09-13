@@ -1,0 +1,14 @@
+{
+  "name": "showkiosk",
+  "private": true,
+  "packageManager": "pnpm@10.6.2",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @showkiosk/server dev",
+    "build": "pnpm --filter @showkiosk/server build",
+    "lint": "pnpm --filter @showkiosk/server lint",
+    "typecheck": "pnpm --filter @showkiosk/server typecheck"
+  }
+}

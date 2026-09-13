@@ -1,0 +1,23 @@
+services:
+  showkiosk:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    image: showkiosk-server:latest
+    container_name: showkiosk
+    restart: unless-stopped
+    ports:
+      - "${SHOWKIOSK_PORT:-3000}:3000"
+    environment:
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      DEVICE_SHARED_SECRET: ${DEVICE_SHARED_SECRET:?set DEVICE_SHARED_SECRET in .env}
+      WEATHER_LAT: ${WEATHER_LAT:-34.0522}
+      WEATHER_LON: ${WEATHER_LON:--118.2437}
+      WEATHER_UNITS: ${WEATHER_UNITS:-imperial}
+      KIOSK_TIMEZONE: ${KIOSK_TIMEZONE:-America/Los_Angeles}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    volumes:
+      - showkiosk-data:/data
+
+volumes:
+  showkiosk-data:

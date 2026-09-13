@@ -1,0 +1,9 @@
+**/node_modules
+**/.next
+**/*.db*
+.git
+apps/android
+scripts
+.claude
+.env
+.env.*
