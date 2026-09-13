@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Low-latency Wi-Fi lock while the kiosk is visible (the Echo's Wi-Fi power save adds 100-400 ms latency). -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <!-- Read /sdcard/showrunner/config.json. Granted via adb appops (see docs/device-setup.md). -->
     <uses-permission
         android:name="android.permission.MANAGE_EXTERNAL_STORAGE"

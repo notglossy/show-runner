@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.net.wifi.WifiManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -49,6 +50,7 @@ class MainActivity : android.app.Activity() {
     private lateinit var overlay: View
     private lateinit var overlayBody: TextView
     private var webView: WebView? = null
+    private var wifiLock: WifiManager.WifiLock? = null
 
     private var state = State.CONNECTING
     @Volatile private var kioskMode = KioskMode.Mode.IMMERSIVE
@@ -95,10 +97,12 @@ class MainActivity : android.app.Activity() {
     override fun onResume() {
         super.onResume()
         kioskMode = KioskMode.apply(this)
+        acquireWifiLock()
         webView?.onResume()
     }
 
     override fun onPause() {
+        wifiLock?.takeIf { it.isHeld }?.release()
         webView?.onPause()
         super.onPause()
     }
@@ -120,6 +124,15 @@ class MainActivity : android.app.Activity() {
         io.shutdownNow()
         webView?.destroy()
         super.onDestroy()
+    }
+
+    /** Keeps Wi-Fi out of power save while the kiosk is in the foreground. */
+    private fun acquireWifiLock() {
+        val lock = wifiLock ?: applicationContext.getSystemService(WifiManager::class.java)
+            ?.createWifiLock(WifiManager.WIFI_MODE_FULL_LOW_LATENCY, "ShowRunner:kiosk")
+            ?.apply { setReferenceCounted(false) }
+            ?.also { wifiLock = it }
+        if (lock != null && !lock.isHeld) runCatching { lock.acquire() }.onFailure { Log.w(TAG, "Wi-Fi lock failed", it) }
     }
 
     // ---- session -----------------------------------------------------------------
