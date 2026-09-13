@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { describe, expect, it } from "vitest";
-import { registerDevice } from "@/lib/devices/service";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { PREVIOUS_TOKEN_GRACE_MS, registerDevice } from "@/lib/devices/service";
 import { ADMIN_SESSION_MS, createAdminSession, isAdminRequest, verifyAdminSession } from "./admin";
 import { randomPairingCode, safeEqual } from "./crypto";
 import { requireDevice, requireDeviceOrAdmin, requireSharedSecret } from "./device";
@@ -49,14 +49,29 @@ describe("device auth", () => {
     expect(() => requireDeviceOrAdmin(req({ cookie: `showrunner_device=${b.device.id}.${a.token}` }), b.device.id)).toThrow();
   });
 
-  it("invalidates the old token when the device re-registers", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("keeps the previous token valid for a grace period after re-registration, then rejects it", () => {
+    vi.useFakeTimers();
+    const reRegister = (id: string) =>
+      registerDevice({ deviceId: id, model: "m", androidVersion: "11", appVersion: "1", screenWidth: 1280, screenHeight: 800 }, null);
     const first = register();
-    const again = registerDevice(
-      { deviceId: first.device.id, model: "m", androidVersion: "11", appVersion: "1", screenWidth: 1280, screenHeight: 800 },
-      null,
-    );
-    expect(() => requireDevice(req({ authorization: `Bearer ${first.token}` }), first.device.id)).toThrow();
-    expect(requireDevice(req({ authorization: `Bearer ${again.token}` }), first.device.id).id).toBe(first.device.id);
+    const second = reRegister(first.device.id);
+    const bearer = (t: string) => req({ authorization: `Bearer ${t}` });
+
+    // A silently retried registration: the device may hold either token.
+    expect(requireDevice(bearer(first.token), first.device.id).id).toBe(first.device.id);
+    expect(requireDevice(bearer(second.token), first.device.id).id).toBe(first.device.id);
+
+    vi.advanceTimersByTime(PREVIOUS_TOKEN_GRACE_MS + 1);
+    expect(() => requireDevice(bearer(first.token), first.device.id)).toThrow();
+    expect(requireDevice(bearer(second.token), first.device.id).id).toBe(first.device.id);
+
+    // Only one previous token is honoured: after another rotation the first token is gone for good.
+    const third = reRegister(first.device.id);
+    expect(() => requireDevice(bearer(first.token), first.device.id)).toThrow();
+    expect(requireDevice(bearer(second.token), first.device.id).id).toBe(first.device.id);
+    expect(requireDevice(bearer(third.token), first.device.id).id).toBe(first.device.id);
   });
 
   it("lets admins view any device but not act as one; hides unknown devices from non-admins", () => {

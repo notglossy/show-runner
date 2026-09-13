@@ -40,8 +40,11 @@ export type Viewer = { kind: "device"; device: Device } | { kind: "admin"; devic
 export function requireDeviceOrAdmin(req: Request, deviceId: string): Viewer {
   const device = getDb().select().from(devices).where(eq(devices.id, deviceId)).get();
   if (device) {
+    const previousValid = device.previousTokenHash && (device.previousTokenExpiresAt?.getTime() ?? 0) > Date.now();
     for (const token of presentedTokens(req, deviceId)) {
-      if (safeEqual(sha256(token), device.tokenHash)) return { kind: "device", device };
+      const hash = sha256(token);
+      if (safeEqual(hash, device.tokenHash)) return { kind: "device", device };
+      if (previousValid && safeEqual(hash, device.previousTokenHash!)) return { kind: "device", device };
     }
   }
   if (isAdminRequest(req)) {

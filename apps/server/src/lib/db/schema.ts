@@ -69,6 +69,12 @@ export const devices = sqliteTable(
     claimedAt: integer("claimed_at", { mode: "timestamp_ms" }),
     /** SHA-256 of the current device token. Rotated on every registration. */
     tokenHash: text("token_hash").notNull(),
+    /**
+     * The token before the last rotation stays valid until this time, so a registration that was
+     * silently retried by the device's HTTP stack (two tokens issued) doesn't lock the device out.
+     */
+    previousTokenHash: text("previous_token_hash"),
+    previousTokenExpiresAt: integer("previous_token_expires_at", { mode: "timestamp_ms" }),
     model: text("model").notNull(),
     androidVersion: text("android_version").notNull(),
     appVersion: text("app_version").notNull(),

@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+# Build the ShowRunner kiosk APK and install/configure it on a device over adb.
+#
+#   scripts/install.sh [options]
+#
+#   --server URL       write /sdcard/showrunner/config.json with this server URL (needs --secret)
+#   --secret SECRET    DEVICE_SHARED_SECRET for the config file
+#   --device-owner     make the app device owner (lock task kiosk). Requires zero accounts on the device.
+#   --launcher         build with the HOME intent filter enabled (-PshowrunnerLauncher=true)
+#   --no-build         install the existing debug APK without rebuilding
+#   --serial S         adb target (default: $ANDROID_SERIAL or 192.168.1.203:5555)
+#
+# Everything this script does on the device is also written out in docs/device-setup.md.
+set -euo pipefail
+
+PKG=com.notglossy.showrunner
+ACTIVITY=$PKG/.MainActivity
+ADMIN=$PKG/.KioskDeviceAdminReceiver
+CONFIG_PATH=/sdcard/showrunner/config.json
+
+server=""
+secret=""
+device_owner=false
+launcher=false
+build=true
+serial=${ANDROID_SERIAL:-192.168.1.203:5555}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --server) server=$2; shift 2 ;;
+    --secret) secret=$2; shift 2 ;;
+    --device-owner) device_owner=true; shift ;;
+    --launcher) launcher=true; shift ;;
+    --no-build) build=false; shift ;;
+    --serial) serial=$2; shift 2 ;;
+    -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
+    *) echo "install: unknown option $1" >&2; exit 2 ;;
+  esac
+done
+
+if [[ -n "$server" && -z "$secret" ]] || [[ -z "$server" && -n "$secret" ]]; then
+  echo "install: --server and --secret must be given together" >&2
+  exit 2
+fi
+
+repo_root=$(cd "$(dirname "$0")/.." && pwd)
+android_dir=$repo_root/apps/android
+apk=$android_dir/app/build/outputs/apk/debug/app-debug.apk
+
+sdk=${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}
+adb_bin=$(command -v adb || true)
+[[ -z "$adb_bin" && -x "$sdk/platform-tools/adb" ]] && adb_bin=$sdk/platform-tools/adb
+[[ -n "$adb_bin" ]] || { echo "install: adb not found (install platform-tools or set ANDROID_HOME)" >&2; exit 2; }
+adb() { "$adb_bin" -s "$serial" "$@"; }
+step() { printf '\n==> %s\n' "$*"; }
+
+if $build; then
+  step "Building debug APK (launcher=$launcher)"
+  if [[ -z "${JAVA_HOME:-}" ]]; then
+    studio_jbr="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+    [[ -d "$studio_jbr" ]] && export JAVA_HOME=$studio_jbr
+  fi
+  (cd "$android_dir" && ./gradlew assembleDebug --console=plain -q "-PshowrunnerLauncher=$launcher")
+fi
+[[ -f "$apk" ]] || { echo "install: $apk not found; run without --no-build" >&2; exit 1; }
+
+if [[ "$serial" == *:* ]]; then
+  step "Connecting to $serial"
+  "$adb_bin" connect "$serial" >/dev/null || true
+fi
+state=$("$adb_bin" -s "$serial" get-state 2>/dev/null || true)
+[[ "$state" == device ]] || { echo "install: $serial is '${state:-unreachable}'. Wake the device and accept the debugging prompt." >&2; exit 1; }
+
+step "Installing $(basename "$apk")"
+# -r keep data, -t allow testOnly (debug builds are testOnly so device owner stays removable)
+adb install -r -t "$apk"
+
+step "Granting app ops"
+adb shell appops set $PKG MANAGE_EXTERNAL_STORAGE allow   # read /sdcard/showrunner/config.json
+adb shell appops set $PKG SYSTEM_ALERT_WINDOW allow       # start on boot when not device owner
+
+if [[ -n "$server" ]]; then
+  step "Writing $CONFIG_PATH"
+  tmp=$(mktemp -t showrunner-config.XXXXXX)
+  trap 'rm -f "$tmp"' EXIT
+  python3 -c 'import json,sys; print(json.dumps({"serverUrl": sys.argv[1], "sharedSecret": sys.argv[2]}, indent=2))' "$server" "$secret" >"$tmp"
+  adb shell mkdir -p "$(dirname $CONFIG_PATH)"
+  adb push "$tmp" "$CONFIG_PATH" >/dev/null
+fi
+
+if $device_owner; then
+  step "Setting device owner"
+  if adb shell dumpsys device_policy | grep -q "Device Owner"; then
+    echo "already has a device owner:"
+    adb shell dumpsys device_policy | grep -A2 "Device Owner" | sed 's/^/  /'
+  else
+    accounts=$(adb shell dumpsys account | sed -n 's/^ *Accounts: \([0-9]*\).*/\1/p' | head -1)
+    if [[ "${accounts:-0}" != "0" ]]; then
+      echo "install: device has $accounts account(s); remove them before setting device owner" >&2
+      exit 1
+    fi
+    adb shell dpm set-device-owner "$ADMIN"
+  fi
+fi
+
+step "Launching"
+adb shell am start -n "$ACTIVITY" >/dev/null
+sleep 2
+
+step "Done"
+echo "Device ID: $(adb shell run-as $PKG cat shared_prefs/showrunner_device.xml 2>/dev/null | sed -n 's/.*name="deviceId">\([^<]*\)<.*/\1/p')"
+echo "Logs:      $adb_bin -s $serial logcat -s ShowRunner ShowRunner.Web ShowRunner.Kiosk ShowRunner.Config"
