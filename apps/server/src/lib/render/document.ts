@@ -7,7 +7,11 @@ export const RUNTIME_VERSION = Date.now().toString(36);
 export interface KioskBoot {
   deviceId: string;
   screenId: string | null;
-  viewer: "device" | "admin";
+  /**
+   * device: the kiosk itself. admin: owner viewing /device/:id in a browser.
+   * preview: dashboard editor iframe; no network (data arrives via postMessage).
+   */
+  viewer: "device" | "admin" | "preview";
   refreshSeconds: number;
   serverTime: number;
   urls: { page: string; data: string; events: string; log: string };

@@ -14,6 +14,8 @@ export interface WeatherData {
   /** Set when the last fetch failed and no earlier data exists. */
   error: string | null;
   fetchedAt: string | null;
+  /** Where the forecast is for. `name` is the label set in dashboard settings (may be null). */
+  location: { name: string | null; latitude: number; longitude: number };
   units: { temperature: "°F" | "°C"; windSpeed: "mph" | "km/h"; precipitation: "in" | "mm" };
   current:
     | (WeatherCondition & {
@@ -99,6 +101,10 @@ export type OpenMeteoResponse = z.infer<typeof OpenMeteoResponse>;
 const CARDINALS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 export const cardinal = (degrees: number) => CARDINALS[Math.round((((degrees % 360) + 360) % 360) / 45) % 8]!;
 
+function locationFor(config: ProviderContext["config"]): WeatherData["location"] {
+  return { name: config.WEATHER_LOCATION_NAME, latitude: config.WEATHER_LAT, longitude: config.WEATHER_LON };
+}
+
 function unitsFor(system: "imperial" | "metric"): WeatherData["units"] {
   return system === "imperial"
     ? { temperature: "°F", windSpeed: "mph", precipitation: "in" }
@@ -172,6 +178,7 @@ export function toWeatherData(raw: OpenMeteoResponse, ctx: Pick<ProviderContext,
     available: true,
     error: null,
     fetchedAt: ctx.now.toISOString(),
+    location: locationFor(ctx.config),
     units: unitsFor(ctx.config.WEATHER_UNITS),
     current: {
       temperature: round(c.temperature_2m),
@@ -214,6 +221,7 @@ export const weatherProvider: DataProvider<"weather", WeatherData> = {
       available: false,
       error: error instanceof Error ? error.message : String(error),
       fetchedAt: null,
+      location: locationFor(config),
       units: unitsFor(config.WEATHER_UNITS),
       current: null,
       today: null,

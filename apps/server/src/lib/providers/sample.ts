@@ -1,4 +1,4 @@
-import type { Env } from "@/lib/env";
+import type { ProviderConfig } from "./types";
 import fixture from "./__fixtures__/open-meteo-la.json";
 import type { KioskDataPayload } from "./payload";
 import { toWeatherData, type OpenMeteoResponse } from "./weather";
@@ -37,7 +37,8 @@ export function samplePayload(): BrowserKioskData {
     WEATHER_UNITS: "imperial",
     WEATHER_LAT: 34.0522,
     WEATHER_LON: -118.2437,
-  } as Env;
+    WEATHER_LOCATION_NAME: "Los Angeles, California",
+  } as ProviderConfig;
   return {
     generatedAt: now.toISOString(),
     screen: { id: "sample", name: "Sample" },

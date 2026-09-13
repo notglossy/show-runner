@@ -1,5 +1,5 @@
 import type { Device, Screen } from "@/lib/db/schema";
-import { env } from "@/lib/env";
+import { effectiveConfig } from "@/lib/settings/service";
 import { resolveProvider } from "./cache";
 import { providers, type ProviderData } from "./registry";
 import type { DataProvider } from "./types";
@@ -11,7 +11,7 @@ export type KioskDataPayload = ProviderData & {
 };
 
 export async function buildDataPayload(device: Device, screen: Pick<Screen, "id" | "name"> | null): Promise<KioskDataPayload> {
-  const ctx = { device, config: env(), now: new Date() };
+  const ctx = { device, config: effectiveConfig(), now: new Date() };
   const values = await Promise.all(
     providers.map(async (p) => [p.key, await resolveProvider(p as DataProvider<string, unknown>, ctx)] as const),
   );

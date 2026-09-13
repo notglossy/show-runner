@@ -15,6 +15,13 @@
       "when": 1789340059296,
       "tag": "0001_previous_token_grace",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789342098354,
+      "tag": "0002_settings",
+      "breakpoints": true
     }
   ]
 }

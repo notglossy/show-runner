@@ -124,6 +124,15 @@ export const deviceLogs = sqliteTable(
   (t) => [index("device_logs_device_created").on(t.deviceId, t.createdAt)],
 );
 
+/** Dashboard settings stored as JSON documents by key (currently just "overrides"). */
+export const settings = sqliteTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value", { mode: "json" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
 export type Screen = typeof screens.$inferSelect;
 export type Playlist = typeof playlists.$inferSelect;
 export type PlaylistItem = typeof playlistItems.$inferSelect;

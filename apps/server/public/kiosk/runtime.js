@@ -6,7 +6,7 @@
   /**
    * @typedef {{ type: string, screenId?: string | null, serverTime?: number }} KioskMessage
    * @typedef {{
-   *   deviceId: string, screenId: string | null, viewer: "device" | "admin",
+   *   deviceId: string, screenId: string | null, viewer: "device" | "admin" | "preview",
    *   refreshSeconds: number, serverTime: number,
    *   urls: { page: string, data: string, events: string, log: string },
    *   data: any
@@ -183,6 +183,7 @@
   let failures = 0;
 
   async function refresh() {
+    if (boot.viewer === "preview") return; // data is pushed by the editor
     clearTimeout(refreshTimer);
     const started = Date.now();
     try {
@@ -349,6 +350,21 @@
   });
   Object.defineProperty(window, "kiosk", { value: kiosk, writable: false, configurable: false });
 
+  // ---- preview mode ---------------------------------------------------------
+  // The dashboard editor renders screens in a sandboxed iframe with no network access to the API.
+  // It pushes kiosk.data with: iframe.contentWindow.postMessage({ type: "kiosk:data", data }, "*")
+
+  function listenForPreviewData() {
+    window.addEventListener("message", (event) => {
+      if (event.source !== window.parent || event.data?.type !== "kiosk:data" || !event.data.data) return;
+      data = event.data.data;
+      if (data.time?.epochMs) clockOffsetMs = data.time.epochMs - Date.now();
+      deriveTime();
+      applyBindings();
+      emit("data", data);
+    });
+  }
+
   // ---- start -----------------------------------------------------------------
 
   deriveTime();
@@ -359,6 +375,10 @@
     emit("data", data);
     emit("tick", data.time);
     scheduleTick();
+    if (boot.viewer === "preview") {
+      listenForPreviewData();
+      return;
+    }
     refreshTimer = setTimeout(refresh, Math.max(5, boot.refreshSeconds) * 1000);
     connect();
   }

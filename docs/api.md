@@ -95,6 +95,10 @@ The last 1000 lines per device are kept.
 | `GET /api/playlists/:id` | | `{ playlist }` with ordered `items` |
 | `PATCH /api/playlists/:id` | `{ name?, items? }` (`items` replaces the list) | `{ playlist }`; rotation re-syncs |
 | `DELETE /api/playlists/:id` | | 204; devices using it become unassigned |
+| `GET /api/settings` | | `{ effective, defaults, overrides }` (weather location/units/name, timezone) |
+| `PATCH /api/settings` | any of `weatherLatitude, weatherLongitude, weatherUnits, weatherLocationName, timezone` (`null` clears) | same as GET; connected devices refresh data |
+| `GET /api/settings/geocode` | `?q=paris` | `{ results: [{ label, latitude, longitude, timezone }] }` (Open-Meteo geocoding) |
+| `GET /api/preview/data` | | live `kiosk.data` for a placeholder device (editor preview) |
 
 `DeviceView` fields: `id, name, claimed, claimedAt, pairingCode, model, androidVersion, appVersion,
 screenWidth, screenHeight, assignment, currentScreenId, playlistPosition, online` (heartbeat within
