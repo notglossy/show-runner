@@ -121,3 +121,34 @@ export const UpdatePlaylistRequestSchema = z
   .refine((obj) => Object.keys(obj).length > 0, {
     message: "At least one field is required",
   });
+
+export const UpdateSettingsRequestSchema = z
+  .object({
+    weatherLatitude: z.number().min(-90).max(90).nullable().optional(),
+    weatherLongitude: z.number().min(-180).max(180).nullable().optional(),
+    weatherUnits: z.enum(["imperial", "metric"]).nullable().optional(),
+    weatherLocationName: z.string().trim().min(1).max(100).nullable().optional(),
+    timezone: z
+      .string()
+      .min(1)
+      .refine(
+        (tz) => {
+          try {
+            new Intl.DateTimeFormat("en-US", { timeZone: tz });
+            return true;
+          } catch {
+            return false;
+          }
+        },
+        "Invalid IANA timezone",
+      )
+      .nullable()
+      .optional(),
+  })
+  .refine((obj) => Object.keys(obj).length > 0, {
+    message: "At least one field is required",
+  });
+
+export const GeocodeQuerySchema = z.object({
+  q: z.string().trim().min(2).max(100),
+});
