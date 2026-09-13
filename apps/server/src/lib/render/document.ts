@@ -45,9 +45,9 @@ export function renderKioskDocument({ title, body, boot }: { title: string; body
 <html lang="en" data-viewer="${boot.viewer}">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=1280, initial-scale=1, user-scalable=no">
+<meta name="viewport" content="width=1280, user-scalable=no">
 <meta name="color-scheme" content="dark">
-<title>${escapeHtml(title)} · ShowKiosk</title>
+<title>${escapeHtml(title)} · ShowRunner</title>
 <style>${BASE_CSS}</style>
 <script>window.__KIOSK_BOOT__=${jsonForScript(boot)};</script>
 <script src="/kiosk/runtime.js?v=${RUNTIME_VERSION}"></script>
@@ -61,8 +61,8 @@ ${body}
 /** Minimal page without the runtime, for requests that can't be served a screen. */
 export function renderPlainPage(title: string, message: string): string {
   return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=1280, initial-scale=1">
-<meta name="color-scheme" content="dark"><title>${escapeHtml(title)} · ShowKiosk</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=1280, user-scalable=no">
+<meta name="color-scheme" content="dark"><title>${escapeHtml(title)} · ShowRunner</title>
 <style>${BASE_CSS}body{display:grid;place-items:center;font:500 32px/1.4 system-ui,sans-serif;text-align:center}
 h1{font-size:56px;margin:0 0 16px}p{color:#aaa;margin:0}</style></head>
 <body><main><h1>${escapeHtml(title)}</h1><p>${escapeHtml(message)}</p></main></body></html>`;

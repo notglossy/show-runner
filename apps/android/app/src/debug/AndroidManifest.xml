@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds are testOnly so device owner can be removed without a factory reset
+     (adb shell dpm remove-active-admin). Install with `adb install -t`. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:testOnly="true" />
+</manifest>

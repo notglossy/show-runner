@@ -12,7 +12,7 @@ export default async function Home() {
   const screens = listScreens();
   return (
     <main className="mx-auto max-w-3xl p-8">
-      <h1 className="text-2xl font-semibold">ShowKiosk</h1>
+      <h1 className="text-2xl font-semibold">ShowRunner</h1>
       <p className="mb-6 text-neutral-600">Dashboard coming in Phase 3. Use the API for now.</p>
       <h2 className="mb-2 font-semibold">Devices</h2>
       <ul className="mb-6 list-disc pl-6">

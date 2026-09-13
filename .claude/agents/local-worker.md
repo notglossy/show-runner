@@ -22,7 +22,7 @@ model through `scripts/delegate.sh` and report back what happened.
    - **Constraints:** anything the caller specified (style, no new dependencies, etc.).
    - **Acceptance:** what "done" means, in checkable terms.
    - A final line `CHECK: <shell command>` that verifies the result from the repo root
-     (e.g. `CHECK: pnpm --filter @showkiosk/server typecheck`, or
+     (e.g. `CHECK: pnpm --filter @showrunner/server typecheck`, or
      `CHECK: test -s docs/glossary.md && grep -c '^## ' docs/glossary.md`).
      Use the caller's check if one was given.
 3. Run: `scripts/delegate.sh <task-file>` (add a model argument only if the caller asked

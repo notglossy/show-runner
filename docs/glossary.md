@@ -1,6 +1,6 @@
 # Glossary
 
-Terms used across the ShowKiosk server, Android shell, and docs.
+Terms used across the ShowRunner server, Android shell, and docs.
 
 ## Binding
 

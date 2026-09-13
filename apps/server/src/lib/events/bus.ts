@@ -13,8 +13,8 @@ interface Subscriber {
   send: (event: KioskEvent) => void;
 }
 
-const globalForBus = globalThis as unknown as { __showkioskBus?: Map<string, Set<Subscriber>> };
-const channels = (globalForBus.__showkioskBus ??= new Map());
+const globalForBus = globalThis as unknown as { __showrunnerBus?: Map<string, Set<Subscriber>> };
+const channels = (globalForBus.__showrunnerBus ??= new Map());
 
 export function subscribe(deviceId: string, viewer: ViewerKind, send: Subscriber["send"]): () => void {
   const sub: Subscriber = { viewer, send };

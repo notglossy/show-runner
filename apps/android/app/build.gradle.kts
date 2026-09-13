@@ -2,6 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
+// Build with -PshowrunnerLauncher=true to let the app act as the device's Home screen.
+val launcherEnabled = (findProperty("showrunnerLauncher") as String?)?.toBoolean() ?: false
+
 android {
     namespace = "com.notglossy.showrunner"
     compileSdk = 37
@@ -12,6 +15,9 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+
+        manifestPlaceholders["launcherEnabled"] = launcherEnabled.toString()
+        buildConfigField("boolean", "LAUNCHER_ENABLED", launcherEnabled.toString())
     }
 
     buildTypes {

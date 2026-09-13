@@ -11,7 +11,7 @@ export type Db = BetterSQLite3Database<typeof schema>;
 export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 export type DbOrTx = Db | Tx;
 
-const globalForDb = globalThis as unknown as { __showkioskDb?: { db: Db; sqlite: Database.Database } };
+const globalForDb = globalThis as unknown as { __showrunnerDb?: { db: Db; sqlite: Database.Database } };
 
 function migrationsDir() {
   return process.env.MIGRATIONS_DIR ?? path.join(process.cwd(), "drizzle");
@@ -19,7 +19,7 @@ function migrationsDir() {
 
 /** Opens (and migrates) the SQLite database once per process. */
 export function getDb(): Db {
-  if (!globalForDb.__showkioskDb) {
+  if (!globalForDb.__showrunnerDb) {
     const file = env().DATABASE_PATH;
     if (file !== ":memory:") fs.mkdirSync(path.dirname(path.resolve(file)), { recursive: true });
     const sqlite = new Database(file);
@@ -28,13 +28,13 @@ export function getDb(): Db {
     sqlite.pragma("busy_timeout = 5000");
     const db = drizzle(sqlite, { schema });
     migrate(db, { migrationsFolder: migrationsDir() });
-    globalForDb.__showkioskDb = { db, sqlite };
+    globalForDb.__showrunnerDb = { db, sqlite };
   }
-  return globalForDb.__showkioskDb.db;
+  return globalForDb.__showrunnerDb.db;
 }
 
 /** For tests only. */
 export function closeDb() {
-  globalForDb.__showkioskDb?.sqlite.close();
-  globalForDb.__showkioskDb = undefined;
+  globalForDb.__showrunnerDb?.sqlite.close();
+  globalForDb.__showrunnerDb = undefined;
 }

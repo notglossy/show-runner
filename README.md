@@ -1,4 +1,4 @@
-# ShowKiosk (show-runner)
+# ShowRunner
 
 Self-hosted dashboard kiosk for a rooted Echo Show 8 running LineageOS. The Android app is a thin
 full-screen WebView; a Next.js server on your LAN decides what every screen shows.

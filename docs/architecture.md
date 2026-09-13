@@ -1,6 +1,6 @@
 # Architecture
 
-ShowKiosk has two moving parts: a **dumb Android WebView shell** on the Echo Show 8 and a
+ShowRunner has two moving parts: a **dumb Android WebView shell** on the Echo Show 8 and a
 **Next.js server** on the LAN that owns all state and decides what every device shows.
 
 ```
@@ -71,10 +71,10 @@ sequenceDiagram
   every WebView request (page, data, SSE, log) carries it; `EventSource` can't set headers. Details
   are in [`api.md`](api.md).
 - **Config over rebuilds.** Server config is env vars. Device config is
-  `/sdcard/showkiosk/config.json` or `am start` intent extras.
+  `/sdcard/showrunner/config.json` or `am start` intent extras.
 
 ## Deployment
 
 - Dev: `pnpm dev` on the Mac, or `docker compose up` (native arm64).
 - Prod: the home server (amd64) builds the same `apps/server/Dockerfile` via Komodo.
-  DB lives on the `showkiosk-data` named volume at `/data/showkiosk.db`.
+  DB lives on the `showrunner-data` named volume at `/data/showrunner.db`.

@@ -24,6 +24,8 @@ export const ONLINE_WINDOW_MS = 3 * HEARTBEAT_INTERVAL_SECONDS * 1000;
 /** Screen assigned automatically when a device is claimed. */
 export const DEFAULT_SCREEN_ID = "builtin-clock";
 export const MAX_LOGS_PER_DEVICE = 1000;
+/** How long the previous token keeps working after a re-registration. */
+export const PREVIOUS_TOKEN_GRACE_MS = 10 * 60_000;
 
 /** Device as returned by admin APIs (never includes the token hash). */
 export interface DeviceView {
@@ -134,7 +136,17 @@ export function registerDevice(input: RegisterDeviceRequest, ip: string | null):
       .get();
   } else {
     const pairingCode = existing.claimedAt ? null : (existing.pairingCode ?? uniquePairingCode());
-    device = db.update(devices).set({ ...meta, pairingCode }).where(eq(devices.id, existing.id)).returning().get();
+    device = db
+      .update(devices)
+      .set({
+        ...meta,
+        pairingCode,
+        previousTokenHash: existing.tokenHash,
+        previousTokenExpiresAt: new Date(now.getTime() + PREVIOUS_TOKEN_GRACE_MS),
+      })
+      .where(eq(devices.id, existing.id))
+      .returning()
+      .get();
   }
   return { device, token };
 }
@@ -264,8 +276,8 @@ export function currentScreenOf(device: Device): Screen | null {
 // ---- Logs --------------------------------------------------------------------
 
 const LOG_RATE_PER_MINUTE = 60;
-const globalForLogs = globalThis as unknown as { __showkioskLogRate?: Map<string, { windowStart: number; count: number }> };
-const logRate = (globalForLogs.__showkioskLogRate ??= new Map());
+const globalForLogs = globalThis as unknown as { __showrunnerLogRate?: Map<string, { windowStart: number; count: number }> };
+const logRate = (globalForLogs.__showrunnerLogRate ??= new Map());
 
 /** Stores a device log line. Returns false when rate-limited (the line is dropped). */
 export function appendLog(device: Device, input: DeviceLogRequest, userAgent: string | null): boolean {

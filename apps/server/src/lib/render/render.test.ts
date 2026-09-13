@@ -18,12 +18,14 @@ describe("renderKioskDocument", () => {
   it("wraps the fragment with base CSS, boot config, and the runtime before the body", () => {
     const html = renderKioskDocument({ title: "Clock", body: "<p data-bind=\"time.hhmm\"></p>", boot: boot() });
     expect(html.startsWith("<!doctype html>")).toBe(true);
-    expect(html).toContain('<meta name="viewport" content="width=1280');
+    // No initial-scale: on the Echo (961 dp wide) it would pin 1 CSS px = 1 dp and break the 1280 canvas.
+    expect(html).toContain('<meta name="viewport" content="width=1280, user-scalable=no">');
+    expect(html).not.toContain("initial-scale");
     expect(html).toContain('data-viewer="device"');
     expect(html.indexOf("__KIOSK_BOOT__")).toBeLessThan(html.indexOf("/kiosk/runtime.js"));
     expect(html.indexOf("/kiosk/runtime.js")).toBeLessThan(html.indexOf("<body"));
     expect(html).toContain('<p data-bind="time.hhmm"></p>');
-    expect(html).toContain("<title>Clock · ShowKiosk</title>");
+    expect(html).toContain("<title>Clock · ShowRunner</title>");
   });
 
   it("embeds boot JSON that cannot break out of the script tag", () => {
@@ -31,7 +33,7 @@ describe("renderKioskDocument", () => {
     const html = renderKioskDocument({ title: "<b>", body: "", boot: boot({ data }) });
     const script = html.slice(html.indexOf("window.__KIOSK_BOOT__="), html.indexOf(";</script>"));
     expect(script).not.toContain("</script>");
-    expect(html).toContain("<title>&lt;b&gt; · ShowKiosk</title>");
+    expect(html).toContain("<title>&lt;b&gt; · ShowRunner</title>");
     const parsed = JSON.parse(script.replace("window.__KIOSK_BOOT__=", ""));
     expect(parsed.data.screen.name).toBe("</script><script>alert(1)</script>");
   });

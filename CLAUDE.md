@@ -1,4 +1,4 @@
-# ShowKiosk
+# ShowRunner
 
 Self-hosted dashboard kiosk for a rooted Echo Show 8 (2nd gen) running LineageOS 18.1 / Android 11.
 A thin Android WebView shell displays whatever a Next.js server on the LAN tells it to.
@@ -50,6 +50,23 @@ public/kiosk/runtime.js          window.kiosk runtime (plain JS); its contract i
 instrumentation.ts -> lib/startup.ts   env check, migrate, seed, start scheduler
 ```
 
+## Android code map (`apps/android/app/src/main/java/com/notglossy/showrunner`)
+
+```
+MainActivity.kt           session state machine: SETUP / CONNECTING / SHOWING / RECONNECTING; WebView setup,
+                          register -> cookie -> load /device/:id, heartbeat loop + watchdog, overlay, setup screen
+KioskConfig.kt            ConfigStore: /sdcard/showrunner/config.json or am start extras (most recent wins)
+ServerClient.kt           HttpURLConnection + org.json client for register / heartbeat
+KioskMode.kt              device owner -> lock task, keyguard/status bar off, stay awake, persistent HOME; else immersive
+NativeBridge.kt           window.KioskNative (getDeviceInfo, get/setBrightness, reload): keep it small
+DeviceStatus.kt           heartbeat body (battery, wifi); DeviceIdentity.kt: UUID + device info
+BootReceiver.kt           BOOT_COMPLETED / MY_PACKAGE_REPLACED -> start activity
+KioskDeviceAdminReceiver.kt   device admin component for dpm set-device-owner
+```
+
+Device quirks and every adb step: `docs/device-setup.md`. Install with `scripts/install.sh` (prefer USB).
+Inspect the running page via WebView DevTools (debug builds), see the troubleshooting table there.
+
 Adding a data provider: new file in `lib/providers/`, add to `registry.ts`, document the fields in
 `docs/screen-authoring.md` §6, and extend `sample.ts`.
 
@@ -61,16 +78,16 @@ Adding a data provider: new file in `lib/providers/`, add to `registry.ts`, docu
 pnpm install
 pnpm dev                 # http://localhost:3000
 pnpm typecheck && pnpm lint && pnpm build
-pnpm --filter @showkiosk/server test        # vitest, in-memory SQLite
-pnpm --filter @showkiosk/server db:generate # after editing lib/db/schema.ts (commit the SQL)
+pnpm --filter @showrunner/server test        # vitest, in-memory SQLite
+pnpm --filter @showrunner/server db:generate # after editing lib/db/schema.ts (commit the SQL)
 
 cp .env.example .env     # set ADMIN_PASSWORD, DEVICE_SHARED_SECRET
-docker compose up --build -d   # http://localhost:${SHOWKIOSK_PORT:-3000}, health: /api/health
+docker compose up --build -d   # http://localhost:${SHOWRUNNER_PORT:-3000}, health: /api/health
 ```
 
 Config is env vars only: `ADMIN_PASSWORD`, `DEVICE_SHARED_SECRET`, `WEATHER_LAT`, `WEATHER_LON`,
 `WEATHER_UNITS` (imperial|metric), `KIOSK_TIMEZONE`, `ANTHROPIC_API_KEY` (Phase 4), `DATABASE_PATH`
-(image default `/data/showkiosk.db`). Prod host is amd64, built by Komodo from `apps/server/Dockerfile`
+(image default `/data/showrunner.db`). Prod host is amd64, built by Komodo from `apps/server/Dockerfile`
 with the repo root as the build context.
 
 ### Android
