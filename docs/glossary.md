@@ -50,6 +50,10 @@ The fallback full-screen mode that hides system bars when the app is not device 
 
 The small script the server injects into every rendered screen, which provides `window.kiosk`, listens for commands, and reports errors to `POST /api/devices/:id/log`.
 
+## Launcher flag
+
+A build flag that, when enabled, declares the HOME/launcher intent filter so the Android shell can act as the device's launcher. With it enabled, the shell is chosen once as the default Home app on the device.
+
 ## Lock task mode
 
 Android kiosk mode started with `startLockTask()` that suppresses the status bar, navigation bar, and recents.
@@ -81,3 +85,7 @@ The thin full-screen Android WebView app in `apps/android` that loads `GET /devi
 ## Template
 
 The HTML/CSS/JS source stored in a screen, which references live data through bindings and `kiosk.on('data', fn)`.
+
+## Watchdog
+
+Logic in the Android shell that retries with backoff when the WebView fails to load or no heartbeat acknowledgement has arrived for several minutes, and shows a full-screen "reconnecting" state that includes the server URL and device ID.
