@@ -24,10 +24,13 @@ RUN pnpm --filter @showkiosk/server build
 FROM node:${NODE_VERSION}-bookworm-slim AS runtime
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 HOSTNAME=0.0.0.0 \
-    DATABASE_PATH=/data/showkiosk.db
+    DATABASE_PATH=/data/showkiosk.db \
+    MIGRATIONS_DIR=/app/apps/server/drizzle
 WORKDIR /app
 COPY --from=build --chown=node:node /repo/apps/server/.next/standalone ./
 COPY --from=build --chown=node:node /repo/apps/server/.next/static ./apps/server/.next/static
+COPY --from=build --chown=node:node /repo/apps/server/public ./apps/server/public
+COPY --from=build --chown=node:node /repo/apps/server/drizzle ./apps/server/drizzle
 RUN mkdir -p /data && chown node:node /data
 USER node
 VOLUME ["/data"]
