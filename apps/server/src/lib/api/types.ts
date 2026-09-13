@@ -63,7 +63,7 @@ export interface DeviceLogRequest {
 // ---- Admin: devices --------------------------------------------------------
 
 export interface ClaimDeviceRequest {
-  /** 6 chars from the pairing alphabet; accepted case-insensitively and trimmed. */
+  /** 6 chars from the pairing alphabet A-H J K M N P-Z 2-9 (no I, L, O, 0, 1); case-insensitive, trimmed. */
   pairingCode: string;
   /** 1-100 chars, trimmed. */
   name: string;
@@ -71,8 +71,8 @@ export interface ClaimDeviceRequest {
 
 export type DeviceAssignment =
   | { type: "none" }
-  | { type: "screen"; screenId: string }
-  | { type: "playlist"; playlistId: string };
+  | { type: "screen"; /** 1-100 chars */ screenId: string }
+  | { type: "playlist"; /** 1-100 chars */ playlistId: string };
 
 export interface UpdateDeviceRequest {
   /** 1-100 chars, trimmed. */
@@ -83,7 +83,7 @@ export interface UpdateDeviceRequest {
 export type DeviceCommandRequest =
   | { type: "reload" }
   | { type: "refreshData" }
-  | { type: "navigate"; screenId: string };
+  | { type: "navigate"; /** 1-100 chars */ screenId: string };
 
 export interface DeviceLogsQuery {
   /** Integer 1-500, default 100. Parsed from a query string, so coerce. */
