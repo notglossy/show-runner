@@ -33,7 +33,7 @@ describe("weather", () => {
     expect(data.today?.sunrise).toMatch(/^\d{1,2}:\d{2}\s?AM$/);
     expect(data.today?.sunset).toMatch(/^\d{1,2}:\d{2}\s?PM$/);
     expect(data.hourly).toHaveLength(12);
-    expect(data.hourly[0]?.iso <= new Date(fixture.current.time * 1000).toISOString()).toBe(true);
+    expect(data.hourly[0]!.iso <= new Date(fixture.current.time * 1000).toISOString()).toBe(true);
     expect(data.hourly[0]?.hour).toMatch(/^\d{1,2}\s?(AM|PM)$/);
   });
 

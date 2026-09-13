@@ -7,6 +7,9 @@ import { env } from "@/lib/env";
 import * as schema from "./schema";
 
 export type Db = BetterSQLite3Database<typeof schema>;
+/** A transaction handle; helpers that should work inside or outside a transaction accept `DbOrTx`. */
+export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
+export type DbOrTx = Db | Tx;
 
 const globalForDb = globalThis as unknown as { __showkioskDb?: { db: Db; sqlite: Database.Database } };
 

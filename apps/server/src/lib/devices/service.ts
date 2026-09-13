@@ -1,0 +1,319 @@
+import { and, desc, eq, isNull, lt, sql } from "drizzle-orm";
+import { ApiError, notFound } from "@/lib/api/http";
+import type {
+  ClaimDeviceRequest,
+  DeviceAssignment,
+  DeviceCommandRequest,
+  DeviceLogRequest,
+  DeviceLogsQuery,
+  HeartbeatRequest,
+  RegisterDeviceRequest,
+  UpdateDeviceRequest,
+} from "@/lib/api/types";
+import { randomPairingCode, randomToken, sha256 } from "@/lib/auth/crypto";
+import { getDb } from "@/lib/db/client";
+import { deviceLogs, devices, playlists, type Device, type DeviceLog, type Screen } from "@/lib/db/schema";
+import { connectionCount, publish } from "@/lib/events/bus";
+import { playlistItemsFor } from "@/lib/playlists/queries";
+import { syncDevice } from "@/lib/playlists/scheduler";
+import { findScreen } from "@/lib/screens/service";
+
+export const HEARTBEAT_INTERVAL_SECONDS = 30;
+/** A device counts as online if its last heartbeat is newer than this. */
+export const ONLINE_WINDOW_MS = 3 * HEARTBEAT_INTERVAL_SECONDS * 1000;
+/** Screen assigned automatically when a device is claimed. */
+export const DEFAULT_SCREEN_ID = "builtin-clock";
+export const MAX_LOGS_PER_DEVICE = 1000;
+
+/** Device as returned by admin APIs (never includes the token hash). */
+export interface DeviceView {
+  id: string;
+  name: string | null;
+  claimed: boolean;
+  claimedAt: string | null;
+  pairingCode: string | null;
+  model: string;
+  androidVersion: string;
+  appVersion: string;
+  screenWidth: number;
+  screenHeight: number;
+  assignment: DeviceAssignment;
+  currentScreenId: string | null;
+  playlistPosition: number;
+  online: boolean;
+  /** Open SSE connections from the device itself. */
+  connected: boolean;
+  lastSeenAt: string | null;
+  lastIp: string | null;
+  status: Device["status"];
+  registeredAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function assignmentOf(d: Device): DeviceAssignment {
+  if (d.assignmentType === "screen" && d.screenId) return { type: "screen", screenId: d.screenId };
+  if (d.assignmentType === "playlist" && d.playlistId) return { type: "playlist", playlistId: d.playlistId };
+  return { type: "none" };
+}
+
+export function toDeviceView(d: Device, now = Date.now()): DeviceView {
+  return {
+    id: d.id,
+    name: d.name,
+    claimed: d.claimedAt !== null,
+    claimedAt: d.claimedAt?.toISOString() ?? null,
+    pairingCode: d.pairingCode,
+    model: d.model,
+    androidVersion: d.androidVersion,
+    appVersion: d.appVersion,
+    screenWidth: d.screenWidth,
+    screenHeight: d.screenHeight,
+    assignment: assignmentOf(d),
+    currentScreenId: d.currentScreenId,
+    playlistPosition: d.playlistPosition,
+    online: d.lastSeenAt !== null && now - d.lastSeenAt.getTime() < ONLINE_WINDOW_MS,
+    connected: connectionCount(d.id, "device") > 0,
+    lastSeenAt: d.lastSeenAt?.toISOString() ?? null,
+    lastIp: d.lastIp,
+    status: d.status,
+    registeredAt: d.registeredAt.toISOString(),
+    createdAt: d.createdAt.toISOString(),
+    updatedAt: d.updatedAt.toISOString(),
+  };
+}
+
+export function listDevices(): Device[] {
+  return getDb().select().from(devices).orderBy(desc(devices.lastSeenAt)).all();
+}
+
+export function findDevice(id: string): Device | undefined {
+  return getDb().select().from(devices).where(eq(devices.id, id)).get();
+}
+
+export function getDeviceOr404(id: string): Device {
+  const device = findDevice(id);
+  if (!device) throw notFound("Device");
+  return device;
+}
+
+function uniquePairingCode(): string {
+  const db = getDb();
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const code = randomPairingCode();
+    if (!db.select({ id: devices.id }).from(devices).where(eq(devices.pairingCode, code)).get()) return code;
+  }
+  throw new Error("Could not allocate a unique pairing code");
+}
+
+/**
+ * Creates or refreshes a device record and issues a fresh token (the previous token stops working).
+ * Unclaimed devices keep their pairing code across re-registrations.
+ */
+export function registerDevice(input: RegisterDeviceRequest, ip: string | null): { device: Device; token: string } {
+  const db = getDb();
+  const token = randomToken();
+  const now = new Date();
+  const meta = {
+    model: input.model,
+    androidVersion: input.androidVersion,
+    appVersion: input.appVersion,
+    screenWidth: input.screenWidth,
+    screenHeight: input.screenHeight,
+    tokenHash: sha256(token),
+    registeredAt: now,
+    lastIp: ip,
+  };
+  const existing = findDevice(input.deviceId);
+  let device: Device;
+  if (!existing) {
+    device = db
+      .insert(devices)
+      .values({ id: input.deviceId, pairingCode: uniquePairingCode(), ...meta })
+      .returning()
+      .get();
+  } else {
+    const pairingCode = existing.claimedAt ? null : (existing.pairingCode ?? uniquePairingCode());
+    device = db.update(devices).set({ ...meta, pairingCode }).where(eq(devices.id, existing.id)).returning().get();
+  }
+  return { device, token };
+}
+
+export function recordHeartbeat(device: Device, input: HeartbeatRequest, ip: string | null): Device {
+  const status: Device["status"] = {
+    battery: input.battery ?? null,
+    wifi: input.wifi ?? null,
+    currentUrl: input.currentUrl ?? null,
+    uptimeSeconds: input.uptimeSeconds ?? null,
+    appVersion: device.appVersion,
+  };
+  return getDb()
+    .update(devices)
+    .set({ status, lastSeenAt: new Date(), lastIp: ip })
+    .where(eq(devices.id, device.id))
+    .returning()
+    .get();
+}
+
+export function claimDevice(input: ClaimDeviceRequest): Device {
+  const db = getDb();
+  const device = db
+    .select()
+    .from(devices)
+    .where(and(eq(devices.pairingCode, input.pairingCode), isNull(devices.claimedAt)))
+    .get();
+  if (!device) throw notFound("Unclaimed device with that pairing code");
+  db.update(devices)
+    .set({ name: input.name, claimedAt: new Date(), pairingCode: null })
+    .where(eq(devices.id, device.id))
+    .run();
+  if (device.assignmentType === "none" && findScreen(DEFAULT_SCREEN_ID)) {
+    return applyAssignment(device.id, { type: "screen", screenId: DEFAULT_SCREEN_ID });
+  }
+  publish(device.id, { type: "reload" });
+  return getDeviceOr404(device.id);
+}
+
+function requireClaimed(device: Device) {
+  if (!device.claimedAt) throw new ApiError(409, "conflict", "Device must be claimed first");
+}
+
+export function updateDevice(id: string, input: UpdateDeviceRequest): Device {
+  const device = getDeviceOr404(id);
+  if (input.name !== undefined) {
+    getDb().update(devices).set({ name: input.name }).where(eq(devices.id, id)).run();
+  }
+  if (input.assignment) {
+    requireClaimed(device);
+    return applyAssignment(id, input.assignment);
+  }
+  return getDeviceOr404(id);
+}
+
+/** Sets what a device should show, updates rotation, and tells the device to navigate. */
+export function applyAssignment(id: string, assignment: DeviceAssignment): Device {
+  const db = getDb();
+  switch (assignment.type) {
+    case "none":
+      db.update(devices)
+        .set({ assignmentType: "none", screenId: null, playlistId: null, currentScreenId: null, playlistPosition: 0 })
+        .where(eq(devices.id, id))
+        .run();
+      break;
+    case "screen":
+      if (!findScreen(assignment.screenId)) throw notFound("Screen");
+      db.update(devices)
+        .set({
+          assignmentType: "screen",
+          screenId: assignment.screenId,
+          playlistId: null,
+          currentScreenId: assignment.screenId,
+          playlistPosition: 0,
+        })
+        .where(eq(devices.id, id))
+        .run();
+      break;
+    case "playlist": {
+      if (!db.select({ id: playlists.id }).from(playlists).where(eq(playlists.id, assignment.playlistId)).get()) {
+        throw notFound("Playlist");
+      }
+      const first = playlistItemsFor(assignment.playlistId)[0];
+      db.update(devices)
+        .set({
+          assignmentType: "playlist",
+          screenId: null,
+          playlistId: assignment.playlistId,
+          currentScreenId: first?.screenId ?? null,
+          playlistPosition: 0,
+        })
+        .where(eq(devices.id, id))
+        .run();
+      break;
+    }
+  }
+  const device = getDeviceOr404(id);
+  syncDevice(id);
+  publish(id, { type: "navigate", screenId: device.currentScreenId });
+  return getDeviceOr404(id);
+}
+
+export function sendCommand(device: Device, command: DeviceCommandRequest): { delivered: number } {
+  if (command.type === "navigate") {
+    requireClaimed(device);
+    if (!findScreen(command.screenId)) throw notFound("Screen");
+    getDb().update(devices).set({ currentScreenId: command.screenId }).where(eq(devices.id, device.id)).run();
+    // Restart the dwell timer so the manually chosen screen gets a full slot.
+    if (device.assignmentType === "playlist") syncDevice(device.id, { holdCurrentScreen: true });
+    return { delivered: publish(device.id, { type: "navigate", screenId: command.screenId }) };
+  }
+  return { delivered: publish(device.id, command) };
+}
+
+export function deleteDevice(id: string): void {
+  getDeviceOr404(id);
+  getDb().delete(devices).where(eq(devices.id, id)).run();
+  syncDevice(id);
+  publish(id, { type: "reload" });
+}
+
+/** The screen the device should render right now, if any. */
+export function currentScreenOf(device: Device): Screen | null {
+  return device.currentScreenId ? (findScreen(device.currentScreenId) ?? null) : null;
+}
+
+// ---- Logs --------------------------------------------------------------------
+
+const LOG_RATE_PER_MINUTE = 60;
+const globalForLogs = globalThis as unknown as { __showkioskLogRate?: Map<string, { windowStart: number; count: number }> };
+const logRate = (globalForLogs.__showkioskLogRate ??= new Map());
+
+/** Stores a device log line. Returns false when rate-limited (the line is dropped). */
+export function appendLog(device: Device, input: DeviceLogRequest, userAgent: string | null): boolean {
+  const now = Date.now();
+  const bucket = logRate.get(device.id);
+  if (!bucket || now - bucket.windowStart > 60_000) {
+    logRate.set(device.id, { windowStart: now, count: 1 });
+  } else if (++bucket.count > LOG_RATE_PER_MINUTE) {
+    return false;
+  }
+  const db = getDb();
+  db.insert(deviceLogs)
+    .values({
+      deviceId: device.id,
+      level: input.level ?? "error",
+      message: input.message,
+      context: {
+        source: input.source ?? null,
+        line: input.line ?? null,
+        column: input.column ?? null,
+        stack: input.stack ?? null,
+        url: input.url ?? null,
+        screenId: input.screenId ?? null,
+        userAgent,
+      },
+    })
+    .run();
+  db.run(sql`
+    DELETE FROM ${deviceLogs}
+    WHERE ${deviceLogs.deviceId} = ${device.id}
+      AND ${deviceLogs.id} <= (
+        SELECT ${deviceLogs.id} FROM ${deviceLogs}
+        WHERE ${deviceLogs.deviceId} = ${device.id}
+        ORDER BY ${deviceLogs.id} DESC LIMIT 1 OFFSET ${MAX_LOGS_PER_DEVICE}
+      )`);
+  return true;
+}
+
+export function listLogs(deviceId: string, query: DeviceLogsQuery): DeviceLog[] {
+  return getDb()
+    .select()
+    .from(deviceLogs)
+    .where(
+      query.before === undefined
+        ? eq(deviceLogs.deviceId, deviceId)
+        : and(eq(deviceLogs.deviceId, deviceId), lt(deviceLogs.id, query.before)),
+    )
+    .orderBy(desc(deviceLogs.id))
+    .limit(query.limit)
+    .all();
+}
