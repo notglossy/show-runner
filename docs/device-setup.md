@@ -101,6 +101,9 @@ Logs: `adb logcat -s ShowRunner ShowRunner.Web ShowRunner.Kiosk ShowRunner.Confi
 Without config the app shows a setup screen (device ID, kiosk mode, both options below) and checks
 again every 5 seconds, so pushing a config file is enough; no restart needed.
 
+A **running** app (already showing a screen) only reads `config.json` when it starts. To point it at a
+different server, use option 2, which applies immediately, or push the file and `adb reboot`.
+
 **Option 1: config file** (needs the `MANAGE_EXTERNAL_STORAGE` app op from step 2):
 
 ```json
@@ -119,6 +122,10 @@ adb shell am start -n com.notglossy.showrunner/.MainActivity \
   --es serverUrl http://192.168.1.34:3000 --es sharedSecret <DEVICE_SHARED_SECRET>
 ```
 
+Option 2 is the way to **change servers on a locked kiosk**: the running app saves the values,
+re-registers, and loads the new server within a second, without leaving lock task mode. Keep the
+secret out of your shell history, for example `--es sharedSecret "$(grep '^DEVICE_SHARED_SECRET=' .env | cut -d= -f2-)"`.
+
 If both exist, whichever was written most recently wins. `serverUrl` must be `http://` or
 `https://` (a trailing slash is ignored). Use HTTPS once the server is behind a TLS proxy; plain
 HTTP is currently allowed by `res/xml/network_security_config.xml`.
@@ -129,8 +136,12 @@ Requires **zero accounts** on the device (`adb shell dumpsys account | head` →
 
 ```sh
 adb shell dpm set-device-owner com.notglossy.showrunner/.KioskDeviceAdminReceiver
-adb shell am force-stop com.notglossy.showrunner && adb shell am start -n com.notglossy.showrunner/.MainActivity
+adb reboot    # the app starts locked after boot (~45 s)
 ```
+
+Rebooting is the reliable way to apply it. If the app isn't locked yet, `am force-stop` followed by
+`am start` also works. **Once it is locked, `am force-stop` has no effect**, so use intent extras (step 3)
+to reconfigure, or `adb reboot`.
 
 As device owner the app, on every resume: allow-lists itself for lock task and calls
 `startLockTask()` (status bar, navigation bar, Home and Recents suppressed), disables the keyguard
@@ -157,5 +168,7 @@ A non-testOnly (release) build installed as device owner can only be removed by 
 | "Reconnecting…" overlay | Shows after 2 min without a heartbeat ack or when the page fails to load. It lists the server URL and device ID and retries with 5–60 s backoff. Check the server is reachable from the device: `adb shell curl -s http://<server>:3000/api/health` |
 | Page or heartbeat HTTP 401 | The app re-registers automatically. If it persists, check `DEVICE_SHARED_SECRET` matches the config. |
 | Inspect the page | Debug builds enable WebView debugging: `adb forward tcp:9222 localabstract:$(adb shell cat /proc/net/unix \| grep -oE 'webview_devtools_remote_[0-9]+' \| head -1)` then open `chrome://inspect` (or `http://localhost:9222/json`). |
-| Device went back to pairing | It was deleted on the server; claim it again. |
+| Device went back to pairing | It was deleted on the server, or now points at a different server; claim it there. |
+| `am force-stop` does nothing / "intent has been delivered to currently running top-most instance" | The app is locked as device owner. Reconfigure with intent extras (step 3) or `adb reboot`. |
+| Moving to a new server | `adb shell am start -n com.notglossy.showrunner/.MainActivity --es serverUrl http://<new-server>:3000 --es sharedSecret <secret>`, then claim the new pairing code in that server's dashboard. Extras outrank an older `config.json`, but a config file pushed *later* wins, so update or delete the file too if you keep using it. |
 | Screen stays awake after uninstalling | `adb shell settings put global stay_on_while_plugged_in 0` |
