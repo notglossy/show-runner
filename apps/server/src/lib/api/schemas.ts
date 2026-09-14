@@ -152,3 +152,10 @@ export const UpdateSettingsRequestSchema = z
 export const GeocodeQuerySchema = z.object({
   q: z.string().trim().min(2).max(100),
 });
+
+export const GenerateScreenRequestSchema = z.object({
+  instruction: z.string().trim().min(1).max(4000),
+  currentHtml: z.string().max(512000).nullable().optional(),
+  model: z.string().trim().min(1).max(200).optional(),
+  previewErrors: z.array(z.string().min(1).max(1000)).max(20).optional(),
+});
