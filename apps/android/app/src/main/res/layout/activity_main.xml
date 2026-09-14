@@ -99,10 +99,12 @@
         android:focusable="true"
         android:visibility="gone">
 
+        <!-- Top of the screen so the number pad (bottom half in landscape) never covers the PIN row. -->
         <LinearLayout
             android:layout_width="520dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="24dp"
             android:background="#FF14181F"
             android:orientation="vertical"
             android:padding="28dp">
