@@ -157,3 +157,16 @@ export interface GeocodeQuery {
   /** Place name to search. Trimmed, 2-100 chars. */
   q: string;
 }
+
+// ---- Admin: AI screen generation ---------------------------------------------------
+
+export interface GenerateScreenRequest {
+  /** What to build or change, in plain English. Trimmed, 1-4000 chars. */
+  instruction: string;
+  /** The current template to modify ("based on current screen"). Up to 512000 chars, or null/omitted for a new screen. */
+  currentHtml?: string | null;
+  /** Model id for the configured provider, e.g. "google/gemini-3.8-flash". Trimmed, 1-200 chars. Omit for the server default. */
+  model?: string;
+  /** JS errors the editor preview reported for currentHtml, passed to the model. 0-20 items, each 1-1000 chars. */
+  previewErrors?: string[];
+}

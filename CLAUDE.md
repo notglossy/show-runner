@@ -92,7 +92,8 @@ docker compose up --build -d   # http://localhost:${SHOWRUNNER_PORT:-3000}, heal
 ```
 
 Config is env vars only: `ADMIN_PASSWORD`, `DEVICE_SHARED_SECRET`, `WEATHER_LAT`, `WEATHER_LON`,
-`WEATHER_UNITS` (imperial|metric), `KIOSK_TIMEZONE`, `ANTHROPIC_API_KEY` (Phase 4), `DATABASE_PATH`
+`WEATHER_UNITS` (imperial|metric), `KIOSK_TIMEZONE`, `AI_BASE_URL` / `AI_API_KEY` / `AI_MODEL` (AI screen generation via
+any OpenAI-compatible API, OpenRouter by default), `DATABASE_PATH`
 (image default `/data/showrunner.db`). Prod host is amd64, built by Komodo from `apps/server/Dockerfile`
 with the repo root as the build context.
 

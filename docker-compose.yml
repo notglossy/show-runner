@@ -15,7 +15,9 @@ services:
       WEATHER_LON: ${WEATHER_LON:--118.2437}
       WEATHER_UNITS: ${WEATHER_UNITS:-imperial}
       KIOSK_TIMEZONE: ${KIOSK_TIMEZONE:-America/Los_Angeles}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AI_BASE_URL: ${AI_BASE_URL:-https://openrouter.ai/api/v1}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-google/gemini-3.8-flash}
     volumes:
       - showrunner-data:/data
 
