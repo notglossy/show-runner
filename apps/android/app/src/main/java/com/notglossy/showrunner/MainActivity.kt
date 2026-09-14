@@ -11,6 +11,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.provider.Settings
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -477,8 +478,10 @@ class MainActivity : android.app.Activity() {
         }
 
         findViewById<Button>(R.id.exit_pin_ok).setOnClickListener { checkPin() }
-        exitPin.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) checkPin()
+        exitPin.setOnEditorActionListener { _, actionId, event ->
+            // Soft keyboard ✓ sends IME_ACTION_DONE; a hardware/adb Enter arrives as a key event instead.
+            val enter = event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN
+            if (actionId == EditorInfo.IME_ACTION_DONE || enter) checkPin()
             true
         }
         exitChooseHome.setOnClickListener { runNativeCommand("chooseHome") }
