@@ -50,7 +50,17 @@ export function AiPanel({
   const [problems, setProblems] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
+  const [phase, setPhase] = useState<string | null>(null);
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [now, setNow] = useState(0);
   const abort = useRef<AbortController | null>(null);
+
+  // Tick the elapsed-time counter while a generation runs (models can think silently for a while).
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [running]);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,8 +94,11 @@ export function AiPanel({
     setRunning(true);
     setError(null);
     setProblems([]);
-    setStatus("Starting…");
+    setStatus(null);
+    setPhase("Starting…");
     const started = Date.now();
+    setStartedAt(started);
+    setNow(started);
     try {
       const res = await fetch("/api/ai/generate-screen", {
         method: "POST",
@@ -116,8 +129,8 @@ export function AiPanel({
           if (!line) continue;
           const ev = JSON.parse(line) as GenerateEvent;
           const secs = Math.round((Date.now() - started) / 1000);
-          if (ev.type === "status") setStatus(`${ev.message} ${secs}s`);
-          else if (ev.type === "progress") setStatus(`${ev.phase === "reasoning" ? "Thinking" : "Writing"}… ${(ev.characters / 1024).toFixed(1)} KB · ${secs}s`);
+          if (ev.type === "status") setPhase(ev.message);
+          else if (ev.type === "progress") setPhase(`${ev.phase === "reasoning" ? "Thinking" : "Writing"}… ${(ev.characters / 1024).toFixed(1)} KB`);
           else if (ev.type === "error") {
             finished = true;
             setError(ev.message);
@@ -142,6 +155,7 @@ export function AiPanel({
       }
     } finally {
       setRunning(false);
+      setPhase(null);
       abort.current = null;
     }
   }
@@ -200,7 +214,9 @@ export function AiPanel({
               Stop
             </Button>
           )}
-          <span className="text-xs text-neutral-600">{status}</span>
+          <span className="text-xs text-neutral-600">
+            {running && phase ? `${phase} · ${Math.max(0, Math.round((now - (startedAt ?? now)) / 1000))}s` : status}
+          </span>
         </div>
         <ErrorText>{error}</ErrorText>
         {problems.length > 0 && (
