@@ -17,6 +17,8 @@ export interface DeviceStatus {
   currentUrl?: string | null;
   uptimeSeconds?: number | null;
   appVersion?: string | null;
+  kioskMode?: "launcher" | "strict" | "immersive" | null;
+  isDefaultHome?: boolean | null;
 }
 
 export type ScreenSource = "builtin" | "user" | "ai";
