@@ -37,8 +37,12 @@ Notes:
 - **adb over Wi-Fi is fragile for big transfers.** A stalled `adb install` over the network kept the
   adb server pushing data and made the Echo's HTTP connections take 5–20 s. Install APKs over
   **USB**, or `adb disconnect 192.168.1.203:5555` if a network transfer hangs.
-- **Kiosk lock.** As device owner: Home, Recents and launching other apps are blocked (lock task),
-  no keyguard after sleep/wake, and the app restarts locked after reboot (~45 s to screen).
+- **Kiosk modes.** Launcher mode: Home returns to ShowRunner, the Home picker switches to Trebuchet /
+  Nova / View Assist and ShowRunner doesn't take the screen back, and it comes back after reboot.
+  Strict mode: Home, Recents and other apps are blocked and there's no keyguard; leaving it from the
+  exit menu clears device owner without a reset (tested 2026-09-13).
+- **Direct Boot.** After a reboot Android shows the direct-boot-aware Launcher3 first and doesn't switch
+  to the default Home app on unlock; the boot receiver brings ShowRunner forward when it's the default Home.
 
 ## 1. Enable adb over the network (one time)
 
@@ -77,20 +81,20 @@ From the repo root (builds a debug APK with Android Studio's JDK if `JAVA_HOME` 
 # USB is more reliable for the 7 MB APK; find the serial with `adb devices`
 scripts/install.sh --serial <usb-serial> \
   --server http://<server-lan-ip>:3000 --secret "$DEVICE_SHARED_SECRET" \
-  --device-owner
+  --home                # launcher kiosk mode (recommended); add --strict for strict mode
 ```
 
 What it does, step by step (run these by hand if you prefer):
 
 ```sh
 PKG=com.notglossy.showrunner
-cd apps/android && ./gradlew assembleDebug && cd -          # add -PshowrunnerLauncher=true for HOME
+cd apps/android && ./gradlew assembleDebug && cd -
 adb install -r -t apps/android/app/build/outputs/apk/debug/app-debug.apk   # -t: debug builds are testOnly
 adb shell appops set $PKG MANAGE_EXTERNAL_STORAGE allow     # read /sdcard/showrunner/config.json
-adb shell appops set $PKG SYSTEM_ALERT_WINDOW allow         # boot auto-start when not device owner
+adb shell appops set $PKG SYSTEM_ALERT_WINDOW allow         # bring the kiosk forward after boot/update
 adb shell mkdir -p /sdcard/showrunner
 adb push config.json /sdcard/showrunner/config.json         # step 3
-adb shell dpm set-device-owner $PKG/.KioskDeviceAdminReceiver   # step 4
+adb shell cmd role add-role-holder android.app.role.HOME $PKG 0   # step 4: default Home app
 adb shell am start -n $PKG/.MainActivity
 ```
 
@@ -130,35 +134,55 @@ If both exist, whichever was written most recently wins. `serverUrl` must be `ht
 `https://` (a trailing slash is ignored). Use HTTPS once the server is behind a TLS proxy; plain
 HTTP is currently allowed by `res/xml/network_security_config.xml`.
 
-## 4. Kiosk lock (device owner)
+## 4. Kiosk mode
 
-Requires **zero accounts** on the device (`adb shell dumpsys account | head` → `Accounts: 0`).
+ShowRunner reports its mode to the dashboard (device page → Kiosk mode). You never need a factory reset to leave it.
+
+### Launcher mode (recommended)
+
+ShowRunner is the device's **default Home app**, like the Home Assistant kiosk apps. Home, boot and app updates
+bring it back; the system bars are hidden but can be swiped in, and you can switch Home apps at any time.
+
+```sh
+adb shell cmd role add-role-holder android.app.role.HOME com.notglossy.showrunner 0
+```
+
+Or on the device: Settings → Apps → Default apps → Home app → ShowRunner. (`cmd package set-home-activity` also
+works until the next reboot; the HOME role is what persists.) The app shows over a swipe lock screen and dismisses
+it; a PIN/password lock screen stays.
+
+To switch away: exit menu → **Choose Home app…**, or the Settings path above. ShowRunner then stops taking the
+screen after boots and updates.
+
+### Strict mode (optional)
+
+Device owner + lock task: status bar, navigation, Home, Recents and other apps are blocked and the keyguard is
+disabled. Requires **zero accounts** (`adb shell dumpsys account | head` → `Accounts: 0`).
 
 ```sh
 adb shell dpm set-device-owner com.notglossy.showrunner/.KioskDeviceAdminReceiver
-adb reboot    # the app starts locked after boot (~45 s)
+adb reboot    # comes back locked (~45 s)
 ```
-
-Rebooting is the reliable way to apply it. If the app isn't locked yet, `am force-stop` followed by
-`am start` also works. **Once it is locked, `am force-stop` has no effect**, so use intent extras (step 3)
-to reconfigure, or `adb reboot`.
-
-As device owner the app, on every resume: allow-lists itself for lock task and calls
-`startLockTask()` (status bar, navigation bar, Home and Recents suppressed), disables the keyguard
-and status bar, and sets "stay awake while plugged in". With a `-PshowrunnerLauncher=true` build it
-also registers itself as the persistent Home activity, so no manual Home selection is needed.
-Without device owner it falls back to immersive full-screen with keep-screen-on (the nav bar can be
-revealed by swiping).
 
 Check: `adb shell dumpsys activity activities | grep mLockTaskModeState` → `LOCKED`.
 
-**Undo** (only possible without a factory reset because debug builds are `testOnly`):
+Leave strict mode (any build, no factory reset): exit menu → **Leave strict mode** (tap twice), or the device page
+in the dashboard → **Leave strict mode**. The app undoes its policies and gives up device ownership; it stays
+installed. Then choose a Home app. From adb (debug builds only, which are `testOnly`):
+`adb shell dpm remove-active-admin com.notglossy.showrunner/.KioskDeviceAdminReceiver`.
 
-```sh
-adb shell dpm remove-active-admin com.notglossy.showrunner/.KioskDeviceAdminReceiver
-```
+While strict mode is on, `am force-stop` has no effect; reconfigure with intent extras (step 3) or `adb reboot`.
 
-A non-testOnly (release) build installed as device owner can only be removed by a factory reset.
+### Exit menu
+
+**Press and hold the top-left corner for 3 seconds.** If a PIN is set (dashboard → Settings → Kiosk exit menu,
+4-8 digits) the menu asks for it. The device keeps a salted hash, so this works while the server is down. It's a
+convenience lock, not strong security. Options: Choose Home app (not in strict mode), Open Android settings,
+Leave strict mode (strict only), Reload.
+
+From the dashboard (device page → Commands): **Open exit menu** (no PIN), **Open Android settings**, **Leave strict
+mode**. These are delivered with the device's next heartbeat reply, so they arrive within about 30 seconds, and
+screens (JavaScript) can't trigger them.
 
 ## 5. Troubleshooting
 
@@ -169,6 +193,8 @@ A non-testOnly (release) build installed as device owner can only be removed by 
 | Page or heartbeat HTTP 401 | The app re-registers automatically. If it persists, check `DEVICE_SHARED_SECRET` matches the config. |
 | Inspect the page | Debug builds enable WebView debugging: `adb forward tcp:9222 localabstract:$(adb shell cat /proc/net/unix \| grep -oE 'webview_devtools_remote_[0-9]+' \| head -1)` then open `chrome://inspect` (or `http://localhost:9222/json`). |
 | Device went back to pairing | It was deleted on the server, or now points at a different server; claim it there. |
-| `am force-stop` does nothing / "intent has been delivered to currently running top-most instance" | The app is locked as device owner. Reconfigure with intent extras (step 3) or `adb reboot`. |
+| `am force-stop` does nothing / "intent has been delivered to currently running top-most instance" | Strict mode is on, or the app is already running. Reconfigure with intent extras (step 3) or `adb reboot`. |
+| Launcher3 shows after a reboot | Check the Home role (`adb shell dumpsys role \| grep -A2 role.HOME`) and that the `SYSTEM_ALERT_WINDOW` app op is allowed (step 2); the boot receiver needs it to bring ShowRunner forward. |
+| Can't get out of the kiosk | Hold the top-left corner 3 s. Forgot the PIN? Remove it in dashboard → Settings, or use the dashboard's Open exit menu command. |
 | Moving to a new server | `adb shell am start -n com.notglossy.showrunner/.MainActivity --es serverUrl http://<new-server>:3000 --es sharedSecret <secret>`, then claim the new pairing code in that server's dashboard. Extras outrank an older `config.json`, but a config file pushed *later* wins, so update or delete the file too if you keep using it. |
 | Screen stays awake after uninstalling | `adb shell settings put global stay_on_while_plugged_in 0` |

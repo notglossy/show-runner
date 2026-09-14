@@ -91,7 +91,8 @@ fi
 
 if $home; then
   step "Setting ShowRunner as the default Home app"
-  adb shell cmd package set-home-activity "$PKG/.MainActivity"
+  # The HOME role is what Android 10+ persists as the default Home app.
+  adb shell cmd role add-role-holder android.app.role.HOME "$PKG" 0
 fi
 
 if $device_owner; then

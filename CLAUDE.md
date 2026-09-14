@@ -69,10 +69,12 @@ MainActivity.kt           session state machine: SETUP / CONNECTING / SHOWING / 
                           register -> cookie -> load /device/:id, heartbeat loop + watchdog, overlay, setup screen
 KioskConfig.kt            ConfigStore: /sdcard/showrunner/config.json or am start extras (most recent wins)
 ServerClient.kt           HttpURLConnection + org.json client for register / heartbeat
-KioskMode.kt              device owner -> lock task, keyguard/status bar off, stay awake, persistent HOME; else immersive
+KioskMode.kt              LAUNCHER (default Home app, default) / STRICT (opt-in device owner + lock task, leavable
+                          in-app via clearDeviceOwnerApp) / IMMERSIVE; launchIntent() reuses the Home task
+ExitPin.kt                cached salted PIN hash for the exit menu (hold top-left corner 3 s)
 NativeBridge.kt           window.KioskNative (getDeviceInfo, get/setBrightness, reload): keep it small
 DeviceStatus.kt           heartbeat body (battery, wifi); DeviceIdentity.kt: UUID + device info
-BootReceiver.kt           BOOT_COMPLETED / MY_PACKAGE_REPLACED -> start activity
+BootReceiver.kt           BOOT_COMPLETED / MY_PACKAGE_REPLACED -> bring kiosk forward unless the user chose another Home
 KioskDeviceAdminReceiver.kt   device admin component for dpm set-device-owner
 ```
 
@@ -125,6 +127,8 @@ Device: `adb connect 192.168.1.203:5555` (network adb persists across reboots). 
   Approved so far: next, react, tailwind, drizzle-orm, drizzle-kit, better-sqlite3, zod, vitest,
   codemirror (+ @codemirror/lang-html, state, view, commands), androidx.core-ktx, androidx.webkit.
 - No Google Play Services / Firebase on Android.
+- Never require a factory reset to leave the kiosk: launcher mode is the default, strict (device owner) is opt-in and
+  must stay leavable from the exit menu and dashboard.
 - Unsure about a device quirk? Flag it and give an adb command to check. Don't guess.
 - Work in phases (0 scaffold, 1 server core, 2 Android shell, 3 dashboard, 4 AI screens) and check in
   with the owner at the end of each. One branch + PR per phase, **always based on `main`** (no stacked PRs).

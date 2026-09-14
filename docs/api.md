@@ -44,13 +44,18 @@ their pairing code across re-registrations.
 Device token only (admins get 403). Body (all optional):
 ```json
 { "battery": { "level": 100, "charging": true }, "wifi": { "rssi": -52, "ssid": "home", "linkSpeedMbps": 144 },
-  "currentUrl": "http://…/device/3f2b…", "currentScreenId": "builtin-clock", "uptimeSeconds": 3600 }
+  "currentUrl": "http://…/device/3f2b…", "currentScreenId": "builtin-clock", "uptimeSeconds": 3600,
+  "kioskMode": "launcher", "isDefaultHome": true }
 ```
 200 (the watchdog's ack):
 ```json
 { "ok": true, "serverTime": 1789335035932, "claimed": true, "currentScreenId": "builtin-clock",
-  "eventsConnected": true, "heartbeatIntervalSeconds": 30 }
+  "eventsConnected": true, "heartbeatIntervalSeconds": 30,
+  "kiosk": { "exitPin": { "salt": "…", "sha256": "…" }, "commands": ["openExitMenu"] } }
 ```
+`kiosk.exitPin` is `null` when no PIN is set. `kiosk.commands` are native commands queued from the dashboard
+(`openExitMenu`, `openSettings`, `exitStrictMode`); each is delivered once. Registration replies also include
+`kiosk.exitPin`.
 `eventsConnected` says whether the device's page currently has its SSE stream open.
 
 ### `GET /device/:id`
@@ -83,7 +88,7 @@ The last 1000 lines per device are kept.
 | `GET /api/devices/:id` | | `{ device }` |
 | `PATCH /api/devices/:id` | `{ "name"?, "assignment"?: {"type":"none"} \| {"type":"screen","screenId"} \| {"type":"playlist","playlistId"} }` | `{ device }`; device navigates immediately |
 | `DELETE /api/devices/:id` | | 204 |
-| `POST /api/devices/:id/commands` | `{"type":"reload"}` \| `{"type":"refreshData"}` \| `{"type":"navigate","screenId"}` | `{ delivered: <open connections> }` |
+| `POST /api/devices/:id/commands` | `{"type":"reload"}` \| `{"type":"refreshData"}` \| `{"type":"navigate","screenId"}` \| `{"type":"openExitMenu"\|"openSettings"\|"exitStrictMode"}` | `{ delivered: <open connections> }`; native kiosk commands return `{ delivered: 0, queued: true }` and reach the app with its next heartbeat (5-minute expiry) |
 | `GET /api/devices/:id/logs` | `?limit=100&before=<id>` | `{ logs }` newest first |
 | `GET /api/screens` | | `{ screens }` (without `html`, with `htmlBytes`) |
 | `POST /api/screens` | `{ name, html, description?, dataRefreshSeconds?, source?: "user"\|"ai", generationPrompt? }` | 201 `{ screen }` |
@@ -96,7 +101,7 @@ The last 1000 lines per device are kept.
 | `PATCH /api/playlists/:id` | `{ name?, items? }` (`items` replaces the list) | `{ playlist }`; rotation re-syncs |
 | `DELETE /api/playlists/:id` | | 204; devices using it become unassigned |
 | `GET /api/settings` | | `{ effective, defaults, overrides }` (weather location/units/name, timezone) |
-| `PATCH /api/settings` | any of `weatherLatitude, weatherLongitude, weatherUnits, weatherLocationName, timezone` (`null` clears) | same as GET; connected devices refresh data |
+| `PATCH /api/settings` | any of `weatherLatitude, weatherLongitude, weatherUnits, weatherLocationName, timezone`, `kioskExitPin` (4-8 digits; `null` clears) | same as GET plus `kioskExitPinSet`; connected devices refresh data |
 | `GET /api/settings/geocode` | `?q=paris` | `{ results: [{ label, latitude, longitude, timezone }] }` (Open-Meteo geocoding) |
 | `GET /api/preview/data` | | live `kiosk.data` for a placeholder device (editor preview) |
 | `GET /api/ai/config` | | `{ configured, defaultModel, provider, models[] }` (never the key; models from the provider's `/models`) |

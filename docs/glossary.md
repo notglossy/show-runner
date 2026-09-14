@@ -28,7 +28,7 @@ One kiosk unit, identified by a UUID the Android app generates on first run.
 
 ## Device owner
 
-Android device-policy status granted once with `adb shell dpm set-device-owner` that lets the app use lock task mode, and it requires no accounts on the device.
+Android device-policy status granted with `adb shell dpm set-device-owner`. ShowRunner uses it only for the optional strict kiosk mode. The app can give it up itself from the exit menu or dashboard, so no factory reset is ever needed.
 
 ## Device token
 
@@ -38,25 +38,29 @@ A per-device credential returned at registration and stored by the shell as a co
 
 The number of seconds a screen stays up in a playlist before the server navigates to the next one.
 
+## Exit menu
+
+The native kiosk menu opened by holding the top-left corner of the display for 3 seconds (PIN optional) or from the dashboard. It offers Choose Home app, Open Android settings, Leave strict mode and Reload.
+
 ## Heartbeat
 
 A `POST /api/devices/:id/heartbeat` the Android shell sends every 30 seconds with battery, Wi-Fi signal, and current screen, which drives last-seen status.
 
 ## Immersive mode
 
-The fallback full-screen mode that hides system bars when the app is not device owner.
+Full-screen with the system bars hidden. The app is always immersive; "immersive" as a kiosk mode means ShowRunner is neither the default Home app nor device owner.
 
 ## Kiosk runtime
 
 The small script the server injects into every rendered screen, which provides `window.kiosk`, listens for commands, and reports errors to `POST /api/devices/:id/log`.
 
-## Launcher flag
+## Launcher mode
 
-A build flag that, when enabled, declares the HOME/launcher intent filter so the Android shell can act as the device's launcher. With it enabled, the shell is chosen once as the default Home app on the device.
+The default kiosk mode: ShowRunner is the default Home app, so Home, boot and updates return to it. The user can still swipe in the system bars and pick another Home app.
 
 ## Lock task mode
 
-Android kiosk mode started with `startLockTask()` that suppresses the status bar, navigation bar, and recents.
+Android kiosk mode started with `startLockTask()` that suppresses the status bar, navigation bar, Home and Recents. Used by strict mode.
 
 ## Pairing code
 
@@ -81,6 +85,10 @@ The `DEVICE_SHARED_SECRET` value the Android shell sends in a header when regist
 ## Shell
 
 The thin full-screen Android WebView app in `apps/android` that loads `GET /device/:id` and displays whatever the server renders.
+
+## Strict mode
+
+The optional kiosk mode using device owner and lock task, where nothing else can be opened. It can always be left from the exit menu or dashboard.
 
 ## Template
 

@@ -33,6 +33,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.webkit.WebViewCompat
 import org.json.JSONObject
+import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.math.min
@@ -90,6 +91,19 @@ class MainActivity : android.app.Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // In launcher mode the kiosk lives in the Home task. A launch from elsewhere (am start, launcher icon,
+        // package update) would otherwise create a second instance with its own WebView and heartbeat loop.
+        if (!intent.hasCategory(Intent.CATEGORY_HOME) && KioskMode.current(this) == KioskMode.Mode.LAUNCHER) {
+            Log.i(TAG, "Forwarding launch to the Home task")
+            startActivity(KioskMode.launchIntent(this).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).putExtras(intent.extras ?: Bundle()))
+            finish()
+            return
+        }
+        activeInstance?.get()?.takeIf { it !== this && !it.isFinishing }?.let {
+            Log.i(TAG, "Finishing previous kiosk instance")
+            it.finish()
+        }
+        activeInstance = WeakReference(this)
         setContentView(R.layout.activity_main)
         webContainer = findViewById(R.id.web_container)
         setupView = findViewById(R.id.setup)
@@ -135,6 +149,7 @@ class MainActivity : android.app.Activity() {
     }
 
     override fun onDestroy() {
+        if (activeInstance?.get() === this) activeInstance = null
         generation++
         main.removeCallbacksAndMessages(null)
         io.shutdownNow()
@@ -568,6 +583,8 @@ class MainActivity : android.app.Activity() {
     }
 
     companion object {
+        /** The live kiosk activity; a newer instance finishes the older one. */
+        @Volatile private var activeInstance: WeakReference<MainActivity>? = null
         private const val TAG = "ShowRunner"
         private const val WEB_TAG = "ShowRunner.Web"
         private const val DEFAULT_HEARTBEAT_MS = 30_000L
