@@ -9,13 +9,15 @@ import org.json.JSONObject
 
 /** Builds the heartbeat body (docs/api.md). */
 object DeviceStatus {
-    fun heartbeatBody(context: Context, currentUrl: String?, currentScreenId: String?, uptimeSeconds: Long): JSONObject {
+    fun heartbeatBody(context: Context, currentUrl: String?, currentScreenId: String?, uptimeSeconds: Long, kioskMode: KioskMode.Mode): JSONObject {
         val body = JSONObject()
         body.put("battery", battery(context) ?: JSONObject.NULL)
         body.put("wifi", wifi(context) ?: JSONObject.NULL)
         body.put("currentUrl", currentUrl?.take(2048) ?: JSONObject.NULL)
         body.put("currentScreenId", currentScreenId?.take(100) ?: JSONObject.NULL)
         body.put("uptimeSeconds", uptimeSeconds)
+        body.put("kioskMode", kioskMode.wire)
+        body.put("isDefaultHome", KioskMode.isDefaultHome(context))
         return body
     }
 

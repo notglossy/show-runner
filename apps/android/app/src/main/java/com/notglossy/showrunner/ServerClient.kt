@@ -19,6 +19,8 @@ class ServerClient(private val origin: String) {
         val pairingCode: String?,
         val pageUrl: String,
         val heartbeatIntervalSeconds: Int,
+        /** `kiosk` block: `exitPin` hash (or null). */
+        val kiosk: JSONObject?,
     )
 
     data class HeartbeatAck(
@@ -26,6 +28,9 @@ class ServerClient(private val origin: String) {
         val currentScreenId: String?,
         val eventsConnected: Boolean,
         val heartbeatIntervalSeconds: Int,
+        val kiosk: JSONObject?,
+        /** Native kiosk commands queued in the dashboard: openExitMenu, openSettings, exitStrictMode. */
+        val commands: List<String>,
     )
 
     fun register(sharedSecret: String, info: DeviceInfo): Registration {
@@ -47,6 +52,7 @@ class ServerClient(private val origin: String) {
             pairingCode = json.optStringOrNull("pairingCode"),
             pageUrl = json.getString("pageUrl"),
             heartbeatIntervalSeconds = json.optInt("heartbeatIntervalSeconds", 30),
+            kiosk = json.optJSONObject("kiosk"),
         )
     }
 
@@ -57,6 +63,10 @@ class ServerClient(private val origin: String) {
             currentScreenId = json.optStringOrNull("currentScreenId"),
             eventsConnected = json.optBoolean("eventsConnected"),
             heartbeatIntervalSeconds = json.optInt("heartbeatIntervalSeconds", 30),
+            kiosk = json.optJSONObject("kiosk"),
+            commands = json.optJSONObject("kiosk")?.optJSONArray("commands")?.let { arr ->
+                (0 until arr.length()).mapNotNull { arr.optString(it).takeIf(String::isNotBlank) }
+            } ?: emptyList(),
         )
     }
 

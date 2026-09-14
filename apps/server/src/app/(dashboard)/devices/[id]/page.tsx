@@ -36,7 +36,7 @@ export default async function DevicePage({ params }: PageProps<"/devices/[id]">)
   const playlists = listPlaylists().map(({ id, name }) => ({ id, name }));
   const screenNames = Object.fromEntries(screens.map((s) => [s.id, s.name]));
   const playlist = device.assignment.type === "playlist" ? getPlaylistOr404(device.assignment.playlistId) : null;
-  const { battery, wifi, uptimeSeconds } = device.status;
+  const { battery, wifi, uptimeSeconds, kioskMode, isDefaultHome } = device.status;
 
   return (
     <>
@@ -61,6 +61,8 @@ export default async function DevicePage({ params }: PageProps<"/devices/[id]">)
               )}
               <Row label="Wi-Fi">{wifi ? `${wifi.ssid ?? "connected"} · ${wifi.rssi} dBm · ${"▮".repeat(wifiBars(wifi.rssi))}${"▯".repeat(4 - wifiBars(wifi.rssi))}` : "—"}</Row>
               <Row label="Battery">{battery ? `${battery.level}%${battery.charging ? " (charging)" : ""}` : "—"}</Row>
+              <Row label="Kiosk mode">{kioskMode ? { launcher: "Launcher (default Home app)", strict: "Strict (device owner lock)", immersive: "Full-screen only" }[kioskMode] : "—"}</Row>
+              <Row label="Default Home app">{isDefaultHome === null || isDefaultHome === undefined ? "—" : isDefaultHome ? "ShowRunner" : "Another app"}</Row>
               <Row label="App uptime">{typeof uptimeSeconds === "number" ? duration(uptimeSeconds) : "—"}</Row>
               <Row label="IP">{device.lastIp ?? "—"}</Row>
               <Row label="Model">{device.model}</Row>
@@ -79,7 +81,7 @@ export default async function DevicePage({ params }: PageProps<"/devices/[id]">)
                 <AssignmentSelect deviceId={device.id} assignment={device.assignment} screens={screens} playlists={playlists} />
               </Card>
               <Card title="Commands">
-                <DeviceCommands deviceId={device.id} screens={screens} claimed={device.claimed} />
+                <DeviceCommands deviceId={device.id} screens={screens} claimed={device.claimed} strict={kioskMode === "strict"} />
               </Card>
               <Card title="Name">
                 <RenameDevice deviceId={device.id} name={device.name} />

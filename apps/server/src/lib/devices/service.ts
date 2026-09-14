@@ -7,6 +7,7 @@ import type {
   DeviceLogRequest,
   DeviceLogsQuery,
   HeartbeatRequest,
+  NativeCommandType,
   RegisterDeviceRequest,
   UpdateDeviceRequest,
 } from "@/lib/api/types";
@@ -158,6 +159,8 @@ export function recordHeartbeat(device: Device, input: HeartbeatRequest, ip: str
     currentUrl: input.currentUrl ?? null,
     uptimeSeconds: input.uptimeSeconds ?? null,
     appVersion: device.appVersion,
+    kioskMode: input.kioskMode ?? null,
+    isDefaultHome: input.isDefaultHome ?? null,
   };
   return getDb()
     .update(devices)
@@ -249,7 +252,29 @@ export function applyAssignment(id: string, assignment: DeviceAssignment): Devic
   return getDeviceOr404(id);
 }
 
-export function sendCommand(device: Device, command: DeviceCommandRequest): { delivered: number } {
+// ---- Native commands (handled by the Android app, delivered with the heartbeat ack) ----
+
+const NATIVE_COMMANDS: readonly NativeCommandType[] = ["openExitMenu", "openSettings", "exitStrictMode"];
+const NATIVE_COMMAND_TTL_MS = 5 * 60_000;
+type NativeQueue = Map<string, { type: NativeCommandType; at: number }[]>;
+const globalForNative = globalThis as unknown as { __showrunnerNativeCommands?: NativeQueue };
+const nativeQueues: NativeQueue = (globalForNative.__showrunnerNativeCommands ??= new Map());
+
+export const isNativeCommand = (type: string): type is NativeCommandType => (NATIVE_COMMANDS as readonly string[]).includes(type);
+
+/** Returns and clears commands queued for the device (dropping ones older than 5 minutes). */
+export function takeNativeCommands(deviceId: string, now = Date.now()): NativeCommandType[] {
+  const queue = nativeQueues.get(deviceId) ?? [];
+  nativeQueues.delete(deviceId);
+  return queue.filter((c) => now - c.at < NATIVE_COMMAND_TTL_MS).map((c) => c.type);
+}
+
+export function sendCommand(device: Device, command: DeviceCommandRequest): { delivered: number; queued?: boolean } {
+  if (isNativeCommand(command.type)) {
+    const queue = (nativeQueues.get(device.id) ?? []).filter((c) => c.type !== command.type);
+    nativeQueues.set(device.id, [...queue, { type: command.type, at: Date.now() }]);
+    return { delivered: 0, queued: true };
+  }
   if (command.type === "navigate") {
     requireClaimed(device);
     if (!findScreen(command.screenId)) throw notFound("Screen");
@@ -258,7 +283,7 @@ export function sendCommand(device: Device, command: DeviceCommandRequest): { de
     if (device.assignmentType === "playlist") syncDevice(device.id, { holdCurrentScreen: true });
     return { delivered: publish(device.id, { type: "navigate", screenId: command.screenId }) };
   }
-  return { delivered: publish(device.id, command) };
+  return { delivered: publish(device.id, command as Exclude<DeviceCommandRequest, { type: NativeCommandType } | { type: "navigate" }>) };
 }
 
 export function deleteDevice(id: string): void {

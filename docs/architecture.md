@@ -5,7 +5,7 @@ ShowRunner has two moving parts: a **dumb Android WebView shell** on the Echo Sh
 
 ```
 ┌────────────── Echo Show 8 (Android 11, WebView 139) ──────────────┐
-│  MainActivity (lock task / immersive)                             │
+│  MainActivity (launcher kiosk; strict lock task optional)          │
 │   ├─ native: register, heartbeat (30s), watchdog, config.json     │
 │   ├─ JS bridge `KioskNative`: brightness, reload, device info     │
 │   └─ WebView ── loads /device/:id ──┐                             │

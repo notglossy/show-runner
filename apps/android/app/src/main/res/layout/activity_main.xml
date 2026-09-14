@@ -81,4 +81,124 @@
             android:textColor="#9AA3B2"
             android:textSize="18sp" />
     </LinearLayout>
+    <!-- Long-press (3 s) here to open the exit menu. Transparent; screens are read-only anyway. -->
+    <View
+        android:id="@+id/exit_hotspot"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:layout_gravity="top|start"
+        android:contentDescription="@string/exit_menu_title" />
+
+    <!-- Kiosk exit menu. -->
+    <FrameLayout
+        android:id="@+id/exit_menu"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#E6000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="520dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="#FF14181F"
+            android:orientation="vertical"
+            android:padding="28dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/exit_menu_title"
+                android:textColor="#FFFFFF"
+                android:textSize="28sp" />
+
+            <TextView
+                android:id="@+id/exit_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textColor="#9AA3B2"
+                android:textSize="15sp" />
+
+            <LinearLayout
+                android:id="@+id/exit_pin_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/exit_pin"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:autofillHints=""
+                    android:hint="@string/exit_pin_hint"
+                    android:imeOptions="actionDone"
+                    android:inputType="numberPassword"
+                    android:maxLength="8"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#6B7382"
+                    android:textSize="22sp" />
+
+                <Button
+                    android:id="@+id/exit_pin_ok"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/exit_unlock" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/exit_actions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <Button
+                    android:id="@+id/exit_choose_home"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/exit_choose_home" />
+
+                <Button
+                    android:id="@+id/exit_settings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/exit_open_settings" />
+
+                <Button
+                    android:id="@+id/exit_leave_strict"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/exit_leave_strict" />
+
+                <Button
+                    android:id="@+id/exit_reload"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/exit_reload" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/exit_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textColor="#FFCF7A"
+                android:textSize="15sp" />
+
+            <Button
+                android:id="@+id/exit_close"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginTop="8dp"
+                android:text="@string/exit_close" />
+        </LinearLayout>
+    </FrameLayout>
 </FrameLayout>

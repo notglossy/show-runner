@@ -7,7 +7,7 @@ import { api, ApiClientError } from "@/lib/client/api";
 import type { Option } from "./assignment-select";
 import { Button, ErrorText, inputBase, inputClass } from "./ui";
 
-export function DeviceCommands({ deviceId, screens, claimed }: { deviceId: string; screens: Option[]; claimed: boolean }) {
+export function DeviceCommands({ deviceId, screens, claimed, strict }: { deviceId: string; screens: Option[]; claimed: boolean; strict: boolean }) {
   const router = useRouter();
   const [screenId, setScreenId] = useState(screens[0]?.id ?? "");
   const [message, setMessage] = useState<string | null>(null);
@@ -17,8 +17,14 @@ export function DeviceCommands({ deviceId, screens, claimed }: { deviceId: strin
     setError(null);
     setMessage(null);
     try {
-      const { delivered } = await api<{ delivered: number }>(`/api/devices/${deviceId}/commands`, { method: "POST", body: command });
-      setMessage(delivered > 0 ? `Sent ${command.type} to ${delivered} connection${delivered === 1 ? "" : "s"}.` : "Sent, but the display isn't connected right now.");
+      const { delivered, queued } = await api<{ delivered: number; queued?: boolean }>(`/api/devices/${deviceId}/commands`, { method: "POST", body: command });
+      setMessage(
+        queued
+          ? "Queued. The display picks it up with its next heartbeat (within about 30 seconds)."
+          : delivered > 0
+            ? `Sent ${command.type} to ${delivered} connection${delivered === 1 ? "" : "s"}.`
+            : "Sent, but the display isn't connected right now.",
+      );
       router.refresh();
     } catch (err) {
       setError(err instanceof ApiClientError ? err.detail : String(err));
@@ -47,6 +53,21 @@ export function DeviceCommands({ deviceId, screens, claimed }: { deviceId: strin
       )}
       <p className="text-xs text-neutral-500">
         &ldquo;Show now&rdquo; switches the display without changing its assignment; a playlist resumes after one dwell.
+      </p>
+      <div className="mt-1 flex flex-wrap gap-2 border-t border-neutral-100 pt-3">
+        <Button onClick={() => send({ type: "openExitMenu" })}>Open exit menu</Button>
+        <Button onClick={() => send({ type: "openSettings" })}>Open Android settings</Button>
+        {strict && (
+          <Button
+            variant="danger"
+            onClick={() => window.confirm("Leave strict mode? The app stops being device owner; it stays the Home app.") && send({ type: "exitStrictMode" })}
+          >
+            Leave strict mode
+          </Button>
+        )}
+      </div>
+      <p className="text-xs text-neutral-500">
+        Kiosk commands run on the display itself. The exit menu opens without asking for the PIN when sent from here.
       </p>
       {message && <p className="text-sm text-neutral-700">{message}</p>}
       <ErrorText>{error}</ErrorText>

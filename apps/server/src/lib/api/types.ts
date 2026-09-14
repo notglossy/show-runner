@@ -39,7 +39,16 @@ export interface HeartbeatRequest {
   currentScreenId?: string | null;
   /** Integer >= 0. */
   uptimeSeconds?: number | null;
+  /** How the app is holding the screen: launcher (default Home app), strict (device owner lock task), immersive (neither). */
+  kioskMode?: KioskMode | null;
+  /** Whether ShowRunner is the device's default Home app. */
+  isDefaultHome?: boolean | null;
 }
+
+export type KioskMode = "launcher" | "strict" | "immersive";
+
+/** Commands handled by the Android app itself (delivered in the heartbeat reply, never via screen JavaScript). */
+export type NativeCommandType = "openExitMenu" | "openSettings" | "exitStrictMode";
 
 export interface DeviceLogRequest {
   /** Defaults to "error". */
@@ -83,7 +92,8 @@ export interface UpdateDeviceRequest {
 export type DeviceCommandRequest =
   | { type: "reload" }
   | { type: "refreshData" }
-  | { type: "navigate"; /** 1-100 chars */ screenId: string };
+  | { type: "navigate"; /** 1-100 chars */ screenId: string }
+  | { type: NativeCommandType };
 
 export interface DeviceLogsQuery {
   /** Integer 1-500, default 100. Parsed from a query string, so coerce. */
@@ -151,6 +161,8 @@ export interface UpdateSettingsRequest {
   weatherLocationName?: string | null;
   /** IANA timezone accepted by Intl.DateTimeFormat (e.g. "America/Los_Angeles"), or null. */
   timezone?: string | null;
+  /** PIN for the on-device kiosk exit menu: 4-8 digits, or null to remove it (menu opens without a PIN). */
+  kioskExitPin?: string | null;
 }
 
 export interface GeocodeQuery {

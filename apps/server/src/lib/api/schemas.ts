@@ -37,6 +37,8 @@ export const HeartbeatRequestSchema = z.object({
   currentUrl: z.string().max(2048).nullable().optional(),
   currentScreenId: z.string().max(100).nullable().optional(),
   uptimeSeconds: z.int().min(0).nullable().optional(),
+  kioskMode: z.enum(["launcher", "strict", "immersive"]).nullable().optional(),
+  isDefaultHome: z.boolean().nullable().optional(),
 });
 
 export const DeviceLogRequestSchema = z.object({
@@ -74,6 +76,9 @@ export const DeviceCommandRequestSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("reload") }),
   z.object({ type: z.literal("refreshData") }),
   z.object({ type: z.literal("navigate"), screenId: z.string().min(1).max(100) }),
+  z.object({ type: z.literal("openExitMenu") }),
+  z.object({ type: z.literal("openSettings") }),
+  z.object({ type: z.literal("exitStrictMode") }),
 ]);
 
 export const DeviceLogsQuerySchema = z.object({
@@ -144,6 +149,7 @@ export const UpdateSettingsRequestSchema = z
       )
       .nullable()
       .optional(),
+    kioskExitPin: z.string().regex(/^\d{4,8}$/, "PIN must be 4-8 digits").nullable().optional(),
   })
   .refine((obj) => Object.keys(obj).length > 0, {
     message: "At least one field is required",

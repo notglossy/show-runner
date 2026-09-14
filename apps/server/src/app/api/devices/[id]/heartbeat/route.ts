@@ -2,7 +2,8 @@ import { parseJson, route } from "@/lib/api/http";
 import { clientIp } from "@/lib/api/request";
 import { HeartbeatRequestSchema } from "@/lib/api/schemas";
 import { requireDevice } from "@/lib/auth/device";
-import { HEARTBEAT_INTERVAL_SECONDS, recordHeartbeat } from "@/lib/devices/service";
+import { HEARTBEAT_INTERVAL_SECONDS, recordHeartbeat, takeNativeCommands } from "@/lib/devices/service";
+import { getKioskPinHash } from "@/lib/settings/service";
 import { connectionCount } from "@/lib/events/bus";
 
 /** Device-facing. The response is the watchdog's ack. */
@@ -17,5 +18,6 @@ export const POST = route(async (req, { params }: RouteContext<"/api/devices/[id
     currentScreenId: updated.currentScreenId,
     eventsConnected: connectionCount(updated.id, "device") > 0,
     heartbeatIntervalSeconds: HEARTBEAT_INTERVAL_SECONDS,
+    kiosk: { exitPin: getKioskPinHash(), commands: takeNativeCommands(updated.id) },
   });
 });

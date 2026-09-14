@@ -10,6 +10,12 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.provider.Settings
+import android.view.MotionEvent
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.Button
+import android.widget.EditText
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -27,6 +33,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.webkit.WebViewCompat
 import org.json.JSONObject
+import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.math.min
@@ -49,6 +56,15 @@ class MainActivity : android.app.Activity() {
     private lateinit var setupBody: TextView
     private lateinit var overlay: View
     private lateinit var overlayBody: TextView
+    private lateinit var exitMenu: View
+    private lateinit var exitStatus: TextView
+    private lateinit var exitPinRow: View
+    private lateinit var exitPin: EditText
+    private lateinit var exitActions: View
+    private lateinit var exitMessage: TextView
+    private lateinit var exitLeaveStrict: Button
+    private lateinit var exitChooseHome: Button
+    private var leaveStrictArmed = false
     private var webView: WebView? = null
     private var wifiLock: WifiManager.WifiLock? = null
 
@@ -75,12 +91,26 @@ class MainActivity : android.app.Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // In launcher mode the kiosk lives in the Home task. A launch from elsewhere (am start, launcher icon,
+        // package update) would otherwise create a second instance with its own WebView and heartbeat loop.
+        if (!intent.hasCategory(Intent.CATEGORY_HOME) && KioskMode.current(this) == KioskMode.Mode.LAUNCHER) {
+            Log.i(TAG, "Forwarding launch to the Home task")
+            startActivity(KioskMode.launchIntent(this).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).putExtras(intent.extras ?: Bundle()))
+            finish()
+            return
+        }
+        activeInstance?.get()?.takeIf { it !== this && !it.isFinishing }?.let {
+            Log.i(TAG, "Finishing previous kiosk instance")
+            it.finish()
+        }
+        activeInstance = WeakReference(this)
         setContentView(R.layout.activity_main)
         webContainer = findViewById(R.id.web_container)
         setupView = findViewById(R.id.setup)
         setupBody = findViewById(R.id.setup_body)
         overlay = findViewById(R.id.overlay)
         overlayBody = findViewById(R.id.overlay_body)
+        setupExitMenu()
         deviceInfo = DeviceIdentity.info(this)
         WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG)
         ConfigStore.saveFromIntent(this, intent)
@@ -112,13 +142,14 @@ class MainActivity : android.app.Activity() {
         if (hasFocus) KioskMode.hideSystemBars(this)
     }
 
-    @Deprecated("Kiosk: back does nothing")
+    @Deprecated("Kiosk: back closes the exit menu, otherwise does nothing")
     @SuppressLint("MissingSuperCall", "GestureBackNavigation")
     override fun onBackPressed() {
-        // Swallow back so the kiosk can't be dismissed.
+        if (exitMenu.visibility == View.VISIBLE) closeExitMenu()
     }
 
     override fun onDestroy() {
+        if (activeInstance?.get() === this) activeInstance = null
         generation++
         main.removeCallbacksAndMessages(null)
         io.shutdownNow()
@@ -174,6 +205,7 @@ class MainActivity : android.app.Activity() {
         heartbeatIntervalMs = reg.heartbeatIntervalSeconds.coerceIn(5, 300) * 1000L
         lastAckAt = SystemClock.elapsedRealtime()
         eventsDownBeats = 0
+        ExitPin.update(this, reg.kiosk)
         val cookies = CookieManager.getInstance()
         cookies.setAcceptCookie(true)
         cookies.setCookie(cfg.serverUrl, "${reg.cookieName}=${reg.cookieValue}; Path=/; SameSite=Lax") {
@@ -210,7 +242,7 @@ class MainActivity : android.app.Activity() {
         val reg = registration ?: return
         val uptime = (SystemClock.elapsedRealtime() - startedAt) / 1000
         try {
-            val body = DeviceStatus.heartbeatBody(this, currentUrl, currentScreenId, uptime)
+            val body = DeviceStatus.heartbeatBody(this, currentUrl, currentScreenId, uptime, KioskMode.current(this))
             val ack = ServerClient(cfg.serverUrl).heartbeat(reg.deviceId, reg.token, body)
             main.post { if (gen == generation) onHeartbeatAck(ack) }
         } catch (e: ServerClient.HttpException) {
@@ -230,6 +262,8 @@ class MainActivity : android.app.Activity() {
 
     private fun onHeartbeatAck(ack: ServerClient.HeartbeatAck) {
         lastAckAt = SystemClock.elapsedRealtime()
+        ExitPin.update(this, ack.kiosk)
+        ack.commands.forEach(::runNativeCommand)
         heartbeatIntervalMs = ack.heartbeatIntervalSeconds.coerceIn(5, 300) * 1000L
         if (state == State.RECONNECTING) {
             // Server is back after a heartbeat outage: reload the page and carry on.
@@ -356,8 +390,8 @@ class MainActivity : android.app.Activity() {
             .put("appVersion", info.appVersion)
             .put("screenWidth", info.screenWidth)
             .put("screenHeight", info.screenHeight)
-            .put("kioskMode", kioskMode.name.lowercase())
-            .put("launcher", BuildConfig.LAUNCHER_ENABLED)
+            .put("kioskMode", kioskMode.wire)
+            .put("isDefaultHome", KioskMode.isDefaultHome(this))
             .put("serverUrl", config?.serverUrl ?: JSONObject.NULL)
             .put("webViewVersion", WebViewCompat.getCurrentWebViewPackage(this)?.versionName ?: JSONObject.NULL)
     }
@@ -379,7 +413,7 @@ class MainActivity : android.app.Activity() {
             appendLine("This display needs a server URL and the device shared secret.")
             appendLine()
             appendLine("Device ID:  $id")
-            appendLine("Kiosk mode: ${if (KioskMode.isDeviceOwner(this@MainActivity)) "device owner (locked)" else "immersive (not device owner)"}")
+            appendLine("Kiosk mode: ${describeMode(KioskMode.current(this@MainActivity))}")
             appendLine()
             appendLine("Option 1: config file (recommended)")
             appendLine("  adb shell appops set $pkg MANAGE_EXTERNAL_STORAGE allow")
@@ -420,6 +454,126 @@ class MainActivity : android.app.Activity() {
         }
     }
 
+    // ---- Exit menu + native commands ----------------------------------------------------
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupExitMenu() {
+        exitMenu = findViewById(R.id.exit_menu)
+        exitStatus = findViewById(R.id.exit_status)
+        exitPinRow = findViewById(R.id.exit_pin_row)
+        exitPin = findViewById(R.id.exit_pin)
+        exitActions = findViewById(R.id.exit_actions)
+        exitMessage = findViewById(R.id.exit_message)
+        exitLeaveStrict = findViewById(R.id.exit_leave_strict)
+        exitChooseHome = findViewById(R.id.exit_choose_home)
+
+        val openAfterHold = Runnable { openExitMenu(requirePin = true) }
+        findViewById<View>(R.id.exit_hotspot).setOnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> main.postDelayed(openAfterHold, EXIT_HOLD_MS)
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> main.removeCallbacks(openAfterHold)
+            }
+            true
+        }
+
+        findViewById<Button>(R.id.exit_pin_ok).setOnClickListener { checkPin() }
+        exitPin.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) checkPin()
+            true
+        }
+        exitChooseHome.setOnClickListener { runNativeCommand("chooseHome") }
+        findViewById<Button>(R.id.exit_settings).setOnClickListener { runNativeCommand("openSettings") }
+        exitLeaveStrict.setOnClickListener {
+            if (!leaveStrictArmed) {
+                leaveStrictArmed = true
+                exitLeaveStrict.text = "Tap again to leave strict mode"
+            } else {
+                runNativeCommand("exitStrictMode")
+            }
+        }
+        findViewById<Button>(R.id.exit_reload).setOnClickListener {
+            closeExitMenu()
+            startSession()
+        }
+        findViewById<Button>(R.id.exit_close).setOnClickListener { closeExitMenu() }
+    }
+
+    private fun openExitMenu(requirePin: Boolean) {
+        val mode = KioskMode.current(this)
+        val pinRequired = requirePin && ExitPin.stored(this) != null
+        leaveStrictArmed = false
+        exitLeaveStrict.text = getString(R.string.exit_leave_strict)
+        exitLeaveStrict.visibility = if (mode == KioskMode.Mode.STRICT) View.VISIBLE else View.GONE
+        exitChooseHome.isEnabled = mode != KioskMode.Mode.STRICT
+        exitStatus.text = "${describeMode(mode)} · Home app: ${if (KioskMode.isDefaultHome(this)) "ShowRunner" else "another app"}"
+        exitMessage.text = if (mode == KioskMode.Mode.STRICT) "Strict mode locks Home. Leave strict mode to choose another Home app." else ""
+        exitPin.setText("")
+        exitPinRow.visibility = if (pinRequired) View.VISIBLE else View.GONE
+        exitActions.visibility = if (pinRequired) View.GONE else View.VISIBLE
+        exitMenu.visibility = View.VISIBLE
+        exitMenu.bringToFront()
+        if (pinRequired) {
+            exitPin.requestFocus()
+            getSystemService(InputMethodManager::class.java).showSoftInput(exitPin, InputMethodManager.SHOW_IMPLICIT)
+        }
+        main.removeCallbacks(autoCloseExitMenu)
+        main.postDelayed(autoCloseExitMenu, EXIT_MENU_IDLE_MS)
+    }
+
+    private val autoCloseExitMenu = Runnable { closeExitMenu() }
+
+    private fun closeExitMenu() {
+        main.removeCallbacks(autoCloseExitMenu)
+        getSystemService(InputMethodManager::class.java).hideSoftInputFromWindow(exitPin.windowToken, 0)
+        exitMenu.visibility = View.GONE
+        KioskMode.hideSystemBars(this)
+    }
+
+    private fun checkPin() {
+        val hash = ExitPin.stored(this)
+        if (hash == null || ExitPin.matches(hash, exitPin.text.toString())) {
+            getSystemService(InputMethodManager::class.java).hideSoftInputFromWindow(exitPin.windowToken, 0)
+            exitPinRow.visibility = View.GONE
+            exitActions.visibility = View.VISIBLE
+            exitMessage.text = exitMessage.text.takeIf { KioskMode.current(this) == KioskMode.Mode.STRICT } ?: ""
+        } else {
+            exitPin.setText("")
+            exitMessage.text = "Wrong PIN"
+        }
+        main.removeCallbacks(autoCloseExitMenu)
+        main.postDelayed(autoCloseExitMenu, EXIT_MENU_IDLE_MS)
+    }
+
+    /** Native kiosk actions, from the exit menu or dashboard commands in the heartbeat ack. */
+    private fun runNativeCommand(command: String) {
+        Log.i(TAG, "Kiosk command: $command")
+        when (command) {
+            "openExitMenu" -> openExitMenu(requirePin = false)
+            "openSettings" -> {
+                closeExitMenu()
+                KioskMode.pauseLockTask(this)
+                startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
+            "chooseHome" -> {
+                closeExitMenu()
+                startActivity(Intent(Settings.ACTION_HOME_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
+            "exitStrictMode" -> {
+                val ok = KioskMode.leaveStrictMode(this)
+                kioskMode = KioskMode.apply(this)
+                if (exitMenu.visibility == View.VISIBLE) openExitMenu(requirePin = false)
+                exitMessage.text = if (ok) "Left strict mode. ShowRunner is no longer device owner." else "Couldn't leave strict mode; see the device log."
+            }
+            else -> Log.w(TAG, "Unknown kiosk command: $command")
+        }
+    }
+
+    private fun describeMode(mode: KioskMode.Mode) = when (mode) {
+        KioskMode.Mode.STRICT -> "Strict (device owner lock)"
+        KioskMode.Mode.LAUNCHER -> "Launcher (default Home app)"
+        KioskMode.Mode.IMMERSIVE -> "Full-screen (not the Home app)"
+    }
+
     private fun describe(e: Exception): String = when (e) {
         is ServerClient.HttpException -> e.message ?: "HTTP ${e.status}"
         is java.net.UnknownHostException -> "unknown host"
@@ -429,6 +583,8 @@ class MainActivity : android.app.Activity() {
     }
 
     companion object {
+        /** The live kiosk activity; a newer instance finishes the older one. */
+        @Volatile private var activeInstance: WeakReference<MainActivity>? = null
         private const val TAG = "ShowRunner"
         private const val WEB_TAG = "ShowRunner.Web"
         private const val DEFAULT_HEARTBEAT_MS = 30_000L
@@ -436,6 +592,8 @@ class MainActivity : android.app.Activity() {
         private const val WATCHDOG_TIMEOUT_MS = 2 * 60_000L
         private const val EVENTS_DOWN_RELOAD_BEATS = 3
         private const val SETUP_POLL_MS = 5_000L
+        private const val EXIT_HOLD_MS = 3_000L
+        private const val EXIT_MENU_IDLE_MS = 60_000L
         private val RETRY_BACKOFF_MS = longArrayOf(5_000, 10_000, 20_000, 40_000, 60_000)
     }
 }

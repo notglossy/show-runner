@@ -198,7 +198,7 @@ The runtime loads before your template, so `kiosk` exists when your script runs.
 | `kiosk.log(level, message)` | Report `"error"`, `"warn"`, or `"info"` to the dashboard's device log. |
 | `kiosk.deviceId` / `kiosk.screenId` | Identifiers (strings; `screenId` may be `null`). |
 | `kiosk.connected` | `true` while the live command connection to the server is open. |
-| `kiosk.native` | Device bridge on the Echo, or `null` in a desktop browser/preview. Always guard: `kiosk.native?.setBrightness(0.3)`. Methods: `getBrightness()` → 0–1, `setBrightness(value)` (0–1; negative returns to the system setting), `getDeviceInfo()` → JSON string (`deviceId, model, androidVersion, appVersion, screenWidth, screenHeight, kioskMode, launcher, serverUrl, webViewVersion`), `reload()`. Use sparingly, e.g. dimming at night. |
+| `kiosk.native` | Device bridge on the Echo, or `null` in a desktop browser/preview. Always guard: `kiosk.native?.setBrightness(0.3)`. Methods: `getBrightness()` → 0–1, `setBrightness(value)` (0–1; negative returns to the system setting), `getDeviceInfo()` → JSON string (`deviceId, model, androidVersion, appVersion, screenWidth, screenHeight, kioskMode` (`"launcher"`, `"strict"` or `"immersive"`), `isDefaultHome, serverUrl, webViewVersion`), `reload()`. Use sparingly, e.g. dimming at night. |
 
 ### Events
 
