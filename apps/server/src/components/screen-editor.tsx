@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Screen } from "@/lib/db/schema";
 import type { KioskDataPayload } from "@/lib/providers/payload";
 import { api, ApiClientError } from "@/lib/client/api";
+import { AiPanel, type AiResult } from "./ai-panel";
 import { CodeEditor } from "./code-editor";
 import { ScreenPreview, type PreviewLog } from "./screen-preview";
 import { Badge, Button, Card, ErrorText, Field, inputClass } from "./ui";
@@ -31,6 +32,10 @@ export function ScreenEditor({ screen, sampleData, usage }: { screen: EditableSc
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [previewLogs, setPreviewLogs] = useState<PreviewLog[]>([]);
+  /** html before each AI change, newest last, for undo. */
+  const [aiHistory, setAiHistory] = useState<string[]>([]);
+  /** Most recent instruction that produced the current draft, saved as generationPrompt. */
+  const [aiPrompt, setAiPrompt] = useState<string | null>(null);
   const dirty =
     draft.name !== saved.name ||
     draft.description !== saved.description ||
@@ -46,6 +51,26 @@ export function ScreenEditor({ screen, sampleData, usage }: { screen: EditableSc
 
   const setHtml = useCallback((html: string) => setDraft((d) => ({ ...d, html })), []);
 
+  // Latest html, readable from async callbacks (an AI result can arrive after further edits).
+  const htmlRef = useRef(draft.html);
+  useEffect(() => {
+    htmlRef.current = draft.html;
+  }, [draft.html]);
+
+  const applyAi = useCallback((result: AiResult) => {
+    const before = htmlRef.current;
+    setAiHistory((h) => [...h, before].slice(-20));
+    setDraft((d) => ({ ...d, html: result.html }));
+    setAiPrompt(result.instruction);
+  }, []);
+
+  function undoAi() {
+    const previous = aiHistory.at(-1);
+    if (previous === undefined) return;
+    setAiHistory(aiHistory.slice(0, -1));
+    setDraft((d) => ({ ...d, html: previous }));
+  }
+
   async function save() {
     setPending(true);
     setError(null);
@@ -54,11 +79,13 @@ export function ScreenEditor({ screen, sampleData, usage }: { screen: EditableSc
       description: draft.description,
       html: draft.html,
       dataRefreshSeconds: draft.dataRefreshSeconds,
+      ...(aiPrompt ? { source: "ai" as const, generationPrompt: aiPrompt } : {}),
     };
     try {
       if (draft.id) {
         const { screen: updated } = await api<{ screen: Screen }>(`/api/screens/${draft.id}`, { method: "PATCH", body });
         setSaved({ ...draft, source: updated.source });
+        setAiPrompt(null);
         router.refresh();
       } else {
         const { screen: created } = await api<{ screen: Screen }>("/api/screens", { method: "POST", body });
@@ -113,7 +140,21 @@ export function ScreenEditor({ screen, sampleData, usage }: { screen: EditableSc
       <ErrorText>{error}</ErrorText>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <div className="min-w-0">
+        <div className="flex min-w-0 flex-col gap-3">
+          <AiPanel
+            currentHtml={draft.html}
+            hasExistingScreen={Boolean(draft.id)}
+            previewErrors={previewLogs.map((l) => `${l.message}${l.line ? ` (line ${l.line})` : ""}`)}
+            onResult={applyAi}
+          />
+          {aiHistory.length > 0 && (
+            <div className="flex items-center gap-2 text-xs text-neutral-600">
+              <Button size="sm" onClick={undoAi}>
+                Undo AI change
+              </Button>
+              <span>{aiHistory.length} AI version{aiHistory.length === 1 ? "" : "s"} this session</span>
+            </div>
+          )}
           <CodeEditor value={draft.html} onChange={setHtml} />
           <p className="mt-1 text-xs text-neutral-500">
             Body fragment: one &lt;style&gt;, markup with data-bind attributes, optional &lt;script&gt;. See docs/screen-authoring.md.
