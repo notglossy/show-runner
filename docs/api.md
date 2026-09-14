@@ -99,6 +99,25 @@ The last 1000 lines per device are kept.
 | `PATCH /api/settings` | any of `weatherLatitude, weatherLongitude, weatherUnits, weatherLocationName, timezone` (`null` clears) | same as GET; connected devices refresh data |
 | `GET /api/settings/geocode` | `?q=paris` | `{ results: [{ label, latitude, longitude, timezone }] }` (Open-Meteo geocoding) |
 | `GET /api/preview/data` | | live `kiosk.data` for a placeholder device (editor preview) |
+| `GET /api/ai/config` | | `{ configured, defaultModel, provider, models[] }` (never the key; models from the provider's `/models`) |
+| `POST /api/ai/generate-screen` | `{ instruction, currentHtml?, model?, previewErrors? }` | `application/x-ndjson` stream of events (below); 503 `not_configured` without `AI_API_KEY` |
+
+### AI generation stream
+
+One JSON object per line, in order:
+
+```jsonl
+{"type":"status","message":"Asking google/gemini-3.8-flash…"}
+{"type":"progress","phase":"reasoning","characters":812}
+{"type":"progress","phase":"writing","characters":10240}
+{"type":"status","message":"Fixing problems (attempt 2)…"}
+{"type":"result","html":"<style>…","problems":[],"model":"google/gemini-3.8-flash","attempts":1,"usage":{"promptTokens":7520,"completionTokens":8895}}
+```
+
+The last line is `result` or `{"type":"error","message":"…"}`. The server sends `docs/screen-authoring.md` as the
+system prompt, validates the returned fragment (`lib/ai/validate.ts`), and asks the model once to fix any rule
+violations. `problems` lists anything still wrong. Nothing is saved; the editor saves with `source: "ai"` and
+`generationPrompt`.
 
 `DeviceView` fields: `id, name, claimed, claimedAt, pairingCode, model, androidVersion, appVersion,
 screenWidth, screenHeight, assignment, currentScreenId, playlistPosition, online` (heartbeat within

@@ -28,7 +28,10 @@ scripts/        delegate.sh (OMP delegation), install.sh (Phase 2)
 - **Providers** (`time`, `weather` via Open-Meteo, ...) live in a server `providers/` module: one class with
   `fetch()` + cache TTL, plus one registry entry.
 - `docs/screen-authoring.md` is the binding contract for templates **and** the system prompt for AI screen
-  generation (Phase 4). Keep it precise and complete when data fields change.
+  generation. Keep it precise and complete when data fields change; `lib/ai/validate.ts` enforces its mechanical rules.
+- **AI generation** uses any OpenAI-compatible API (`AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`; OpenRouter +
+  `google/gemini-3.8-flash` by default). The editor can pick another model per browser. Output always lands in the
+  editor for review; nothing is saved automatically.
 - Target browser is **AOSP WebView 139** (Chromium 139). Anything Chromium 139 supports is fine.
 
 ## Server code map (`apps/server/src`)
@@ -49,6 +52,9 @@ lib/events/bus.ts                in-memory SSE pub/sub (single process)
 lib/providers/                   DataProvider interface, cache, time/weather/device, registry.ts, payload.ts,
                                  sample.ts (browser-shaped sample kiosk.data for previews/tests)
 lib/render/                      document shell + system screens
+lib/ai/                          AI screen generation: client.ts (streams any OpenAI-compatible /chat/completions),
+                                 prompt.ts (authoring doc = system prompt), validate.ts (template rules, also used by
+                                 seed tests), extract.ts, generate.ts (call -> validate -> one repair turn)
 lib/settings/                    dashboard settings (weather location/units, timezone) overriding env defaults; geocoding
 lib/client/                      browser-side helpers (api() fetch wrapper with typed errors, formatting)
 lib/seed/screens.ts              built-in screens, inserted when the screens table is empty
@@ -92,7 +98,8 @@ docker compose up --build -d   # http://localhost:${SHOWRUNNER_PORT:-3000}, heal
 ```
 
 Config is env vars only: `ADMIN_PASSWORD`, `DEVICE_SHARED_SECRET`, `WEATHER_LAT`, `WEATHER_LON`,
-`WEATHER_UNITS` (imperial|metric), `KIOSK_TIMEZONE`, `ANTHROPIC_API_KEY` (Phase 4), `DATABASE_PATH`
+`WEATHER_UNITS` (imperial|metric), `KIOSK_TIMEZONE`, `AI_BASE_URL` / `AI_API_KEY` / `AI_MODEL` (AI screen generation via
+any OpenAI-compatible API, OpenRouter by default), `DATABASE_PATH`
 (image default `/data/showrunner.db`). Prod host is amd64, built by Komodo from `apps/server/Dockerfile`
 with the repo root as the build context.
 

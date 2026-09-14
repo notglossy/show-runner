@@ -70,6 +70,9 @@ sequenceDiagram
   Bearer header. The shell also stores it as a cookie for the server origin via `CookieManager`, so
   every WebView request (page, data, SSE, log) carries it; `EventSource` can't set headers. Details
   are in [`api.md`](api.md).
+- **AI screens.** The editor sends a description (plus the current template when revising) to
+  `POST /api/ai/generate-screen`, which streams a request to an OpenAI-compatible API with
+  `screen-authoring.md` as the system prompt, validates the fragment, and does one repair turn if needed.
 - **Config over rebuilds.** Server config is env vars. Device config is
   `/sdcard/showrunner/config.json` or `am start` intent extras.
 

@@ -10,6 +10,7 @@ export type ApiErrorCode =
   | "conflict"
   | "payload_too_large"
   | "upstream_failed"
+  | "not_configured"
   | "internal_error";
 
 export interface ApiIssue {

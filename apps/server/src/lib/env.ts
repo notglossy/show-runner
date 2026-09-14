@@ -18,7 +18,13 @@ const EnvSchema = z.object({
         return false;
       }
     }, "KIOSK_TIMEZONE must be a valid IANA timezone"),
-  ANTHROPIC_API_KEY: z.string().optional(),
+  /** OpenAI-compatible Chat Completions API used for AI screen generation (OpenRouter by default). */
+  AI_BASE_URL: z.url().default("https://openrouter.ai/api/v1"),
+  /** Unset = AI generation disabled in the dashboard. */
+  AI_API_KEY: z.string().optional(),
+  AI_MODEL: z.string().min(1).default("google/gemini-3.8-flash"),
+  /** docs/screen-authoring.md, sent as the system prompt. Defaults to the repo copy relative to apps/server. */
+  AUTHORING_DOC_PATH: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
