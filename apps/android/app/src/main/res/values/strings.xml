@@ -4,4 +4,12 @@
     <string name="device_admin_description">Keeps ShowRunner pinned full-screen as a kiosk.</string>
     <string name="setup_title">ShowRunner setup</string>
     <string name="reconnecting">Reconnecting…</string>
+    <string name="exit_menu_title">ShowRunner kiosk</string>
+    <string name="exit_pin_hint">PIN</string>
+    <string name="exit_unlock">Unlock</string>
+    <string name="exit_choose_home">Choose Home app…</string>
+    <string name="exit_open_settings">Open Android settings</string>
+    <string name="exit_leave_strict">Leave strict mode</string>
+    <string name="exit_reload">Reload</string>
+    <string name="exit_close">Close</string>
 </resources>

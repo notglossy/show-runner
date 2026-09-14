@@ -5,8 +5,9 @@
 #
 #   --server URL       write /sdcard/showrunner/config.json with this server URL (needs --secret)
 #   --secret SECRET    DEVICE_SHARED_SECRET for the config file
-#   --device-owner     make the app device owner (lock task kiosk). Requires zero accounts on the device.
-#   --launcher         build with the HOME intent filter enabled (-PshowrunnerLauncher=true)
+#   --home             make ShowRunner the default Home app (launcher kiosk mode; the normal setup)
+#   --strict           also make it device owner (strict lock task mode; optional). Requires zero accounts.
+#                      Leave strict mode any time from the on-device exit menu or the dashboard.
 #   --no-build         install the existing debug APK without rebuilding
 #   --serial S         adb target (default: $ANDROID_SERIAL or 192.168.1.203:5555)
 #
@@ -21,7 +22,7 @@ CONFIG_PATH=/sdcard/showrunner/config.json
 server=""
 secret=""
 device_owner=false
-launcher=false
+home=false
 build=true
 serial=${ANDROID_SERIAL:-192.168.1.203:5555}
 
@@ -29,8 +30,8 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --server) server=$2; shift 2 ;;
     --secret) secret=$2; shift 2 ;;
-    --device-owner) device_owner=true; shift ;;
-    --launcher) launcher=true; shift ;;
+    --strict|--device-owner) device_owner=true; shift ;;
+    --home) home=true; shift ;;
     --no-build) build=false; shift ;;
     --serial) serial=$2; shift 2 ;;
     -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
@@ -55,12 +56,12 @@ adb() { "$adb_bin" -s "$serial" "$@"; }
 step() { printf '\n==> %s\n' "$*"; }
 
 if $build; then
-  step "Building debug APK (launcher=$launcher)"
+  step "Building debug APK"
   if [[ -z "${JAVA_HOME:-}" ]]; then
     studio_jbr="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
     [[ -d "$studio_jbr" ]] && export JAVA_HOME=$studio_jbr
   fi
-  (cd "$android_dir" && ./gradlew assembleDebug --console=plain -q "-PshowrunnerLauncher=$launcher")
+  (cd "$android_dir" && ./gradlew assembleDebug --console=plain -q)
 fi
 [[ -f "$apk" ]] || { echo "install: $apk not found; run without --no-build" >&2; exit 1; }
 
@@ -88,8 +89,13 @@ if [[ -n "$server" ]]; then
   adb push "$tmp" "$CONFIG_PATH" >/dev/null
 fi
 
+if $home; then
+  step "Setting ShowRunner as the default Home app"
+  adb shell cmd package set-home-activity "$PKG/.MainActivity"
+fi
+
 if $device_owner; then
-  step "Setting device owner"
+  step "Setting device owner (strict mode)"
   if adb shell dumpsys device_policy | grep -q "Device Owner"; then
     echo "already has a device owner:"
     adb shell dumpsys device_policy | grep -A2 "Device Owner" | sed 's/^/  /'

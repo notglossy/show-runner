@@ -37,10 +37,9 @@
             </intent-filter>
         </activity>
 
-        <!-- HOME filter lives on an alias so it can be switched on/off at build time (-PshowrunnerLauncher=true). -->
+        <!-- Offered as a Home app. Launcher mode = the user (or install.sh) picks ShowRunner as default Home. -->
         <activity-alias
             android:name=".HomeAlias"
-            android:enabled="${launcherEnabled}"
             android:exported="true"
             android:targetActivity=".MainActivity">
             <intent-filter>
