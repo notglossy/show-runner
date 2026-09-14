@@ -18,9 +18,10 @@ let cachedDoc: { path: string; mtimeMs: number; text: string } | undefined;
 /** docs/screen-authoring.md, re-read when the file changes. */
 export function authoringDoc(): string {
   const file = env().AUTHORING_DOC_PATH ?? path.resolve(process.cwd(), "../../docs/screen-authoring.md");
-  const { mtimeMs } = fs.statSync(file);
+  // Runtime path (the Docker image copies the doc and sets AUTHORING_DOC_PATH): keep it out of build tracing.
+  const { mtimeMs } = fs.statSync(/*turbopackIgnore: true*/ file);
   if (!cachedDoc || cachedDoc.path !== file || cachedDoc.mtimeMs !== mtimeMs) {
-    cachedDoc = { path: file, mtimeMs, text: fs.readFileSync(file, "utf8") };
+    cachedDoc = { path: file, mtimeMs, text: fs.readFileSync(/*turbopackIgnore: true*/ file, "utf8") };
   }
   return cachedDoc.text;
 }
