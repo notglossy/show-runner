@@ -2,10 +2,15 @@
 agp = "9.4.0"
 coreKtx = "1.19.0"
 webkit = "1.17.0"
+junit = "4.13.2"
+orgJson = "20260814"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-webkit = { group = "androidx.webkit", name = "webkit", version.ref = "webkit" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+# Real org.json for JVM unit tests (android.jar only has throwing stubs). Test classpath only; never shipped.
+org-json = { group = "org.json", name = "json", version.ref = "orgJson" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

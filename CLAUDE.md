@@ -76,6 +76,8 @@ NativeBridge.kt           window.KioskNative (getDeviceInfo, get/setBrightness, 
 DeviceStatus.kt           heartbeat body (battery, wifi); DeviceIdentity.kt: UUID + device info
 BootReceiver.kt           BOOT_COMPLETED / MY_PACKAGE_REPLACED -> bring kiosk forward unless the user chose another Home
 KioskDeviceAdminReceiver.kt   device admin component for dpm set-device-owner
+KioskLogic.kt             pure decisions (retry backoff, heartbeat clamp, network recovery, boot start, screen id):
+                          keep logic here, not in MainActivity, so it stays unit-testable
 ```
 
 Device quirks and every adb step: `docs/device-setup.md`. Install with `scripts/install.sh` (prefer USB).
@@ -112,6 +114,7 @@ No system JDK; use Android Studio's bundled JBR. SDK at `~/Library/Android/sdk`.
 ```sh
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
 cd apps/android && ./gradlew assembleDebug      # or assembleRelease (signing: ~/.gradle/gradle.properties, see device-setup.md)
+./gradlew testDebugUnitTest                      # JVM unit tests (no device): app/src/test
 ```
 
 Never commit keystores (`*.jks` is gitignored) or put signing passwords in the repo or `.env`.
@@ -127,7 +130,8 @@ Device: `adb connect 192.168.1.203:5555` (network adb persists across reboots). 
   `docs/device-setup.md` as soon as it's known.
 - Prefer boring, well-known dependencies. Ask the owner before adding anything beyond the stack.
   Approved so far: next, react, tailwind, drizzle-orm, drizzle-kit, better-sqlite3, zod, vitest,
-  codemirror (+ @codemirror/lang-html, state, view, commands), androidx.core-ktx, androidx.webkit.
+  codemirror (+ @codemirror/lang-html, state, view, commands), androidx.core-ktx, androidx.webkit,
+  and test-only junit + org.json (real JSON for JVM tests; android.jar's is a stub).
 - No Google Play Services / Firebase on Android.
 - Never require a factory reset to leave the kiosk: launcher mode is the default, strict (device owner) is opt-in and
   must stay leavable from the exit menu and dashboard.
