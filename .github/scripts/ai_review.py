@@ -415,7 +415,8 @@ class GitHub:
     def get_review_comments(self, number: int, max_pages: int = 3) -> list[dict]:
         """Inline review comments on the PR, newest first so that when a huge
         PR overflows max_pages it is the oldest rounds that fall off, not the
-        latest author responses. Best-effort: the review must run if this fails."""
+        latest author responses. Raises on failure; the caller treats it as
+        best-effort (the review must still run without history)."""
         comments: list[dict] = []
         for page in range(1, max_pages + 1):
             url = f"{self.base}/pulls/{number}/comments?per_page=100&page={page}&sort=created&direction=desc"
@@ -532,6 +533,15 @@ def _diff_header_path(raw: str) -> str:
     if m:
         return m.group(2)
     return rest.split(" b/")[-1]
+
+
+def normalize_path(path: object) -> str:
+    """Canonical repo-relative path for matching against the diff: drops "./" prefixes and
+    leading slashes. (Not a character-set lstrip, which also eats the dot of ".github/...".)"""
+    p = str(path or "").strip()
+    while p.startswith("./"):
+        p = p[2:]
+    return p.lstrip("/")
 
 
 def parse_diff(diff: str) -> list[FileDiff]:
@@ -1294,7 +1304,7 @@ def main() -> int:
     # part of the key — they shift with every push, which would defeat the
     # suppression for the common case of an unchanged finding.
     prior_bot_findings = {
-        (str(c.get("path") or "").lstrip("./"), normalize_finding(c.get("body", "")))
+        (normalize_path(c.get("path")), normalize_finding(c.get("body", "")))
         for c in prior_comments
         if _is_bot(c) and normalize_finding(c.get("body", ""))
     }
@@ -1427,7 +1437,7 @@ def main() -> int:
     repeated = 0
     ponytail_count = 0
     for c in result.get("comments", []) or []:
-        path = str(c.get("path", "")).lstrip("./")
+        path = normalize_path(c.get("path"))
         body = str(c.get("body", "")).strip()
         # A finding that repeats an earlier bot comment verbatim on the same
         # file adds noise, not information — that thread already exists.
