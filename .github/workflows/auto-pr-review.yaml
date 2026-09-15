@@ -81,8 +81,9 @@ jobs:
       # Authenticated per-command fetch: the token is scoped to this step's
       # env and passed as a header on this one git invocation, so it never
       # lands in .git/config or any file opencode can read in later steps.
-      # (With fetch-depth: 0 the base ref usually already exists locally;
-      # this keeps the diff base fresh if the branch moved after checkout.)
+      # (With fetch-depth: 0 the base commit usually already exists locally;
+      # this makes sure the PR's base SHA, which the review diffs against, is
+      # present even if the base branch moved after checkout.)
       # The base ref and the token both travel via env, never via workflow-
       # expression interpolation into the script or via argv: an untrusted
       # branch name cannot inject shell, and the Authorization header is

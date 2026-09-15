@@ -1341,14 +1341,18 @@ def main() -> int:
     ) if thread_digest else ""
 
     if backend == "opencode":
-        base_ref = pr.get("base", {}).get("ref", "main")
+        # Diff against the base commit SHA, not the branch name: this string ends up in a command the
+        # agent runs, and git branch names may contain shell metacharacters such as $ ; ( ).
+        base_sha = (pr.get("base") or {}).get("sha") or ""
+        if not re.fullmatch(r"[0-9a-f]{40}", base_sha):
+            raise RuntimeError(f"PR base SHA is missing or malformed: {base_sha!r}")
         system = build_system_prompt(
             ponytail_mode, ponytail_ref, extra_instructions,
             inline_ruleset=False, has_history=bool(thread_digest),
         )
         system += (
             "\n\nYou are running inside a checkout of the PR head commit with read-only tools. "
-            "Use them: get the diff with `git diff origin/" + base_ref + "...HEAD`, then read the "
+            "Use them: get the diff with `git diff " + base_sha + "...HEAD`, then read the "
             "surrounding code, callers, and existing helpers before judging a change. "
             "Do not attempt to edit files, run tests, install anything, or access the network. "
             "Your final message must be ONLY the JSON object described above, nothing before or after it."
@@ -1357,7 +1361,7 @@ def main() -> int:
             pr_header
             + f"Changed files ({len(kept)}): " + ", ".join(f.path for f in kept) + "\n"
             + history_block + "\n"
-            + f"Review this pull request. Start with `git diff origin/{base_ref}...HEAD`.\n\n"
+            + f"Review this pull request. Start with `git diff {base_sha}...HEAD`.\n\n"
             + "FORMAT: your final message must be exactly one JSON object with keys summary, verdict, comments"
             + (", ponytail_net_lines" if ponytail_mode != "off" else "")
             + ". Put Ponytail findings inside comments with a tag field; do not use the L<line>: text format. "
