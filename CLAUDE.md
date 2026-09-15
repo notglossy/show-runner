@@ -111,8 +111,10 @@ No system JDK; use Android Studio's bundled JBR. SDK at `~/Library/Android/sdk`.
 
 ```sh
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-cd apps/android && ./gradlew assembleDebug
+cd apps/android && ./gradlew assembleDebug      # or assembleRelease (signing: ~/.gradle/gradle.properties, see device-setup.md)
 ```
+
+Never commit keystores (`*.jks` is gitignored) or put signing passwords in the repo or `.env`.
 
 Device: `adb connect 192.168.1.203:5555` (network adb persists across reboots). adb lives at
 `~/Library/Android/sdk/platform-tools/adb` and isn't on PATH. Scripts honor `ANDROID_SERIAL`.

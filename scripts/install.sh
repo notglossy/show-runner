@@ -8,7 +8,10 @@
 #   --home             make ShowRunner the default Home app (launcher kiosk mode; the normal setup)
 #   --strict           also make it device owner (strict lock task mode; optional). Requires zero accounts.
 #                      Leave strict mode any time from the on-device exit menu or the dashboard.
-#   --no-build         install the existing debug APK without rebuilding
+#   --release          build/install the release APK signed with your key (see docs/device-setup.md)
+#   --reinstall        uninstall first; needed once when switching between debug and release signing.
+#                      The device keeps its ID (/sdcard/showrunner/device-id) and config, so no re-claim.
+#   --no-build         install the existing APK without rebuilding
 #   --serial S         adb target (default: $ANDROID_SERIAL or 192.168.1.203:5555)
 #
 # Everything this script does on the device is also written out in docs/device-setup.md.
@@ -24,6 +27,8 @@ secret=""
 device_owner=false
 home=false
 build=true
+variant=debug
+reinstall=false
 serial=${ANDROID_SERIAL:-192.168.1.203:5555}
 
 while [[ $# -gt 0 ]]; do
@@ -33,6 +38,8 @@ while [[ $# -gt 0 ]]; do
     --strict|--device-owner) device_owner=true; shift ;;
     --home) home=true; shift ;;
     --no-build) build=false; shift ;;
+    --release) variant=release; shift ;;
+    --reinstall) reinstall=true; shift ;;
     --serial) serial=$2; shift 2 ;;
     -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
     *) echo "install: unknown option $1" >&2; exit 2 ;;
@@ -46,7 +53,7 @@ fi
 
 repo_root=$(cd "$(dirname "$0")/.." && pwd)
 android_dir=$repo_root/apps/android
-apk=$android_dir/app/build/outputs/apk/debug/app-debug.apk
+apk_for() { echo "$android_dir/app/build/outputs/apk/$1/app-$1.apk"; }
 
 sdk=${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}
 adb_bin=$(command -v adb || true)
@@ -56,13 +63,16 @@ adb() { "$adb_bin" -s "$serial" "$@"; }
 step() { printf '\n==> %s\n' "$*"; }
 
 if $build; then
-  step "Building debug APK"
+  step "Building $variant APK"
   if [[ -z "${JAVA_HOME:-}" ]]; then
     studio_jbr="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
     [[ -d "$studio_jbr" ]] && export JAVA_HOME=$studio_jbr
   fi
-  (cd "$android_dir" && ./gradlew assembleDebug --console=plain -q)
+  task=assembleDebug
+  [[ $variant == release ]] && task=assembleRelease
+  (cd "$android_dir" && ./gradlew "$task" --console=plain -q)
 fi
+apk=$(apk_for "$variant")
 [[ -f "$apk" ]] || { echo "install: $apk not found; run without --no-build" >&2; exit 1; }
 
 if [[ "$serial" == *:* ]]; then
@@ -72,9 +82,23 @@ fi
 state=$("$adb_bin" -s "$serial" get-state 2>/dev/null || true)
 [[ "$state" == device ]] || { echo "install: $serial is '${state:-unreachable}'. Wake the device and accept the debugging prompt." >&2; exit 1; }
 
+if $reinstall; then
+  step "Uninstalling the current app (config.json and device-id on /sdcard are kept)"
+  adb shell "test -f /sdcard/showrunner/device-id" \
+    || echo "warning: /sdcard/showrunner/device-id not found; the device will get a new ID and need claiming again"
+  adb uninstall "$PKG" || true
+fi
+
 step "Installing $(basename "$apk")"
-# -r keep data, -t allow testOnly (debug builds are testOnly so device owner stays removable)
-adb install -r -t "$apk"
+# -r keep data, -t allow testOnly (debug builds are testOnly)
+if ! out=$(adb install -r -t "$apk" 2>&1); then
+  echo "$out"
+  if grep -q "INSTALL_FAILED_UPDATE_INCOMPATIBLE" <<<"$out"; then
+    echo "install: the installed app is signed with a different key (debug vs release). Re-run with --reinstall." >&2
+  fi
+  exit 1
+fi
+echo "$out" | tail -1
 
 step "Granting app ops"
 adb shell appops set $PKG MANAGE_EXTERNAL_STORAGE allow   # read /sdcard/showrunner/config.json
@@ -115,5 +139,5 @@ adb shell am start -n "$ACTIVITY" >/dev/null
 sleep 2
 
 step "Done"
-echo "Device ID: $(adb shell run-as $PKG cat shared_prefs/showrunner_device.xml 2>/dev/null | sed -n 's/.*name="deviceId">\([^<]*\)<.*/\1/p')"
+echo "Device ID: $(adb shell cat /sdcard/showrunner/device-id 2>/dev/null | tr -d '\r')"
 echo "Logs:      $adb_bin -s $serial logcat -s ShowRunner ShowRunner.Web ShowRunner.Kiosk ShowRunner.Config"

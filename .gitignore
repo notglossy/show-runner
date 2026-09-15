@@ -35,3 +35,8 @@ apps/android/.kotlin/
 
 # tool output
 .playwright-mcp/
+
+# signing keys (never commit)
+*.jks
+*.keystore
+*.p12

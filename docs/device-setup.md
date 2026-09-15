@@ -100,6 +100,39 @@ adb shell am start -n $PKG/.MainActivity
 
 Logs: `adb logcat -s ShowRunner ShowRunner.Web ShowRunner.Kiosk ShowRunner.Config ShowRunner.Boot`
 
+### Release builds (your own signing key)
+
+Debug builds are signed with this machine's automatic debug key, so only this machine can build updates for them.
+Release builds are signed with your key, aren't debuggable (no `run-as`, no WebView DevTools), and install from any
+machine that has the key.
+
+1. **Create the key once** (Android Studio's JDK has `keytool`; there's no system Java):
+   ```sh
+   mkdir -p ~/keys
+   "/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin/keytool" -genkeypair -v \
+     -keystore ~/keys/showrunner-release.jks -alias showrunner \
+     -keyalg RSA -keysize 4096 -validity 10000 -dname "CN=ShowRunner"
+   ```
+   The `-dname` fields are embedded in every APK and readable by anyone. **Back up the `.jks` file and its password.**
+   Without them you can never update the installed app again.
+2. **Tell Gradle** in `~/.gradle/gradle.properties` (`chmod 600`; never the repo or `.env`):
+   ```properties
+   SHOWRUNNER_KEYSTORE=/Users/you/keys/showrunner-release.jks
+   SHOWRUNNER_KEY_ALIAS=showrunner
+   SHOWRUNNER_KEYSTORE_PASSWORD=...
+   # SHOWRUNNER_KEY_PASSWORD=...   only if the key's password differs (not with keytool's default PKCS12)
+   ```
+   Environment variables with the same names also work (e.g. for CI). Without them, release builds fail with a clear error.
+3. **Build and install:** `scripts/install.sh --release --home --serial <usb-serial>`.
+   `versionCode` is the git commit count, so newer commits always install over older ones.
+4. **Switching an installed device between debug and release** (different keys) needs one uninstall:
+   `scripts/install.sh --release --reinstall --home --serial <usb-serial>`. The app keeps its device ID in
+   `/sdcard/showrunner/device-id` and its config in `/sdcard/showrunner/config.json`, so it reconnects as the same
+   claimed display. Intent-extras config and a strict-mode device owner don't survive the uninstall. Leave strict mode
+   first, and re-send extras if you used them.
+
+Check which key an APK uses: `apksigner verify --print-certs app-release.apk` (in `~/Library/Android/sdk/build-tools/*/`).
+
 ## 3. Configure the server URL and secret
 
 Without config the app shows a setup screen (device ID, kiosk mode, both options below) and checks
