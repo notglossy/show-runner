@@ -39,7 +39,6 @@ import org.json.JSONObject
 import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import kotlin.math.min
 
 /**
  * The whole kiosk: loads config, registers with the server, shows `/device/:id` in a WebView,
@@ -191,7 +190,7 @@ class MainActivity : android.app.Activity() {
     private fun onNetworkAvailable() {
         val lostForMs = if (networkLostAt > 0) SystemClock.elapsedRealtime() - networkLostAt else 0L
         networkLostAt = 0L
-        if (lostForMs == 0L && registration != null && state != State.RECONNECTING) return
+        if (!KioskLogic.shouldRecoverOnNetwork(lostForMs, registered = registration != null, reconnecting = state == State.RECONNECTING)) return
         Log.i(TAG, "Network available${if (lostForMs > 0) " after ${lostForMs / 1000}s offline" else ""}; recovering")
         main.removeCallbacks(recoverAfterNetwork)
         // Give DHCP/DNS a moment after the link comes up.
@@ -258,7 +257,7 @@ class MainActivity : android.app.Activity() {
         Log.i(TAG, "Registered ${reg.deviceId} claimed=${reg.claimed}")
         generation++ // retires the previous heartbeat loop (it used the old token)
         registration = reg
-        heartbeatIntervalMs = reg.heartbeatIntervalSeconds.coerceIn(5, 300) * 1000L
+        heartbeatIntervalMs = KioskLogic.heartbeatIntervalMs(reg.heartbeatIntervalSeconds)
         lastAckAt = SystemClock.elapsedRealtime()
         eventsDownBeats = 0
         ExitPin.update(this, reg.kiosk)
@@ -273,7 +272,7 @@ class MainActivity : android.app.Activity() {
 
     private fun scheduleRetry(error: String) {
         lastError = error
-        val delay = RETRY_BACKOFF_MS[min(retryAttempt, RETRY_BACKOFF_MS.lastIndex)]
+        val delay = KioskLogic.retryDelayMs(retryAttempt)
         retryAttempt++
         nextRetryAt = SystemClock.elapsedRealtime() + delay
         setState(State.RECONNECTING)
@@ -320,7 +319,7 @@ class MainActivity : android.app.Activity() {
         lastAckAt = SystemClock.elapsedRealtime()
         ExitPin.update(this, ack.kiosk)
         ack.commands.forEach(::runNativeCommand)
-        heartbeatIntervalMs = ack.heartbeatIntervalSeconds.coerceIn(5, 300) * 1000L
+        heartbeatIntervalMs = KioskLogic.heartbeatIntervalMs(ack.heartbeatIntervalSeconds)
         if (state == State.RECONNECTING) {
             // Server is back after a heartbeat outage: reload the page and carry on.
             retryAttempt = 0
@@ -411,7 +410,7 @@ class MainActivity : android.app.Activity() {
         override fun onPageFinished(view: WebView, url: String) {
             currentUrl = url
             view.evaluateJavascript("window.kiosk ? window.kiosk.screenId : null") { value ->
-                currentScreenId = value?.takeUnless { it == "null" }?.removeSurrounding("\"")
+                currentScreenId = KioskLogic.parseScreenId(value)
             }
         }
 
@@ -653,6 +652,5 @@ class MainActivity : android.app.Activity() {
         private const val NETWORK_SETTLE_MS = 1_500L
         private const val EXIT_HOLD_MS = 3_000L
         private const val EXIT_MENU_IDLE_MS = 60_000L
-        private val RETRY_BACKOFF_MS = longArrayOf(5_000, 10_000, 20_000, 40_000, 60_000)
     }
 }

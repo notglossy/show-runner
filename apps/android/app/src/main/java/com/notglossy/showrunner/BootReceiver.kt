@@ -15,8 +15,7 @@ import android.util.Log
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val mode = KioskMode.current(context)
-        val start = (intent.action == Intent.ACTION_BOOT_COMPLETED || intent.action == Intent.ACTION_MY_PACKAGE_REPLACED) &&
-            mode != KioskMode.Mode.IMMERSIVE
+        val start = KioskLogic.shouldStartOnBroadcast(intent.action, mode)
         Log.i("ShowRunner.Boot", "${intent.action}: mode=${mode.wire} start=$start")
         if (!start) return
         context.startActivity(

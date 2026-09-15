@@ -64,6 +64,9 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.webkit)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.org.json)
 }
 
 // Fail loudly (at configuration time, configuration-cache safe) instead of producing an unsigned release APK.
