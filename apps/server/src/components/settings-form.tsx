@@ -119,6 +119,15 @@ export function SettingsForm({ effective, defaults, overrides }: { effective: Ki
       <span className="text-xs text-neutral-400">Default from environment</span>
     );
 
+  // Open-Meteo data is CC BY 4.0: credit it wherever its weather or place data is shown.
+  const openMeteoAttribution = (
+    <p className="text-xs text-neutral-500">
+      <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-neutral-900">
+        Weather data by Open-Meteo.com
+      </a>
+    </p>
+  );
+
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <form onSubmit={save} className="flex flex-col gap-6 lg:col-span-2">
@@ -158,6 +167,7 @@ export function SettingsForm({ effective, defaults, overrides }: { effective: Ki
                 <input className={inputClass} value={form.weatherLocationName} maxLength={100} onChange={(e) => set({ weatherLocationName: e.target.value })} />
               </Field>
             </div>
+            {openMeteoAttribution}
           </div>
         </Card>
 
@@ -194,6 +204,7 @@ export function SettingsForm({ effective, defaults, overrides }: { effective: Ki
           <p className="mb-3 text-sm text-neutral-600">Fetch current weather and time with the saved settings.</p>
           <Button onClick={checkWeather}>Check weather now</Button>
           {check && <p className="mt-3 text-sm text-neutral-800">{check}</p>}
+          <div className="mt-3">{openMeteoAttribution}</div>
         </Card>
         <Card title="About these settings">
           <p className="text-sm text-neutral-600">
