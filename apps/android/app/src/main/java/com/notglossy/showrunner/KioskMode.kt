@@ -41,17 +41,6 @@ object KioskMode {
         return resolved?.activityInfo?.packageName == context.packageName
     }
 
-    /**
-     * Intent that starts (or brings back) the kiosk. In launcher mode it goes through HOME so the existing
-     * Home task is reused instead of creating a second activity instance in a separate task.
-     */
-    fun launchIntent(context: Context): Intent =
-        if (!isDeviceOwner(context) && isDefaultHome(context)) {
-            Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).setPackage(context.packageName)
-        } else {
-            Intent(context, MainActivity::class.java)
-        }
-
     fun current(context: Context): Mode = when {
         isDeviceOwner(context) -> Mode.STRICT
         isDefaultHome(context) -> Mode.LAUNCHER

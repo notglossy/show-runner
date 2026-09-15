@@ -92,14 +92,9 @@ class MainActivity : android.app.Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // In launcher mode the kiosk lives in the Home task. A launch from elsewhere (am start, launcher icon,
-        // package update) would otherwise create a second instance with its own WebView and heartbeat loop.
-        if (!intent.hasCategory(Intent.CATEGORY_HOME) && KioskMode.current(this) == KioskMode.Mode.LAUNCHER) {
-            Log.i(TAG, "Forwarding launch to the Home task")
-            startActivity(KioskMode.launchIntent(this).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).putExtras(intent.extras ?: Bundle()))
-            finish()
-            return
-        }
+        // A Home launch and an explicit launch (am start, boot/update receiver) create separate tasks. Keep only the
+        // newest instance so there's never a second WebView and heartbeat loop. (Forwarding explicit launches to the
+        // Home task doesn't work: it won't come to the front while another app, e.g. Settings, is on top.)
         activeInstance?.get()?.takeIf { it !== this && !it.isFinishing }?.let {
             Log.i(TAG, "Finishing previous kiosk instance")
             it.finish()

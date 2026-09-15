@@ -19,6 +19,8 @@ class BootReceiver : BroadcastReceiver() {
             mode != KioskMode.Mode.IMMERSIVE
         Log.i("ShowRunner.Boot", "${intent.action}: mode=${mode.wire} start=$start")
         if (!start) return
-        context.startActivity(KioskMode.launchIntent(context).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP))
+        context.startActivity(
+            Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+        )
     }
 }
