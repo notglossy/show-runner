@@ -5,6 +5,8 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.wifi.WifiManager
+import android.net.ConnectivityManager
+import android.net.Network
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -112,6 +114,7 @@ class MainActivity : android.app.Activity() {
         ConfigStore.saveFromIntent(this, intent)
         startSession()
         main.post(tickRunnable)
+        registerNetworkCallback()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -146,11 +149,68 @@ class MainActivity : android.app.Activity() {
 
     override fun onDestroy() {
         if (activeInstance?.get() === this) activeInstance = null
+        if (networkCallbackRegistered) runCatching { getSystemService(ConnectivityManager::class.java).unregisterNetworkCallback(networkCallback) }
         generation++
         main.removeCallbacksAndMessages(null)
         io.shutdownNow()
         webView?.destroy()
         super.onDestroy()
+    }
+
+    // ---- network recovery ------------------------------------------------------------------
+
+    private var networkCallbackRegistered = false
+    private var networkLostAt = 0L
+
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            main.post(::onNetworkAvailable)
+        }
+
+        override fun onLost(network: Network) {
+            main.post(::onNetworkLost)
+        }
+    }
+
+    private fun registerNetworkCallback() {
+        runCatching {
+            getSystemService(ConnectivityManager::class.java).registerDefaultNetworkCallback(networkCallback)
+            networkCallbackRegistered = true
+        }.onFailure { Log.w(TAG, "Couldn't watch network changes", it) }
+    }
+
+    private fun onNetworkLost() {
+        if (networkLostAt == 0L) networkLostAt = SystemClock.elapsedRealtime()
+        Log.w(TAG, "Network lost")
+    }
+
+    /**
+     * Called when Android reports a usable default network: right after registering (ignored unless we're
+     * still waiting to register), and whenever Wi-Fi comes back after a drop or roam.
+     */
+    private fun onNetworkAvailable() {
+        val lostForMs = if (networkLostAt > 0) SystemClock.elapsedRealtime() - networkLostAt else 0L
+        networkLostAt = 0L
+        if (lostForMs == 0L && registration != null && state != State.RECONNECTING) return
+        Log.i(TAG, "Network available${if (lostForMs > 0) " after ${lostForMs / 1000}s offline" else ""}; recovering")
+        main.removeCallbacks(recoverAfterNetwork)
+        // Give DHCP/DNS a moment after the link comes up.
+        main.postDelayed(recoverAfterNetwork, NETWORK_SETTLE_MS)
+    }
+
+    private val recoverAfterNetwork = Runnable {
+        if (config == null || state == State.SETUP) return@Runnable
+        if (registration == null || state == State.RECONNECTING) {
+            // Skip the remaining backoff: cancel pending retries and the old heartbeat loop, register now.
+            generation++
+            retryAttempt = 0
+            registration = null
+            register()
+        } else {
+            // The page kept showing cached content; reload it to refresh data and reopen its event stream.
+            lastAckAt = SystemClock.elapsedRealtime()
+            webView?.reload()
+        }
     }
 
     /** Keeps Wi-Fi out of power save while the kiosk is in the foreground. */
@@ -590,6 +650,7 @@ class MainActivity : android.app.Activity() {
         private const val WATCHDOG_TIMEOUT_MS = 2 * 60_000L
         private const val EVENTS_DOWN_RELOAD_BEATS = 3
         private const val SETUP_POLL_MS = 5_000L
+        private const val NETWORK_SETTLE_MS = 1_500L
         private const val EXIT_HOLD_MS = 3_000L
         private const val EXIT_MENU_IDLE_MS = 60_000L
         private val RETRY_BACKOFF_MS = longArrayOf(5_000, 10_000, 20_000, 40_000, 60_000)

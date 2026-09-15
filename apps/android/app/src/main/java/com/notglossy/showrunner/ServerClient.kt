@@ -74,8 +74,9 @@ class ServerClient(private val origin: String) {
         val conn = URL(origin + path).openConnection() as HttpURLConnection
         try {
             conn.requestMethod = "POST"
-            conn.connectTimeout = 10_000
-            conn.readTimeout = 15_000
+            // Short timeouts: on flaky Wi-Fi a stalled request should fail fast and be retried.
+            conn.connectTimeout = 5_000
+            conn.readTimeout = 10_000
             conn.doOutput = true
             conn.useCaches = false
             conn.setRequestProperty("Content-Type", "application/json")
