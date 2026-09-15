@@ -652,6 +652,8 @@ def build_thread_digest(comments: list[dict], max_chars: int) -> str:
             break
         kept.append(thread)
         budget -= len(thread) + 1
+    if len(kept) < len(rendered):
+        log(f"Review history over AI_MAX_THREAD_CHARS={max_chars}: kept the newest {len(kept)} of {len(rendered)} thread(s)")
     if not kept:
         return ""  # no usable history; caller must not enable the history rules
     dropped = len(rendered) - len(kept)
