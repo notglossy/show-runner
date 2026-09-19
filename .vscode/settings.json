@@ -1,26 +1,26 @@
 {
   // Format the server tree with Prettier on save; ESLint fixes the rest (import sort).
-  'editor.defaultFormatter': 'esbenp.prettier-vscode',
-  'editor.formatOnSave': true,
-  'editor.codeActionsOnSave': {
-    'source.fixAll.eslint': 'explicit'
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
   },
-  '[typescript]': {
-    'editor.defaultFormatter': 'esbenp.prettier-vscode'
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  '[typescriptreact]': {
-    'editor.defaultFormatter': 'esbenp.prettier-vscode'
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  '[javascript]': {
-    'editor.defaultFormatter': 'esbenp.prettier-vscode'
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  'prettier.configPath': 'apps/server/.prettierrc',
-  'eslint.useFlatConfig': true,
-  'eslint.workingDirectories': ['apps/server'],
+  "prettier.configPath": "apps/server/.prettierrc",
+  "eslint.useFlatConfig": true,
+  "eslint.workingDirectories": ["apps/server"],
   // Android Studio owns Kotlin formatting; nothing to configure here.
-  'files.exclude': {
-    'apps/android/.gradle': true,
-    'apps/android/build': true,
-    'apps/android/app/build': true
+  "files.exclude": {
+    "apps/android/.gradle": true,
+    "apps/android/build": true,
+    "apps/android/app/build": true
   }
 }
