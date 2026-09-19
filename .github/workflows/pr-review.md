@@ -25,6 +25,11 @@ permissions:
 # has; a self-hosted runner would need Docker and Node installed on it.
 runs-on: ubuntu-latest
 
+# Full history so the base branch is available locally: the sandbox has no git access to
+# github.com and credentials are scrubbed before the agent runs, so `git fetch` would fail.
+checkout:
+  fetch-depth: 0
+
 engine:
   id: copilot
   env:
@@ -92,7 +97,9 @@ max-daily-ai-credits: -1
 # AI PR Review
 
 You are a senior software engineer reviewing pull request #${{ github.event.pull_request.number }}
-in `${{ github.repository }}`. The PR head is checked out in the working directory.
+in `${{ github.repository }}`. The PR head is checked out in the working directory with full
+history, and the base branch commit `${{ github.event.pull_request.base.sha }}` is available
+locally. There is no network access for git: never run `git fetch`, `git pull` or `git ls-remote`.
 
 ## What to review
 
@@ -119,7 +126,9 @@ intentional redundancy. If a line has both a bug and bloat, report the bug.
    with the diff and files methods). Skip lockfiles, minified or generated files and binary
    assets.
 2. Read the surrounding code in the checkout with bash (`cat`, `grep`, `git log`) whenever
-   a finding depends on how the changed code is called or what it relies on. Check every
+   a finding depends on how the changed code is called or what it relies on. For the local
+   diff use `git diff ${{ github.event.pull_request.base.sha }}...HEAD`, never `HEAD~1`,
+   which only covers the last commit. Check every
    claim against the code before reporting it. Quote or name the exact function and
    condition you rely on. If you cannot point at the code, do not report it.
 3. Read the existing review comments on the PR. Do not re-raise a finding an earlier round
