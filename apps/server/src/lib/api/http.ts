@@ -23,6 +23,7 @@ export interface ApiErrorBody {
   error: { code: ApiErrorCode; message: string; issues?: ApiIssue[] };
 }
 
+/** Throw in a handler to return a typed JSON error with an HTTP `status`. */
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -39,6 +40,7 @@ export const unauthorized = (message = 'Authentication required') =>
   new ApiError(401, 'unauthorized', message);
 export const conflict = (message: string) => new ApiError(409, 'conflict', message);
 
+/** Serializes an `ApiError` into the `{ error: { code, message, issues } }` JSON body. */
 export function errorResponse(err: ApiError): Response {
   const body: ApiErrorBody = { error: { code: err.code, message: err.message } };
   if (err.issues?.length) body.error.issues = err.issues;
@@ -86,6 +88,7 @@ export async function parseJson<S extends ZodType>(
   return validate(schema, raw);
 }
 
+/** Validates an already-parsed value; throws 400 `validation_failed` on schema mismatch. */
 export function validate<S extends ZodType>(schema: S, value: unknown): z.infer<S> {
   const parsed = schema.safeParse(value);
   if (!parsed.success) {

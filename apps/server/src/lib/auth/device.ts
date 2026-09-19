@@ -9,6 +9,7 @@ import { safeEqual, sha256 } from './crypto';
 export const DEVICE_COOKIE = 'showrunner_device';
 export const SHARED_SECRET_HEADER = 'x-kiosk-secret';
 
+/** Throws 401 unless the `x-kiosk-secret` header matches the shared secret. */
 export function requireSharedSecret(req: Request): void {
   const provided = req.headers.get(SHARED_SECRET_HEADER);
   if (!provided || !safeEqual(provided, env().DEVICE_SHARED_SECRET)) {

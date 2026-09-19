@@ -5,6 +5,7 @@ import { requireAdminPage } from '@/lib/auth/session';
 import { samplePayload } from '@/lib/providers/sample';
 import { findScreen, screenUsage } from '@/lib/screens/service';
 
+// Live state on every request; never prerender.
 export const dynamic = 'force-dynamic';
 
 export default async function ScreenPage({ params }: PageProps<'/screens/[id]'>) {

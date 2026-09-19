@@ -14,6 +14,7 @@ export interface DeviceData {
   lastSeenAt: string | null;
 }
 
+/** Maps an RSSI reading in dBm to 0-4 wifi bars for `device.wifi`. */
 export function wifiBars(rssi: number): number {
   if (rssi >= -55) return 4;
   if (rssi >= -66) return 3;

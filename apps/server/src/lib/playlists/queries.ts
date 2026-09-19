@@ -10,6 +10,7 @@ export interface PlaylistItemView {
   dwellSeconds: number;
 }
 
+/** Lists a playlist's items in play order, joined with their screen names. */
 export function playlistItemsFor(playlistId: string, db: DbOrTx = getDb()): PlaylistItemView[] {
   return db
     .select({

@@ -3,6 +3,7 @@ import { requireDeviceOrAdmin } from '@/lib/auth/device';
 import { findDevice } from '@/lib/devices/service';
 import { subscribe, type KioskEvent } from '@/lib/events/bus';
 
+// Live state on every request; never prerender.
 export const dynamic = 'force-dynamic';
 
 const KEEPALIVE_MS = 25_000;

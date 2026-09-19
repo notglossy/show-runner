@@ -7,6 +7,7 @@ import { listDevices } from '@/lib/devices/service';
 import { getPlaylistOr404 } from '@/lib/playlists/service';
 import { listScreens } from '@/lib/screens/service';
 
+// Live state on every request; never prerender.
 export const dynamic = 'force-dynamic';
 
 export default async function PlaylistPage({ params }: PageProps<'/playlists/[id]'>) {

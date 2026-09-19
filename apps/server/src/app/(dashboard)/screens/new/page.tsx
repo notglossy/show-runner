@@ -3,6 +3,7 @@ import { PageHeader } from '@/components/ui';
 import { requireAdminPage } from '@/lib/auth/session';
 import { samplePayload } from '@/lib/providers/sample';
 
+// Live state on every request; never prerender.
 export const dynamic = 'force-dynamic';
 
 const STARTER = `<style>

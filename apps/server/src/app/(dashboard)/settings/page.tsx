@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/ui';
 import { requireAdminPage } from '@/lib/auth/session';
 import { getSettings } from '@/lib/settings/service';
 
+// Live state on every request; never prerender.
 export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage() {

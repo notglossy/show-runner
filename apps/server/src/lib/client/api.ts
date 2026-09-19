@@ -1,5 +1,6 @@
 import type { ApiErrorBody, ApiIssue } from '@/lib/api/http';
 
+/** Typed error for a failed admin API call, carrying HTTP `status`, `code`, and field issues. */
 export class ApiClientError extends Error {
   constructor(
     readonly status: number,

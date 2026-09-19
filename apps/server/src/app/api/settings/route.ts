@@ -3,6 +3,7 @@ import { UpdateSettingsRequestSchema } from '@/lib/api/schemas';
 import { requireAdmin } from '@/lib/auth/admin';
 import { getSettings, updateSettings } from '@/lib/settings/service';
 
+// Live state on every request; never prerender.
 export const dynamic = 'force-dynamic';
 
 export const GET = route(async (req) => {

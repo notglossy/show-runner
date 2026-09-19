@@ -8,24 +8,29 @@ import { publish } from '@/lib/events/bus';
 
 export type ScreenSummary = Omit<Screen, 'html'> & { htmlBytes: number };
 
+/** Collapses a screen row to its summary with the template size in bytes. */
 export function toScreenSummary({ html, ...rest }: Screen): ScreenSummary {
   return { ...rest, htmlBytes: Buffer.byteLength(html) };
 }
 
+/** Lists screen summaries ordered by name for the dashboard. */
 export function listScreens(): ScreenSummary[] {
   return getDb().select().from(screens).orderBy(asc(screens.name)).all().map(toScreenSummary);
 }
 
+/** Finds a screen by id, or undefined when it does not exist. */
 export function findScreen(id: string): Screen | undefined {
   return getDb().select().from(screens).where(eq(screens.id, id)).get();
 }
 
+/** Returns a screen by id, throwing 404 when it does not exist. */
 export function getScreenOr404(id: string): Screen {
   const screen = findScreen(id);
   if (!screen) throw notFound('Screen');
   return screen;
 }
 
+/** Inserts a screen row with generated id and defaults for optional fields. */
 export function createScreen(
   input: Omit<CreateScreenRequest, 'source'> & { id?: string; source?: Screen['source'] },
 ): Screen {

@@ -31,10 +31,12 @@ export function authoringDoc(): string {
   return cachedDoc.text;
 }
 
+/** System prompt: the authoring guide plus the one-`html`-block reply contract. */
 export function systemPrompt(doc = authoringDoc()): string {
   return doc + RESPONSE_FORMAT;
 }
 
+/** Chat history for a new screen or an edit of `currentHtml`, with preview errors folded in. */
 export function buildMessages({
   instruction,
   currentHtml,
@@ -62,6 +64,7 @@ export function buildMessages({
   ];
 }
 
+/** Follow-up asking the model to fix the listed guide violations. */
 export function repairMessage(problems: string[]): ChatMessage {
   return {
     role: 'user',

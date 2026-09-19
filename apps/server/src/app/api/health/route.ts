@@ -1,3 +1,4 @@
+// Live state on every request; never prerender.
 export const dynamic = 'force-dynamic';
 
 export function GET() {

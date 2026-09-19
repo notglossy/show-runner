@@ -15,6 +15,7 @@ import { wifiBars } from '@/lib/providers/device';
 import { getPlaylistOr404, listPlaylists } from '@/lib/playlists/service';
 import { listScreens } from '@/lib/screens/service';
 
+// Live state on every request; never prerender.
 export const dynamic = 'force-dynamic';
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {

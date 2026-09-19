@@ -5,6 +5,7 @@ import { generateScreen, type GenerateEvent } from '@/lib/ai/generate';
 import { requireAdmin } from '@/lib/auth/admin';
 import { env } from '@/lib/env';
 
+// Live state on every request; never prerender.
 export const dynamic = 'force-dynamic';
 
 /**

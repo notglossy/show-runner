@@ -26,11 +26,13 @@ import { playlistItemsFor } from '@/lib/playlists/queries';
 import { syncDevice } from '@/lib/playlists/scheduler';
 import { findScreen } from '@/lib/screens/service';
 
+/** How often devices heartbeat; tripled, it defines the online window. */
 export const HEARTBEAT_INTERVAL_SECONDS = 30;
 /** A device counts as online if its last heartbeat is newer than this. */
 export const ONLINE_WINDOW_MS = 3 * HEARTBEAT_INTERVAL_SECONDS * 1000;
 /** Screen assigned automatically when a device is claimed. */
 export const DEFAULT_SCREEN_ID = 'builtin-clock';
+/** Caps stored log lines per device; older lines are pruned on insert. */
 export const MAX_LOGS_PER_DEVICE = 1000;
 /** How long the previous token keeps working after a re-registration. */
 export const PREVIOUS_TOKEN_GRACE_MS = 10 * 60_000;
@@ -61,6 +63,7 @@ export interface DeviceView {
   updatedAt: string;
 }
 
+/** Reads the device row's assignment columns back into a `DeviceAssignment`. */
 export function assignmentOf(d: Device): DeviceAssignment {
   if (d.assignmentType === 'screen' && d.screenId) return { type: 'screen', screenId: d.screenId };
   if (d.assignmentType === 'playlist' && d.playlistId)
@@ -68,6 +71,7 @@ export function assignmentOf(d: Device): DeviceAssignment {
   return { type: 'none' };
 }
 
+/** Shapes a device row for admin APIs, deriving its `online` and `connected` flags. */
 export function toDeviceView(d: Device, now = Date.now()): DeviceView {
   return {
     id: d.id,
@@ -94,14 +98,17 @@ export function toDeviceView(d: Device, now = Date.now()): DeviceView {
   };
 }
 
+/** Lists every device, most recently seen first. */
 export function listDevices(): Device[] {
   return getDb().select().from(devices).orderBy(desc(devices.lastSeenAt)).all();
 }
 
+/** Looks up a device by id, returning undefined when it does not exist. */
 export function findDevice(id: string): Device | undefined {
   return getDb().select().from(devices).where(eq(devices.id, id)).get();
 }
 
+/** Loads a device by id, throwing 404 when it does not exist. */
 export function getDeviceOr404(id: string): Device {
   const device = findDevice(id);
   if (!device) throw notFound('Device');
@@ -164,6 +171,7 @@ export function registerDevice(
   return { device, token };
 }
 
+/** Stores the heartbeat status snapshot and marks the device seen now. */
 export function recordHeartbeat(
   device: Device,
   input: HeartbeatRequest,
@@ -186,6 +194,7 @@ export function recordHeartbeat(
     .get();
 }
 
+/** Claims an unclaimed device by pairing code and assigns the default screen. */
 export function claimDevice(input: ClaimDeviceRequest): Device {
   const db = getDb();
   const device = db
@@ -209,6 +218,7 @@ function requireClaimed(device: Device) {
   if (!device.claimedAt) throw new ApiError(409, 'conflict', 'Device must be claimed first');
 }
 
+/** Renames a device and/or applies a new assignment. */
 export function updateDevice(id: string, input: UpdateDeviceRequest): Device {
   const device = getDeviceOr404(id);
   if (input.name !== undefined) {
@@ -292,6 +302,7 @@ type NativeQueue = Map<string, { type: NativeCommandType; at: number }[]>;
 const globalForNative = globalThis as unknown as { __showrunnerNativeCommands?: NativeQueue };
 const nativeQueues: NativeQueue = (globalForNative.__showrunnerNativeCommands ??= new Map());
 
+/** Reports whether a command type is handled by the Android app itself. */
 export const isNativeCommand = (type: string): type is NativeCommandType =>
   (NATIVE_COMMANDS as readonly string[]).includes(type);
 
@@ -302,6 +313,7 @@ export function takeNativeCommands(deviceId: string, now = Date.now()): NativeCo
   return queue.filter((c) => now - c.at < NATIVE_COMMAND_TTL_MS).map((c) => c.type);
 }
 
+/** Delivers a kiosk command over SSE, queueing native commands for the next heartbeat. */
 export function sendCommand(
   device: Device,
   command: DeviceCommandRequest,
@@ -331,6 +343,7 @@ export function sendCommand(
   };
 }
 
+/** Deletes a device and tells its open connections to reload. */
 export function deleteDevice(id: string): void {
   getDeviceOr404(id);
   getDb().delete(devices).where(eq(devices.id, id)).run();
@@ -392,6 +405,7 @@ export function appendLog(
   return true;
 }
 
+/** Lists a device's stored log lines, newest first. */
 export function listLogs(deviceId: string, query: DeviceLogsQuery): DeviceLog[] {
   return getDb()
     .select()

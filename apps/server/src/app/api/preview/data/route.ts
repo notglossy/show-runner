@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/auth/admin';
 import type { Device } from '@/lib/db/schema';
 import { buildDataPayload } from '@/lib/providers/payload';
 
+// Live state on every request; never prerender.
 export const dynamic = 'force-dynamic';
 
 const PREVIEW_DEVICE: Device = {

@@ -2,10 +2,46 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 import prettierConfig from 'eslint-config-prettier/flat';
+import jsdoc from 'eslint-plugin-jsdoc';
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    plugins: { jsdoc },
+    rules: {
+      // JSDoc hygiene everywhere: checked when present, never mandated here.
+      'jsdoc/require-description': 'warn',
+      'jsdoc/no-blank-block-descriptions': 'warn',
+      'jsdoc/check-alignment': 'warn',
+      'jsdoc/no-types': 'warn',
+      // Tagged comments pile up silently; surface them (warn, not error; "fixme"-style markers below are plural).
+      'no-warning-comments': [
+        'warn',
+        { terms: ['todo:', 'fixme:', 'hack:', 'xxx:'], location: 'anywhere' },
+      ],
+    },
+  },
+  {
+    files: ['src/lib/**/*.ts'],
+    plugins: { jsdoc },
+    rules: {
+      // Loose JSDoc: every exported lib function gets /** ... */, no @param/@returns types (signatures carry them).
+      'jsdoc/require-jsdoc': [
+        'warn',
+        {
+          publicOnly: true,
+          require: {
+            ArrowFunctionExpression: false,
+            ClassDeclaration: true,
+            ClassExpression: false,
+            FunctionDeclaration: true,
+            FunctionExpression: true,
+          },
+        },
+      ],
+    },
+  },
   prettierConfig,
   // Override default ignores of eslint-config-next.
   globalIgnores([

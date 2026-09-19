@@ -19,6 +19,7 @@ export function safeEqual(a: string, b: string): boolean {
 // No 0/O, 1/I/L: readable across a room.
 const PAIRING_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
+/** Room-readable pairing code from the unambiguous alphabet (no 0/O, 1/I/L). */
 export function randomPairingCode(length = 6): string {
   let code = '';
   for (let i = 0; i < length; i++) code += PAIRING_ALPHABET[randomInt(PAIRING_ALPHABET.length)];

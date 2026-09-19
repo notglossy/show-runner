@@ -59,6 +59,7 @@ export const KIOSK_FONTS: readonly KioskFont[] = [
 
 export const FONTS_PATH = '/kiosk/fonts';
 
+/** Renders one `@font-face` rule per bundled kiosk font for the document shell. */
 export function fontFaceCss(): string {
   return KIOSK_FONTS.map(
     (f) =>

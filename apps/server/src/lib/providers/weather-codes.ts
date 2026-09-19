@@ -63,6 +63,7 @@ const CODES: Record<number, CodeInfo> = {
   99: info('Thunderstorm with hail', 'thunderstorm', '⛈️'),
 };
 
+/** Maps a WMO weather code to the condition, icon, and day/night emoji templates use. */
 export function describeWeatherCode(code: number, isDay = true) {
   const c = CODES[code] ?? info('Unknown', 'unknown', '❔');
   return {

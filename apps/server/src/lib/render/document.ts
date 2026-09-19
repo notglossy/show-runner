@@ -31,6 +31,7 @@ export const jsonForScript = (value: unknown) =>
     .replace(/\u2028/g, '\\u2028')
     .replace(/\u2029/g, '\\u2029');
 
+/** Builds the page, data, events, and log URLs a kiosk device talks to. */
 export function deviceUrls(deviceId: string): KioskBoot['urls'] {
   const id = encodeURIComponent(deviceId);
   return {

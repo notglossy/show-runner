@@ -15,6 +15,7 @@ interface Subscriber {
 const globalForBus = globalThis as unknown as { __showrunnerBus?: Map<string, Set<Subscriber>> };
 const channels = (globalForBus.__showrunnerBus ??= new Map());
 
+/** Registers a sender for a device's channel. Returns an unsubscribe function. */
 export function subscribe(
   deviceId: string,
   viewer: ViewerKind,
@@ -44,6 +45,7 @@ export function publish(deviceId: string, command: KioskCommand): number {
   return set.size;
 }
 
+/** Counts open connections for a device, optionally filtered by viewer kind. */
 export function connectionCount(deviceId: string, viewer?: ViewerKind): number {
   const set = channels.get(deviceId);
   if (!set) return 0;

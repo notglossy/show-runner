@@ -6,6 +6,7 @@ import { buildDataPayload } from '@/lib/providers/payload';
 import { deviceUrls, renderKioskDocument, renderPlainPage } from '@/lib/render/document';
 import { pairingScreen, unassignedScreen } from '@/lib/render/system-screens';
 
+// Live state on every request; never prerender.
 export const dynamic = 'force-dynamic';
 
 const html = (body: string, status = 200) =>

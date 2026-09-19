@@ -12,6 +12,7 @@ export interface ChatResult {
   usage: { promptTokens: number; completionTokens: number } | null;
 }
 
+/** Typed error for a failed AI provider call, carrying the HTTP `status`. */
 export class AiProviderError extends Error {
   constructor(
     readonly status: number,

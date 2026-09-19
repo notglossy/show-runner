@@ -10,6 +10,7 @@ export type KioskDataPayload = ProviderData & {
   screen: { id: string; name: string } | null;
 };
 
+/** Resolves every provider for a device into the `window.kiosk.data` document. */
 export async function buildDataPayload(
   device: Device,
   screen: Pick<Screen, 'id' | 'name'> | null,

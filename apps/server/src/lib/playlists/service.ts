@@ -17,6 +17,7 @@ export type PlaylistSummary = Playlist & { itemCount: number; totalSeconds: numb
 
 const total = (items: { dwellSeconds: number }[]) => items.reduce((s, i) => s + i.dwellSeconds, 0);
 
+/** Lists every playlist with its item count and total dwell time. */
 export function listPlaylists(): PlaylistSummary[] {
   const db = getDb();
   return db
@@ -30,6 +31,7 @@ export function listPlaylists(): PlaylistSummary[] {
     });
 }
 
+/** Loads a playlist with its items, throwing 404 when it does not exist. */
 export function getPlaylistOr404(id: string): PlaylistView {
   const playlist = getDb().select().from(playlists).where(eq(playlists.id, id)).get();
   if (!playlist) throw notFound('Playlist');
@@ -65,6 +67,7 @@ function replaceItems(playlistId: string, items: PlaylistItemInput[], db: DbOrTx
     .run();
 }
 
+/** Creates a playlist with its items and returns the full view. */
 export function createPlaylist(input: CreatePlaylistRequest): PlaylistView {
   const db = getDb();
   const items = input.items ?? [];
@@ -77,6 +80,7 @@ export function createPlaylist(input: CreatePlaylistRequest): PlaylistView {
   return getPlaylistOr404(id);
 }
 
+/** Renames a playlist and/or replaces its items, then re-syncs assigned devices. */
 export function updatePlaylist(id: string, input: UpdatePlaylistRequest): PlaylistView {
   const db = getDb();
   getPlaylistOr404(id);

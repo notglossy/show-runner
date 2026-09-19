@@ -68,6 +68,7 @@ function advance(deviceId: string): void {
   syncDevice(deviceId);
 }
 
+/** Re-syncs every device assigned to a playlist after the playlist changes. */
 export function syncPlaylist(playlistId: string): void {
   const assigned = getDb()
     .select({ id: devices.id })
@@ -87,8 +88,10 @@ export function startScheduler(): void {
   for (const d of assigned) syncDevice(d.id);
 }
 
+/** Cancels every pending rotation timer (used when shutting down or reseeding). */
 export function stopScheduler(): void {
   for (const id of [...timers.keys()]) clearTimer(id);
 }
 
+/** Counts devices with a pending rotation timer. */
 export const activeRotations = () => timers.size;

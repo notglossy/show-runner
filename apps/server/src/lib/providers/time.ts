@@ -12,6 +12,7 @@ export interface TimeData {
   utcOffsetMinutes: number;
 }
 
+/** Minutes east of UTC for `date` in `timeZone`, handling DST transitions. */
 export function utcOffsetMinutes(date: Date, timeZone: string): number {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone,

@@ -34,6 +34,7 @@ export interface KioskPinHash {
 export const hashKioskPin = (pin: string, salt: string) =>
   createHash('sha256').update(`${salt}:${pin}`).digest('hex');
 
+/** Reads the stored exit-menu PIN hash, or null when no PIN is set. */
 export function getKioskPinHash(): KioskPinHash | null {
   const row = getDb().select().from(settings).where(eq(settings.key, KIOSK_PIN_KEY)).get();
   return (row?.value as KioskPinHash | undefined) ?? null;
@@ -53,6 +54,7 @@ function setKioskPin(pin: string | null) {
     .run();
 }
 
+/** Derives dashboard defaults from env config before overrides apply. */
 export function defaultSettings(config: Env = env()): KioskSettings {
   return {
     weatherLatitude: config.WEATHER_LAT,
@@ -63,11 +65,13 @@ export function defaultSettings(config: Env = env()): KioskSettings {
   };
 }
 
+/** Reads the dashboard overrides patch, or an empty object when none are stored. */
 export function getOverrides(): SettingsOverrides {
   const row = getDb().select().from(settings).where(eq(settings.key, OVERRIDES_KEY)).get();
   return (row?.value as SettingsOverrides | undefined) ?? {};
 }
 
+/** Merges env defaults with stored overrides plus whether an exit PIN is set. */
 export function getSettings(): {
   effective: KioskSettings;
   defaults: KioskSettings;

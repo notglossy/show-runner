@@ -116,6 +116,7 @@ function unitsFor(system: 'imperial' | 'metric'): WeatherData['units'] {
     : { temperature: '°C', windSpeed: 'km/h', precipitation: 'mm' };
 }
 
+/** Builds the Open-Meteo forecast URL for the configured location, units, and timezone. */
 export function openMeteoUrl({ config }: Pick<ProviderContext, 'config'>): string {
   const imperial = config.WEATHER_UNITS === 'imperial';
   const params = new URLSearchParams({

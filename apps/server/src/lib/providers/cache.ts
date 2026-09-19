@@ -12,6 +12,7 @@ interface Entry {
 const globalForCache = globalThis as unknown as { __showrunnerProviderCache?: Map<string, Entry> };
 const entries = (globalForCache.__showrunnerProviderCache ??= new Map());
 
+/** Drops every cached provider value so the next resolve refetches. */
 export function clearProviderCache() {
   entries.clear();
 }

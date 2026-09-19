@@ -5,6 +5,7 @@ import { duration } from '@/lib/client/format';
 import { listDevices } from '@/lib/devices/service';
 import { listPlaylists } from '@/lib/playlists/service';
 
+// Live state on every request; never prerender.
 export const dynamic = 'force-dynamic';
 
 export default async function PlaylistsPage() {

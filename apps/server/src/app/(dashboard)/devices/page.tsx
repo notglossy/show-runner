@@ -10,6 +10,7 @@ import { listDevices, toDeviceView } from '@/lib/devices/service';
 import { listPlaylists } from '@/lib/playlists/service';
 import { listScreens } from '@/lib/screens/service';
 
+// Live state on every request; never prerender.
 export const dynamic = 'force-dynamic';
 
 export default async function DevicesPage() {

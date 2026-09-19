@@ -2,6 +2,7 @@ import { route } from '@/lib/api/http';
 import { requireAdmin } from '@/lib/auth/admin';
 import { env } from '@/lib/env';
 
+// Live state on every request; never prerender.
 export const dynamic = 'force-dynamic';
 
 let modelsCache: { at: number; ids: string[] } | undefined;
