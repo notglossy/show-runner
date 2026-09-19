@@ -48,8 +48,3 @@ export function env(): Env {
   }
   return cached;
 }
-
-/** For tests only. */
-export function resetEnvCache() {
-  cached = undefined;
-}
