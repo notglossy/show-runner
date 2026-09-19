@@ -1,9 +1,9 @@
-import { Nav } from "@/components/nav";
-import { requireAdminPage } from "@/lib/auth/session";
+import { Nav } from '@/components/nav';
+import { requireAdminPage } from '@/lib/auth/session';
 
-export default async function DashboardLayout({ children }: LayoutProps<"/">) {
+export default async function DashboardLayout({ children }: LayoutProps<'/'>) {
   // Pages also check (layouts aren't re-run on every client navigation); this guards the shell itself.
-  await requireAdminPage("/devices");
+  await requireAdminPage('/devices');
   return (
     <div className="min-h-screen bg-neutral-50">
       <Nav />

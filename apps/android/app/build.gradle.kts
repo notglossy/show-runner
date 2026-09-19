@@ -59,6 +59,12 @@ android {
     buildFeatures {
         buildConfig = true
     }
+
+    lint {
+        // Report-only for now: baseline has known findings (targetSdk, WebViewClient lifecycle,
+        // hardcoded strings, cleartext LAN config). Fix those, then flip abortOnError to true.
+        abortOnError = false
+    }
 }
 
 dependencies {

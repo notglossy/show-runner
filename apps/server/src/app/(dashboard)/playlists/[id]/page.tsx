@@ -1,15 +1,17 @@
-import { notFound } from "next/navigation";
-import { PlaylistEditor } from "@/components/playlist-editor";
-import { PageHeader } from "@/components/ui";
-import { ApiError } from "@/lib/api/http";
-import { requireAdminPage } from "@/lib/auth/session";
-import { listDevices } from "@/lib/devices/service";
-import { getPlaylistOr404 } from "@/lib/playlists/service";
-import { listScreens } from "@/lib/screens/service";
+import { notFound } from 'next/navigation';
 
-export const dynamic = "force-dynamic";
+import { PlaylistEditor } from '@/components/playlist-editor';
+import { PageHeader } from '@/components/ui';
+import { ApiError } from '@/lib/api/http';
+import { requireAdminPage } from '@/lib/auth/session';
+import { listDevices } from '@/lib/devices/service';
+import { getPlaylistOr404 } from '@/lib/playlists/service';
+import { listScreens } from '@/lib/screens/service';
 
-export default async function PlaylistPage({ params }: PageProps<"/playlists/[id]">) {
+// Live state on every request; never prerender.
+export const dynamic = 'force-dynamic';
+
+export default async function PlaylistPage({ params }: PageProps<'/playlists/[id]'>) {
   const { id } = await params;
   await requireAdminPage(`/playlists/${id}`);
   let playlist;

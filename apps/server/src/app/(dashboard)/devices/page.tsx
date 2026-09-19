@@ -1,19 +1,21 @@
-import Link from "next/link";
-import { AssignmentSelect } from "@/components/assignment-select";
-import { AutoRefresh } from "@/components/auto-refresh";
-import { ClaimDevice } from "@/components/claim-device";
-import { DeviceStatus } from "@/components/device-status";
-import { TimeAgo } from "@/components/time-ago";
-import { Card, Empty, PageHeader } from "@/components/ui";
-import { requireAdminPage } from "@/lib/auth/session";
-import { listDevices, toDeviceView } from "@/lib/devices/service";
-import { listPlaylists } from "@/lib/playlists/service";
-import { listScreens } from "@/lib/screens/service";
+import Link from 'next/link';
 
-export const dynamic = "force-dynamic";
+import { AssignmentSelect } from '@/components/assignment-select';
+import { AutoRefresh } from '@/components/auto-refresh';
+import { ClaimDevice } from '@/components/claim-device';
+import { DeviceStatus } from '@/components/device-status';
+import { TimeAgo } from '@/components/time-ago';
+import { Card, Empty, PageHeader } from '@/components/ui';
+import { requireAdminPage } from '@/lib/auth/session';
+import { listDevices, toDeviceView } from '@/lib/devices/service';
+import { listPlaylists } from '@/lib/playlists/service';
+import { listScreens } from '@/lib/screens/service';
+
+// Live state on every request; never prerender.
+export const dynamic = 'force-dynamic';
 
 export default async function DevicesPage() {
-  await requireAdminPage("/devices");
+  await requireAdminPage('/devices');
   const devices = listDevices().map((d) => toDeviceView(d));
   const screens = listScreens().map(({ id, name }) => ({ id, name }));
   const playlists = listPlaylists().map(({ id, name }) => ({ id, name }));
@@ -29,19 +31,22 @@ export default async function DevicesPage() {
       {unclaimed.length > 0 && (
         <Card title="Waiting to be claimed" className="mb-6">
           <p className="mb-3 text-sm text-neutral-600">
-            These displays have registered. Check the pairing code shown on the screen matches before claiming.
+            These displays have registered. Check the pairing code shown on the screen matches
+            before claiming.
           </p>
           <ul className="divide-y divide-neutral-100">
             {unclaimed.map((d) => (
               <li key={d.id} className="flex flex-wrap items-center gap-4 py-3">
                 <div className="w-36">
-                  <div className="font-mono text-2xl font-semibold tracking-widest text-neutral-900">{d.pairingCode}</div>
+                  <div className="font-mono text-2xl font-semibold tracking-widest text-neutral-900">
+                    {d.pairingCode}
+                  </div>
                   <div className="text-xs text-neutral-500">
                     {d.model} · registered <TimeAgo iso={d.registeredAt} />
                   </div>
                 </div>
                 <div className="min-w-72 flex-1">
-                  <ClaimDevice pairingCode={d.pairingCode ?? ""} />
+                  <ClaimDevice pairingCode={d.pairingCode ?? ''} />
                 </div>
               </li>
             ))}
@@ -68,7 +73,10 @@ export default async function DevicesPage() {
                 {claimed.map((d) => (
                   <tr key={d.id}>
                     <td className="py-2.5 pr-3">
-                      <Link href={`/devices/${d.id}`} className="font-medium text-neutral-900 underline-offset-2 hover:underline">
+                      <Link
+                        href={`/devices/${d.id}`}
+                        className="font-medium text-neutral-900 underline-offset-2 hover:underline"
+                      >
                         {d.name}
                       </Link>
                       <div className="text-xs text-neutral-500">{d.model}</div>
@@ -79,9 +87,16 @@ export default async function DevicesPage() {
                     <td className="py-2.5 pr-3 text-neutral-600">
                       <TimeAgo iso={d.lastSeenAt} />
                     </td>
-                    <td className="py-2.5 pr-3 text-neutral-700">{d.currentScreenId ? (screenName.get(d.currentScreenId) ?? "—") : "—"}</td>
+                    <td className="py-2.5 pr-3 text-neutral-700">
+                      {d.currentScreenId ? (screenName.get(d.currentScreenId) ?? '—') : '—'}
+                    </td>
                     <td className="py-2.5">
-                      <AssignmentSelect deviceId={d.id} assignment={d.assignment} screens={screens} playlists={playlists} />
+                      <AssignmentSelect
+                        deviceId={d.id}
+                        assignment={d.assignment}
+                        screens={screens}
+                        playlists={playlists}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -92,7 +107,9 @@ export default async function DevicesPage() {
       </Card>
 
       <Card title="Claim by code" className="mt-6">
-        <p className="mb-3 text-sm text-neutral-600">Type the 6-character code shown on a display.</p>
+        <p className="mb-3 text-sm text-neutral-600">
+          Type the 6-character code shown on a display.
+        </p>
         <ClaimDevice />
       </Card>
     </>

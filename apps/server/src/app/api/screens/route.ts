@@ -1,7 +1,7 @@
-import { parseJson, route } from "@/lib/api/http";
-import { CreateScreenRequestSchema } from "@/lib/api/schemas";
-import { requireAdmin } from "@/lib/auth/admin";
-import { createScreen, listScreens } from "@/lib/screens/service";
+import { parseJson, route } from '@/lib/api/http';
+import { CreateScreenRequestSchema } from '@/lib/api/schemas';
+import { requireAdmin } from '@/lib/auth/admin';
+import { createScreen, listScreens } from '@/lib/screens/service';
 
 const MAX_BODY = 600 * 1024;
 

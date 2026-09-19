@@ -1,18 +1,26 @@
-import { randomUUID } from "node:crypto";
-import { asc, eq, inArray } from "drizzle-orm";
-import { ApiError, notFound } from "@/lib/api/http";
-import type { CreatePlaylistRequest, PlaylistItemInput, UpdatePlaylistRequest } from "@/lib/api/types";
-import { getDb, type DbOrTx } from "@/lib/db/client";
-import { devices, playlistItems, playlists, screens, type Playlist } from "@/lib/db/schema";
-import { publish } from "@/lib/events/bus";
-import { playlistItemsFor, type PlaylistItemView } from "./queries";
-import { syncDevice, syncPlaylist } from "./scheduler";
+import { randomUUID } from 'node:crypto';
+
+import { asc, eq, inArray } from 'drizzle-orm';
+
+import { ApiError, notFound } from '@/lib/api/http';
+import type {
+  CreatePlaylistRequest,
+  PlaylistItemInput,
+  UpdatePlaylistRequest,
+} from '@/lib/api/types';
+import { type DbOrTx, getDb } from '@/lib/db/client';
+import { devices, type Playlist, playlistItems, playlists, screens } from '@/lib/db/schema';
+import { publish } from '@/lib/events/bus';
+
+import { playlistItemsFor, type PlaylistItemView } from './queries';
+import { syncDevice, syncPlaylist } from './scheduler';
 
 export type PlaylistView = Playlist & { items: PlaylistItemView[]; totalSeconds: number };
 export type PlaylistSummary = Playlist & { itemCount: number; totalSeconds: number };
 
 const total = (items: { dwellSeconds: number }[]) => items.reduce((s, i) => s + i.dwellSeconds, 0);
 
+/** Lists every playlist with its item count and total dwell time. */
 export function listPlaylists(): PlaylistSummary[] {
   const db = getDb();
   return db
@@ -26,9 +34,10 @@ export function listPlaylists(): PlaylistSummary[] {
     });
 }
 
+/** Loads a playlist with its items, throwing 404 when it does not exist. */
 export function getPlaylistOr404(id: string): PlaylistView {
   const playlist = getDb().select().from(playlists).where(eq(playlists.id, id)).get();
-  if (!playlist) throw notFound("Playlist");
+  if (!playlist) throw notFound('Playlist');
   const items = playlistItemsFor(id);
   return { ...playlist, items, totalSeconds: total(items) };
 }
@@ -36,11 +45,21 @@ export function getPlaylistOr404(id: string): PlaylistView {
 function assertScreensExist(items: PlaylistItemInput[], db: DbOrTx) {
   const ids = [...new Set(items.map((i) => i.screenId))];
   if (!ids.length) return;
-  const found = new Set(db.select({ id: screens.id }).from(screens).where(inArray(screens.id, ids)).all().map((s) => s.id));
-  const issues = items.flatMap((item, i) =>
-    found.has(item.screenId) ? [] : [{ path: `items.${i}.screenId`, message: `Screen ${item.screenId} not found` }],
+  const found = new Set(
+    db
+      .select({ id: screens.id })
+      .from(screens)
+      .where(inArray(screens.id, ids))
+      .all()
+      .map((s) => s.id),
   );
-  if (issues.length) throw new ApiError(400, "validation_failed", "Unknown screen in playlist", issues);
+  const issues = items.flatMap((item, i) =>
+    found.has(item.screenId)
+      ? []
+      : [{ path: `items.${i}.screenId`, message: `Screen ${item.screenId} not found` }],
+  );
+  if (issues.length)
+    throw new ApiError(400, 'validation_failed', 'Unknown screen in playlist', issues);
 }
 
 function replaceItems(playlistId: string, items: PlaylistItemInput[], db: DbOrTx) {
@@ -51,6 +70,7 @@ function replaceItems(playlistId: string, items: PlaylistItemInput[], db: DbOrTx
     .run();
 }
 
+/** Creates a playlist with its items and returns the full view. */
 export function createPlaylist(input: CreatePlaylistRequest): PlaylistView {
   const db = getDb();
   const items = input.items ?? [];
@@ -63,6 +83,7 @@ export function createPlaylist(input: CreatePlaylistRequest): PlaylistView {
   return getPlaylistOr404(id);
 }
 
+/** Renames a playlist and/or replaces its items, then re-syncs assigned devices. */
 export function updatePlaylist(id: string, input: UpdatePlaylistRequest): PlaylistView {
   const db = getDb();
   getPlaylistOr404(id);
@@ -82,16 +103,20 @@ export function updatePlaylist(id: string, input: UpdatePlaylistRequest): Playli
 export function deletePlaylist(id: string): void {
   const db = getDb();
   getPlaylistOr404(id);
-  const affected = db.select({ id: devices.id }).from(devices).where(eq(devices.playlistId, id)).all();
+  const affected = db
+    .select({ id: devices.id })
+    .from(devices)
+    .where(eq(devices.playlistId, id))
+    .all();
   db.transaction((tx) => {
     tx.update(devices)
-      .set({ assignmentType: "none", playlistId: null, currentScreenId: null, playlistPosition: 0 })
+      .set({ assignmentType: 'none', playlistId: null, currentScreenId: null, playlistPosition: 0 })
       .where(eq(devices.playlistId, id))
       .run();
     tx.delete(playlists).where(eq(playlists.id, id)).run();
   });
   for (const d of affected) {
     syncDevice(d.id);
-    publish(d.id, { type: "navigate", screenId: null });
+    publish(d.id, { type: 'navigate', screenId: null });
   }
 }

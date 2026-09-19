@@ -1,4 +1,4 @@
-import type { DataProvider, ProviderContext } from "./types";
+import type { DataProvider, ProviderContext } from './types';
 
 interface Entry {
   value: unknown;
@@ -12,15 +12,19 @@ interface Entry {
 const globalForCache = globalThis as unknown as { __showrunnerProviderCache?: Map<string, Entry> };
 const entries = (globalForCache.__showrunnerProviderCache ??= new Map());
 
+/** Drops every cached provider value so the next resolve refetches. */
 export function clearProviderCache() {
   entries.clear();
 }
 
 const cacheKey = (provider: DataProvider, ctx: ProviderContext) =>
-  provider.scope === "device" ? `${provider.key}:${ctx.device.id}` : provider.key;
+  provider.scope === 'device' ? `${provider.key}:${ctx.device.id}` : provider.key;
 
 /** Resolves a provider's value with TTL caching, in-flight de-duplication, and stale-on-error. */
-export async function resolveProvider<T>(provider: DataProvider<string, T>, ctx: ProviderContext): Promise<T> {
+export async function resolveProvider<T>(
+  provider: DataProvider<string, T>,
+  ctx: ProviderContext,
+): Promise<T> {
   if (provider.ttlMs === 0) return (await fetchOrFallback(provider, ctx, undefined)).value as T;
 
   const key = cacheKey(provider, ctx);
@@ -45,7 +49,10 @@ async function fetchOrFallback<T>(
     const value = await provider.fetch(ctx);
     return { value, expiresAt: Date.now() + provider.ttlMs, good: true };
   } catch (error) {
-    console.warn(`[provider:${provider.key}] fetch failed:`, error instanceof Error ? error.message : error);
+    console.warn(
+      `[provider:${provider.key}] fetch failed:`,
+      error instanceof Error ? error.message : error,
+    );
     const expiresAt = Date.now() + (provider.errorRetryMs ?? 60_000);
     if (previous?.good) return { value: previous.value, expiresAt, good: true };
     return { value: provider.fallback(error, ctx), expiresAt, good: false };

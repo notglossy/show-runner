@@ -93,8 +93,7 @@ Adding a data provider: new file in `lib/providers/`, add to `registry.ts`, docu
 ```sh
 pnpm install
 pnpm dev                 # http://localhost:3000
-pnpm typecheck && pnpm lint && pnpm build
-pnpm --filter @showrunner/server test        # vitest, in-memory SQLite
+pnpm check               # format + lint + typecheck + tests (coverage) + build
 pnpm --filter @showrunner/server db:generate # after editing lib/db/schema.ts (commit the SQL)
 
 cp .env.example .env     # set ADMIN_PASSWORD, DEVICE_SHARED_SECRET
@@ -126,11 +125,15 @@ Device: `adb connect 192.168.1.203:5555` (network adb persists across reboots). 
 
 - Small, reviewable commits, one per meaningful step.
 - Every API route validates input with Zod and returns typed JSON errors.
+- Comments: `/** ... */` on every exported lib function (no `@param`/`@returns` types; signatures carry
+  them), `//` for why-not-what (`force-dynamic`, `use client` workarounds, odd deps), `{/* */}` in JSX,
+  `// TODO:`, `// FIXME:`, `// HACK:` uppercase with colon. Lint warns on missing JSDoc and tagged comments.
 - Anything that must be done on the device (adb commands, permissions, settings) goes in
   `docs/device-setup.md` as soon as it's known.
 - Prefer boring, well-known dependencies. Ask the owner before adding anything beyond the stack.
   Approved so far: next, react, tailwind, drizzle-orm, drizzle-kit, better-sqlite3, zod, vitest,
-  codemirror (+ @codemirror/lang-html, state, view, commands), androidx.core-ktx, androidx.webkit,
+  codemirror (+ @codemirror/lang-html, state, view, commands), prettier (+ eslint-config-prettier,
+  prettier-plugin-tailwindcss), eslint-plugin-jsdoc, androidx.core-ktx, androidx.webkit,
   and test-only junit + org.json (real JSON for JVM tests; android.jar's is a stub).
 - No Google Play Services / Firebase on Android.
 - Never require a factory reset to leave the kiosk: launcher mode is the default, strict (device owner) is opt-in and

@@ -1,7 +1,8 @@
-"use client";
+'use client';
 
-import { useSyncExternalStore } from "react";
-import { timeAgo } from "@/lib/client/format";
+import { useSyncExternalStore } from 'react';
+
+import { timeAgo } from '@/lib/client/format';
 
 // One shared 5-second clock for every <TimeAgo>.
 const TICK_MS = 5000;
@@ -29,7 +30,7 @@ export function TimeAgo({ iso }: { iso: string | null }) {
   if (!iso) return <span>never</span>;
   return (
     <time dateTime={iso} title={now === null ? undefined : new Date(iso).toLocaleString()}>
-      {now === null ? "" : timeAgo(iso, now)}
+      {now === null ? '' : timeAgo(iso, now)}
     </time>
   );
 }

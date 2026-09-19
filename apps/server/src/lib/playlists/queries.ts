@@ -1,6 +1,7 @@
-import { asc, eq } from "drizzle-orm";
-import { getDb, type DbOrTx } from "@/lib/db/client";
-import { playlistItems, screens } from "@/lib/db/schema";
+import { asc, eq } from 'drizzle-orm';
+
+import { type DbOrTx, getDb } from '@/lib/db/client';
+import { playlistItems, screens } from '@/lib/db/schema';
 
 export interface PlaylistItemView {
   id: string;
@@ -10,6 +11,7 @@ export interface PlaylistItemView {
   dwellSeconds: number;
 }
 
+/** Lists a playlist's items in play order, joined with their screen names. */
 export function playlistItemsFor(playlistId: string, db: DbOrTx = getDb()): PlaylistItemView[] {
   return db
     .select({

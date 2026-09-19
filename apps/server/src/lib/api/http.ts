@@ -1,17 +1,17 @@
-import type { NextRequest } from "next/server";
-import { z, type ZodType } from "zod";
+import type { NextRequest } from 'next/server';
+import { z, type ZodType } from 'zod';
 
 export type ApiErrorCode =
-  | "bad_request"
-  | "validation_failed"
-  | "unauthorized"
-  | "forbidden"
-  | "not_found"
-  | "conflict"
-  | "payload_too_large"
-  | "upstream_failed"
-  | "not_configured"
-  | "internal_error";
+  | 'bad_request'
+  | 'validation_failed'
+  | 'unauthorized'
+  | 'forbidden'
+  | 'not_found'
+  | 'conflict'
+  | 'payload_too_large'
+  | 'upstream_failed'
+  | 'not_configured'
+  | 'internal_error';
 
 export interface ApiIssue {
   path: string;
@@ -23,6 +23,7 @@ export interface ApiErrorBody {
   error: { code: ApiErrorCode; message: string; issues?: ApiIssue[] };
 }
 
+/** Throw in a handler to return a typed JSON error with an HTTP `status`. */
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -34,10 +35,12 @@ export class ApiError extends Error {
   }
 }
 
-export const notFound = (what: string) => new ApiError(404, "not_found", `${what} not found`);
-export const unauthorized = (message = "Authentication required") => new ApiError(401, "unauthorized", message);
-export const conflict = (message: string) => new ApiError(409, "conflict", message);
+export const notFound = (what: string) => new ApiError(404, 'not_found', `${what} not found`);
+export const unauthorized = (message = 'Authentication required') =>
+  new ApiError(401, 'unauthorized', message);
+export const conflict = (message: string) => new ApiError(409, 'conflict', message);
 
+/** Serializes an `ApiError` into the `{ error: { code, message, issues } }` JSON body. */
 export function errorResponse(err: ApiError): Response {
   const body: ApiErrorBody = { error: { code: err.code, message: err.message } };
   if (err.issues?.length) body.error.issues = err.issues;
@@ -45,7 +48,7 @@ export function errorResponse(err: ApiError): Response {
 }
 
 function zodIssues(error: z.ZodError): ApiIssue[] {
-  return error.issues.map((i) => ({ path: i.path.join("."), message: i.message }));
+  return error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }));
 }
 
 /** Wraps a route handler so thrown ApiErrors become typed JSON errors and anything else a 500. */
@@ -56,7 +59,7 @@ export function route<Ctx>(handler: (req: NextRequest, ctx: Ctx) => Promise<Resp
     } catch (err) {
       if (err instanceof ApiError) return errorResponse(err);
       console.error(`[api] ${req.method} ${req.nextUrl.pathname}`, err);
-      return errorResponse(new ApiError(500, "internal_error", "Internal server error"));
+      return errorResponse(new ApiError(500, 'internal_error', 'Internal server error'));
     }
   };
 }
@@ -69,25 +72,32 @@ export async function parseJson<S extends ZodType>(
   schema: S,
   maxBytes = DEFAULT_MAX_BODY_BYTES,
 ): Promise<z.infer<S>> {
-  const declared = Number(req.headers.get("content-length") ?? "0");
-  if (declared > maxBytes) throw new ApiError(413, "payload_too_large", `Body exceeds ${maxBytes} bytes`);
+  const declared = Number(req.headers.get('content-length') ?? '0');
+  if (declared > maxBytes)
+    throw new ApiError(413, 'payload_too_large', `Body exceeds ${maxBytes} bytes`);
   const text = await req.text();
   if (Buffer.byteLength(text) > maxBytes) {
-    throw new ApiError(413, "payload_too_large", `Body exceeds ${maxBytes} bytes`);
+    throw new ApiError(413, 'payload_too_large', `Body exceeds ${maxBytes} bytes`);
   }
   let raw: unknown;
   try {
     raw = text.length ? JSON.parse(text) : {};
   } catch {
-    throw new ApiError(400, "bad_request", "Body must be valid JSON");
+    throw new ApiError(400, 'bad_request', 'Body must be valid JSON');
   }
   return validate(schema, raw);
 }
 
+/** Validates an already-parsed value; throws 400 `validation_failed` on schema mismatch. */
 export function validate<S extends ZodType>(schema: S, value: unknown): z.infer<S> {
   const parsed = schema.safeParse(value);
   if (!parsed.success) {
-    throw new ApiError(400, "validation_failed", "Request validation failed", zodIssues(parsed.error));
+    throw new ApiError(
+      400,
+      'validation_failed',
+      'Request validation failed',
+      zodIssues(parsed.error),
+    );
   }
   return parsed.data;
 }

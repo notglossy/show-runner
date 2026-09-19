@@ -1,9 +1,10 @@
-import { parseJson, route } from "@/lib/api/http";
-import { UpdateSettingsRequestSchema } from "@/lib/api/schemas";
-import { requireAdmin } from "@/lib/auth/admin";
-import { getSettings, updateSettings } from "@/lib/settings/service";
+import { parseJson, route } from '@/lib/api/http';
+import { UpdateSettingsRequestSchema } from '@/lib/api/schemas';
+import { requireAdmin } from '@/lib/auth/admin';
+import { getSettings, updateSettings } from '@/lib/settings/service';
 
-export const dynamic = "force-dynamic";
+// Live state on every request; never prerender.
+export const dynamic = 'force-dynamic';
 
 export const GET = route(async (req) => {
   requireAdmin(req);

@@ -1,9 +1,9 @@
-import { parseJson, route } from "@/lib/api/http";
-import { UpdateScreenRequestSchema } from "@/lib/api/schemas";
-import { requireAdmin } from "@/lib/auth/admin";
-import { deleteScreen, getScreenOr404, updateScreen } from "@/lib/screens/service";
+import { parseJson, route } from '@/lib/api/http';
+import { UpdateScreenRequestSchema } from '@/lib/api/schemas';
+import { requireAdmin } from '@/lib/auth/admin';
+import { deleteScreen, getScreenOr404, updateScreen } from '@/lib/screens/service';
 
-type Ctx = RouteContext<"/api/screens/[id]">;
+type Ctx = RouteContext<'/api/screens/[id]'>;
 const MAX_BODY = 600 * 1024;
 
 export const GET = route(async (req, { params }: Ctx) => {

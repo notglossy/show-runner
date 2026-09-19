@@ -8,9 +8,9 @@ export interface BuiltinScreen {
 
 export const BUILTIN_SCREENS: BuiltinScreen[] = [
   {
-    id: "builtin-clock",
-    name: "Clock",
-    description: "Large clock with date and greeting.",
+    id: 'builtin-clock',
+    name: 'Clock',
+    description: 'Large clock with date and greeting.',
     dataRefreshSeconds: 300,
     html: `<style>
   .ck-root { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; color: #fff; font-family: system-ui, sans-serif; text-align: center; }
@@ -27,9 +27,9 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
 </main>`,
   },
   {
-    id: "builtin-clock-weather",
-    name: "Clock & Weather",
-    description: "Clock with current conditions and a 5-day forecast.",
+    id: 'builtin-clock-weather',
+    name: 'Clock & Weather',
+    description: 'Clock with current conditions and a 5-day forecast.',
     dataRefreshSeconds: 60,
     html: `<style>
   .cw-root { position: fixed; inset: 0; padding: 48px; background: #000; color: #fff; font-family: system-ui, sans-serif; display: flex; flex-direction: column; }

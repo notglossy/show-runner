@@ -1,12 +1,13 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import './globals.css';
+
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "ShowRunner",
-  description: "Self-hosted dashboard kiosk",
+  title: 'ShowRunner',
+  description: 'Self-hosted dashboard kiosk',
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="en">
       <body>{children}</body>

@@ -1,14 +1,22 @@
-"use client";
+'use client';
 
-import { indentWithTab } from "@codemirror/commands";
-import { html } from "@codemirror/lang-html";
-import { EditorState } from "@codemirror/state";
-import { EditorView, keymap } from "@codemirror/view";
-import { basicSetup } from "codemirror";
-import { useEffect, useRef } from "react";
+import { indentWithTab } from '@codemirror/commands';
+import { html } from '@codemirror/lang-html';
+import { EditorState } from '@codemirror/state';
+import { EditorView, keymap } from '@codemirror/view';
+import { basicSetup } from 'codemirror';
+import { useEffect, useRef } from 'react';
 
 /** CodeMirror 6 HTML editor. `value` is controlled: external changes (e.g. AI output) replace the document. */
-export function CodeEditor({ value, onChange, height = "34rem" }: { value: string; onChange: (value: string) => void; height?: string }) {
+export function CodeEditor({
+  value,
+  onChange,
+  height = '34rem',
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  height?: string;
+}) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
   const onChangeRef = useRef(onChange);
@@ -33,8 +41,8 @@ export function CodeEditor({ value, onChange, height = "34rem" }: { value: strin
             if (update.docChanged) onChangeRef.current(update.state.doc.toString());
           }),
           EditorView.theme({
-            "&": { height: initial.current.height, fontSize: "13px" },
-            ".cm-scroller": { fontFamily: 'ui-monospace, "JetBrains Mono", Menlo, monospace' },
+            '&': { height: initial.current.height, fontSize: '13px' },
+            '.cm-scroller': { fontFamily: 'ui-monospace, "JetBrains Mono", Menlo, monospace' },
           }),
         ],
       }),
@@ -53,5 +61,7 @@ export function CodeEditor({ value, onChange, height = "34rem" }: { value: strin
     }
   }, [value]);
 
-  return <div ref={host} className="overflow-hidden rounded-md border border-neutral-300 bg-white" />;
+  return (
+    <div ref={host} className="overflow-hidden rounded-md border border-neutral-300 bg-white" />
+  );
 }

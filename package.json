@@ -1,6 +1,6 @@
 {
   "name": "show-runner",
-  "private": true,
+  "license": "MIT",
   "packageManager": "pnpm@10.6.2",
   "engines": {
     "node": ">=22"
@@ -9,6 +9,10 @@
     "dev": "pnpm --filter @showrunner/server dev",
     "build": "pnpm --filter @showrunner/server build",
     "lint": "pnpm --filter @showrunner/server lint",
-    "typecheck": "pnpm --filter @showrunner/server typecheck"
+    "typecheck": "pnpm --filter @showrunner/server typecheck",
+    "format": "pnpm --filter @showrunner/server format",
+    "format:check": "pnpm --filter @showrunner/server format:check",
+    "test": "pnpm --filter @showrunner/server test",
+    "check": "pnpm --filter @showrunner/server check"
   }
 }

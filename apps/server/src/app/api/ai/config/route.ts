@@ -1,8 +1,9 @@
-import { route } from "@/lib/api/http";
-import { requireAdmin } from "@/lib/auth/admin";
-import { env } from "@/lib/env";
+import { route } from '@/lib/api/http';
+import { requireAdmin } from '@/lib/auth/admin';
+import { env } from '@/lib/env';
 
-export const dynamic = "force-dynamic";
+// Live state on every request; never prerender.
+export const dynamic = 'force-dynamic';
 
 let modelsCache: { at: number; ids: string[] } | undefined;
 
@@ -16,12 +17,15 @@ export const GET = route(async (req) => {
       models = modelsCache.ids;
     } else {
       try {
-        const res = await fetch(`${config.AI_BASE_URL.replace(/\/+$/, "")}/models`, {
+        const res = await fetch(`${config.AI_BASE_URL.replace(/\/+$/, '')}/models`, {
           headers: { authorization: `Bearer ${config.AI_API_KEY}` },
           signal: AbortSignal.timeout(8000),
         });
         const body = (await res.json()) as { data?: { id?: string }[] };
-        models = (body.data ?? []).map((m) => m.id).filter((id): id is string => typeof id === "string").sort();
+        models = (body.data ?? [])
+          .map((m) => m.id)
+          .filter((id): id is string => typeof id === 'string')
+          .sort();
         modelsCache = { at: Date.now(), ids: models };
       } catch {
         models = [];

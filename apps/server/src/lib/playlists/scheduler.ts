@@ -1,14 +1,18 @@
-import { eq } from "drizzle-orm";
-import { getDb } from "@/lib/db/client";
-import { devices, type Device } from "@/lib/db/schema";
-import { publish } from "@/lib/events/bus";
-import { playlistItemsFor } from "./queries";
+import { eq } from 'drizzle-orm';
+
+import { getDb } from '@/lib/db/client';
+import { type Device, devices } from '@/lib/db/schema';
+import { publish } from '@/lib/events/bus';
+
+import { playlistItemsFor } from './queries';
 
 /**
  * Rotates playlist-assigned devices: one timer per device, fired after the current item's dwell.
  * State (position, current screen) lives in the devices table so a restart resumes where it was.
  */
-const globalForScheduler = globalThis as unknown as { __showrunnerTimers?: Map<string, NodeJS.Timeout> };
+const globalForScheduler = globalThis as unknown as {
+  __showrunnerTimers?: Map<string, NodeJS.Timeout>;
+};
 const timers = (globalForScheduler.__showrunnerTimers ??= new Map());
 
 function clearTimer(deviceId: string) {
@@ -28,15 +32,19 @@ function loadDevice(deviceId: string): Device | undefined {
 export function syncDevice(deviceId: string, opts: { holdCurrentScreen?: boolean } = {}): void {
   clearTimer(deviceId);
   const device = loadDevice(deviceId);
-  if (!device || device.assignmentType !== "playlist" || !device.playlistId) return;
+  if (!device || device.assignmentType !== 'playlist' || !device.playlistId) return;
 
   const items = playlistItemsFor(device.playlistId);
   const position = items.length ? device.playlistPosition % items.length : 0;
   const expected = items[position]?.screenId ?? null;
   const holding = opts.holdCurrentScreen === true && device.currentScreenId !== expected;
   if (!holding && (expected !== device.currentScreenId || position !== device.playlistPosition)) {
-    getDb().update(devices).set({ currentScreenId: expected, playlistPosition: position }).where(eq(devices.id, deviceId)).run();
-    publish(deviceId, { type: "navigate", screenId: expected });
+    getDb()
+      .update(devices)
+      .set({ currentScreenId: expected, playlistPosition: position })
+      .where(eq(devices.id, deviceId))
+      .run();
+    publish(deviceId, { type: 'navigate', screenId: expected });
   }
   if (!items.length || (items.length < 2 && !holding)) return;
 
@@ -49,28 +57,43 @@ export function syncDevice(deviceId: string, opts: { holdCurrentScreen?: boolean
 function advance(deviceId: string): void {
   timers.delete(deviceId);
   const device = loadDevice(deviceId);
-  if (!device || device.assignmentType !== "playlist" || !device.playlistId) return;
+  if (!device || device.assignmentType !== 'playlist' || !device.playlistId) return;
   const items = playlistItemsFor(device.playlistId);
   if (items.length) {
     const position = (device.playlistPosition + 1) % items.length;
-    getDb().update(devices).set({ playlistPosition: position }).where(eq(devices.id, deviceId)).run();
+    getDb()
+      .update(devices)
+      .set({ playlistPosition: position })
+      .where(eq(devices.id, deviceId))
+      .run();
   }
   syncDevice(deviceId);
 }
 
+/** Re-syncs every device assigned to a playlist after the playlist changes. */
 export function syncPlaylist(playlistId: string): void {
-  const assigned = getDb().select({ id: devices.id }).from(devices).where(eq(devices.playlistId, playlistId)).all();
+  const assigned = getDb()
+    .select({ id: devices.id })
+    .from(devices)
+    .where(eq(devices.playlistId, playlistId))
+    .all();
   for (const d of assigned) syncDevice(d.id);
 }
 
 /** Called once at server start. */
 export function startScheduler(): void {
-  const assigned = getDb().select({ id: devices.id }).from(devices).where(eq(devices.assignmentType, "playlist")).all();
+  const assigned = getDb()
+    .select({ id: devices.id })
+    .from(devices)
+    .where(eq(devices.assignmentType, 'playlist'))
+    .all();
   for (const d of assigned) syncDevice(d.id);
 }
 
+/** Cancels every pending rotation timer (used when shutting down or reseeding). */
 export function stopScheduler(): void {
   for (const id of [...timers.keys()]) clearTimer(id);
 }
 
+/** Counts devices with a pending rotation timer. */
 export const activeRotations = () => timers.size;

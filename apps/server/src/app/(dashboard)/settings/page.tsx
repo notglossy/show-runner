@@ -1,13 +1,14 @@
-import { KioskPinForm } from "@/components/kiosk-pin-form";
-import { SettingsForm } from "@/components/settings-form";
-import { PageHeader } from "@/components/ui";
-import { requireAdminPage } from "@/lib/auth/session";
-import { getSettings } from "@/lib/settings/service";
+import { KioskPinForm } from '@/components/kiosk-pin-form';
+import { SettingsForm } from '@/components/settings-form';
+import { PageHeader } from '@/components/ui';
+import { requireAdminPage } from '@/lib/auth/session';
+import { getSettings } from '@/lib/settings/service';
 
-export const dynamic = "force-dynamic";
+// Live state on every request; never prerender.
+export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage() {
-  await requireAdminPage("/settings");
+  await requireAdminPage('/settings');
   const { effective, defaults, overrides, kioskExitPinSet } = getSettings();
   return (
     <>

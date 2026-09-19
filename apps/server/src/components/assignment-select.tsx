@@ -1,23 +1,30 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import type { DeviceAssignment } from "@/lib/api/types";
-import { api, ApiClientError } from "@/lib/client/api";
-import { inputClass } from "./ui";
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
+import type { DeviceAssignment } from '@/lib/api/types';
+import { api, ApiClientError } from '@/lib/client/api';
+
+import { inputClass } from './ui';
 
 export interface Option {
   id: string;
   name: string;
 }
 
-const encode = (a: DeviceAssignment) => (a.type === "none" ? "none" : a.type === "screen" ? `screen:${a.screenId}` : `playlist:${a.playlistId}`);
+const encode = (a: DeviceAssignment) =>
+  a.type === 'none'
+    ? 'none'
+    : a.type === 'screen'
+      ? `screen:${a.screenId}`
+      : `playlist:${a.playlistId}`;
 
 function decode(value: string): DeviceAssignment {
   const [type, id] = value.split(/:(.*)/s);
-  if (type === "screen" && id) return { type: "screen", screenId: id };
-  if (type === "playlist" && id) return { type: "playlist", playlistId: id };
-  return { type: "none" };
+  if (type === 'screen' && id) return { type: 'screen', screenId: id };
+  if (type === 'playlist' && id) return { type: 'playlist', playlistId: id };
+  return { type: 'none' };
 }
 
 /** Screen/playlist picker that assigns immediately. */
@@ -45,7 +52,10 @@ export function AssignmentSelect({
     setPending(true);
     setError(null);
     try {
-      await api(`/api/devices/${deviceId}`, { method: "PATCH", body: { assignment: decode(next) } });
+      await api(`/api/devices/${deviceId}`, {
+        method: 'PATCH',
+        body: { assignment: decode(next) },
+      });
       router.refresh();
     } catch (err) {
       setValue(previous);
@@ -57,7 +67,12 @@ export function AssignmentSelect({
 
   return (
     <div className="flex flex-col gap-1">
-      <select className={inputClass} value={value} disabled={disabled || pending} onChange={(e) => change(e.target.value)}>
+      <select
+        className={inputClass}
+        value={value}
+        disabled={disabled || pending}
+        onChange={(e) => change(e.target.value)}
+      >
         <option value="none">— Nothing assigned —</option>
         <optgroup label="Screens">
           {screens.map((s) => (

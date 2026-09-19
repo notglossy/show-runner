@@ -1,4 +1,4 @@
-import type { DataProvider } from "./types";
+import type { DataProvider } from './types';
 
 export interface DeviceData {
   id: string;
@@ -14,6 +14,7 @@ export interface DeviceData {
   lastSeenAt: string | null;
 }
 
+/** Maps an RSSI reading in dBm to 0-4 wifi bars for `device.wifi`. */
 export function wifiBars(rssi: number): number {
   if (rssi >= -55) return 4;
   if (rssi >= -66) return 3;
@@ -22,9 +23,9 @@ export function wifiBars(rssi: number): number {
   return 0;
 }
 
-export const deviceProvider: DataProvider<"device", DeviceData> = {
-  key: "device",
-  scope: "device",
+export const deviceProvider: DataProvider<'device', DeviceData> = {
+  key: 'device',
+  scope: 'device',
   ttlMs: 0,
   async fetch({ device }) {
     const { battery, wifi } = device.status;

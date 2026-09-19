@@ -45,14 +45,14 @@ export interface HeartbeatRequest {
   isDefaultHome?: boolean | null;
 }
 
-export type KioskMode = "launcher" | "strict" | "immersive";
+export type KioskMode = 'launcher' | 'strict' | 'immersive';
 
 /** Commands handled by the Android app itself (delivered in the heartbeat reply, never via screen JavaScript). */
-export type NativeCommandType = "openExitMenu" | "openSettings" | "exitStrictMode";
+export type NativeCommandType = 'openExitMenu' | 'openSettings' | 'exitStrictMode';
 
 export interface DeviceLogRequest {
   /** Defaults to "error". */
-  level?: "error" | "warn" | "info";
+  level?: 'error' | 'warn' | 'info';
   /** 1-4000 chars. */
   message: string;
   /** max 2048 chars. */
@@ -79,9 +79,9 @@ export interface ClaimDeviceRequest {
 }
 
 export type DeviceAssignment =
-  | { type: "none" }
-  | { type: "screen"; /** 1-100 chars */ screenId: string }
-  | { type: "playlist"; /** 1-100 chars */ playlistId: string };
+  | { type: 'none' }
+  | { type: 'screen'; /** 1-100 chars */ screenId: string }
+  | { type: 'playlist'; /** 1-100 chars */ playlistId: string };
 
 export interface UpdateDeviceRequest {
   /** 1-100 chars, trimmed. */
@@ -90,9 +90,9 @@ export interface UpdateDeviceRequest {
 }
 
 export type DeviceCommandRequest =
-  | { type: "reload" }
-  | { type: "refreshData" }
-  | { type: "navigate"; /** 1-100 chars */ screenId: string }
+  | { type: 'reload' }
+  | { type: 'refreshData' }
+  | { type: 'navigate'; /** 1-100 chars */ screenId: string }
   | { type: NativeCommandType };
 
 export interface DeviceLogsQuery {
@@ -114,7 +114,7 @@ export interface CreateScreenRequest {
   /** Integer 5-3600, default 60. */
   dataRefreshSeconds?: number;
   /** Only "user" or "ai" may be set through the API; default "user". */
-  source?: "user" | "ai";
+  source?: 'user' | 'ai';
   /** max 4000 chars. */
   generationPrompt?: string | null;
 }
@@ -156,7 +156,7 @@ export interface UpdateSettingsRequest {
   /** Number -180..180, or null. */
   weatherLongitude?: number | null;
   /** "imperial" | "metric", or null. */
-  weatherUnits?: "imperial" | "metric" | null;
+  weatherUnits?: 'imperial' | 'metric' | null;
   /** Display label for the location, e.g. "Los Angeles, California". Trimmed, 1-100 chars, or null. */
   weatherLocationName?: string | null;
   /** IANA timezone accepted by Intl.DateTimeFormat (e.g. "America/Los_Angeles"), or null. */

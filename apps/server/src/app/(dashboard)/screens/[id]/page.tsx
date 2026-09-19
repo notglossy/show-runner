@@ -1,20 +1,28 @@
-import { notFound } from "next/navigation";
-import { ScreenEditor } from "@/components/screen-editor";
-import { Badge, PageHeader } from "@/components/ui";
-import { requireAdminPage } from "@/lib/auth/session";
-import { samplePayload } from "@/lib/providers/sample";
-import { findScreen, screenUsage } from "@/lib/screens/service";
+import { notFound } from 'next/navigation';
 
-export const dynamic = "force-dynamic";
+import { ScreenEditor } from '@/components/screen-editor';
+import { Badge, PageHeader } from '@/components/ui';
+import { requireAdminPage } from '@/lib/auth/session';
+import { samplePayload } from '@/lib/providers/sample';
+import { findScreen, screenUsage } from '@/lib/screens/service';
 
-export default async function ScreenPage({ params }: PageProps<"/screens/[id]">) {
+// Live state on every request; never prerender.
+export const dynamic = 'force-dynamic';
+
+export default async function ScreenPage({ params }: PageProps<'/screens/[id]'>) {
   const { id } = await params;
   await requireAdminPage(`/screens/${id}`);
   const screen = findScreen(id);
   if (!screen) notFound();
   return (
     <>
-      <PageHeader title={<span className="flex items-center gap-2">{screen.name} <Badge>{screen.source}</Badge></span>} />
+      <PageHeader
+        title={
+          <span className="flex items-center gap-2">
+            {screen.name} <Badge>{screen.source}</Badge>
+          </span>
+        }
+      />
       <ScreenEditor
         key={screen.id}
         screen={{

@@ -1,12 +1,11 @@
 /** Commands the server pushes to a device's kiosk runtime over SSE. */
 export type KioskCommand =
-  | { type: "reload" }
-  | { type: "navigate"; screenId: string | null }
-  | { type: "refreshData" };
+  { type: 'reload' } | { type: 'navigate'; screenId: string | null } | { type: 'refreshData' };
 
-export type KioskEvent = KioskCommand | { type: "hello"; screenId: string | null; serverTime: number };
+export type KioskEvent =
+  KioskCommand | { type: 'hello'; screenId: string | null; serverTime: number };
 
-export type ViewerKind = "device" | "admin";
+export type ViewerKind = 'device' | 'admin';
 
 interface Subscriber {
   viewer: ViewerKind;
@@ -16,7 +15,12 @@ interface Subscriber {
 const globalForBus = globalThis as unknown as { __showrunnerBus?: Map<string, Set<Subscriber>> };
 const channels = (globalForBus.__showrunnerBus ??= new Map());
 
-export function subscribe(deviceId: string, viewer: ViewerKind, send: Subscriber["send"]): () => void {
+/** Registers a sender for a device's channel. Returns an unsubscribe function. */
+export function subscribe(
+  deviceId: string,
+  viewer: ViewerKind,
+  send: Subscriber['send'],
+): () => void {
   const sub: Subscriber = { viewer, send };
   let set = channels.get(deviceId);
   if (!set) channels.set(deviceId, (set = new Set()));
@@ -41,6 +45,7 @@ export function publish(deviceId: string, command: KioskCommand): number {
   return set.size;
 }
 
+/** Counts open connections for a device, optionally filtered by viewer kind. */
 export function connectionCount(deviceId: string, viewer?: ViewerKind): number {
   const set = channels.get(deviceId);
   if (!set) return 0;
