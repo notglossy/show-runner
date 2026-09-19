@@ -27,7 +27,7 @@ android {
     defaultConfig {
         applicationId = "com.notglossy.showrunner"
         minSdk = 30
-        targetSdk = 36
+        targetSdk = 37
         versionCode = gitCommitCount
         versionName = "0.2.0"
 
@@ -61,9 +61,8 @@ android {
     }
 
     lint {
-        // Report-only for now: baseline has known findings (targetSdk, WebViewClient lifecycle,
-        // hardcoded strings, cleartext LAN config). Fix those, then flip abortOnError to true.
-        abortOnError = false
+        abortOnError = true
+        warningsAsErrors = true
     }
 }
 

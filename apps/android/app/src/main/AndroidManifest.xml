@@ -15,7 +15,9 @@
     <!-- Lets the boot receiver start the activity when the app is not device owner. Granted via adb appops. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
+    <!-- No launcher icon yet (kiosk: launched as Home, never from the app drawer). tools:ignore documents the gap. -->
     <application
+        tools:ignore="MissingApplicationIcon,DataExtractionRules,DiscouragedApi"
         android:allowBackup="false"
         android:hardwareAccelerated="true"
         android:label="@string/app_name"
