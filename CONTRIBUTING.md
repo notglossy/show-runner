@@ -34,10 +34,9 @@ conflict with the Kotlin conventions it wins. Views codebase — no Compose.
 - Imports: alphabetical, no blank lines between groups (matches the tree as-is).
 - One top-level class per file, PascalCase, file named after the class. Pure logic lives
   in testable helpers (see `KioskLogic.kt`), not the activity.
-- KDoc (`/** ... */`) on public/internal classes, functions, properties; `[Symbol]` links;
+- KDoc (`/** ... */`) on classes and on anything non-obvious; `[Symbol]` links;
   `@param`/`@return` only when they add beyond the signature. Comments explain why
   (lifecycle, threading, API-level/OEM workarounds with the level cited), never restate code.
-- Every `@Suppress`/`@SuppressLint` gets a trailing `//` saying why it is safe.
 - `// TODO(name): description` only. No commented-out code, no file headers.
 - Leave untouched lines alone; no whole-file reformats as a side effect.
 - Ask before adding dependencies beyond the stack in `CLAUDE.md`.

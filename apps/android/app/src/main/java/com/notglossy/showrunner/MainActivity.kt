@@ -142,7 +142,7 @@ class MainActivity : android.app.Activity() {
     }
 
     @Deprecated("Kiosk: back closes the exit menu, otherwise does nothing")
-    @SuppressLint("MissingSuperCall", "GestureBackNavigation") // kiosk owns back: menu or nothing; gesture nav is re-locked by hideSystemBars.
+    @SuppressLint("MissingSuperCall", "GestureBackNavigation") // kiosk owns back: close the menu or swallow; no fragment stack, never call super.
     override fun onBackPressed() {
         if (exitMenu.isVisible) closeExitMenu()
     }
