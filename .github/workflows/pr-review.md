@@ -47,11 +47,12 @@ network:
 # rejects any model missing from its built-in pricing table with HTTP 400. OpenRouter ids,
 # especially the ~vendor/model-latest aliases, are not in that table, so give it a fallback
 # rate in $ per 1M tokens. This only feeds the credit cap; OpenRouter bills its own prices.
-# Current value matches ~deepseek/deepseek-pro-latest, rounded up.
+# Set at or above the dearer of the default model (google/gemini-3.8-flash: 0.75 / 3.75)
+# and the model AI_MODEL currently points at. Raise it if you switch to a pricier model.
 models:
   default-ai-credits-pricing:
-    input: 0.6
-    output: 1.8
+    input: 0.8
+    output: 4
 
 tools:
   github:
