@@ -94,6 +94,3 @@ export function startScheduler(): void {
 export function stopScheduler(): void {
   for (const id of [...timers.keys()]) clearTimer(id);
 }
-
-/** Counts devices with a pending rotation timer. */
-export const activeRotations = () => timers.size;

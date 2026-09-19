@@ -9,12 +9,13 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint",
+    "knip": "knip",
     "typecheck": "next typegen && tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "check": "prettier --check . && eslint && next typegen && tsc --noEmit && vitest run --coverage && next build"
+    "check": "prettier --check . && eslint && knip && next typegen && tsc --noEmit && vitest run --coverage && next build"
   },
   "dependencies": {
     "@codemirror/commands": "^6.11.0",
@@ -42,6 +43,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-jsdoc": "^64.5.4",
     "eslint-plugin-simple-import-sort": "^14.0.0",
+    "knip": "^6.37.0",
     "prettier": "^3.9.8",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "^4",
