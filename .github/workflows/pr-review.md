@@ -68,6 +68,10 @@ safe-outputs:
 
 timeout-minutes: 30
 max-turns: 100
+# The daily guardrail (default 5000 credits) fails closed when any run in the last 24 h
+# has a cancelled agent job with no usage accounting, which a new push causes every time
+# via cancel-in-progress. The per-run max-ai-credits cap (default 1000) still applies.
+max-daily-ai-credits: -1
 ---
 
 # AI PR Review
