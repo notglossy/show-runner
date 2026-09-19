@@ -93,8 +93,7 @@ Adding a data provider: new file in `lib/providers/`, add to `registry.ts`, docu
 ```sh
 pnpm install
 pnpm dev                 # http://localhost:3000
-pnpm format && pnpm typecheck && pnpm lint && pnpm build
-pnpm --filter @showrunner/server test        # vitest, in-memory SQLite
+pnpm check               # format + lint + typecheck + tests (coverage) + build
 pnpm --filter @showrunner/server db:generate # after editing lib/db/schema.ts (commit the SQL)
 
 cp .env.example .env     # set ADMIN_PASSWORD, DEVICE_SHARED_SECRET
