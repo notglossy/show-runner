@@ -45,7 +45,6 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - uses: android-actions/setup-android@f76416b6f0b31dcbe19b88d568aff30e0bf9441c # v3.2.4
       - run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
         working-directory: apps/android
       - run: ./gradlew assembleDebug testDebugUnitTest --warning-mode all
