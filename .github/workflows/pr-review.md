@@ -78,6 +78,10 @@ safe-outputs:
 
 timeout-minutes: 30
 max-turns: 100
+# The proxy blocks inference (HTTP 403) after N consecutive requests that report no
+# prompt-cache hits. OpenRouter does not surface cache reads for every model, so treat every
+# turn as a miss and let the limit equal max-turns.
+max-turn-cache-misses: 100
 # The daily guardrail (default 5000 credits) fails closed when any run in the last 24 h
 # has a cancelled agent job with no usage accounting, which a new push causes every time
 # via cancel-in-progress. The per-run max-ai-credits cap (default 1000) still applies.
