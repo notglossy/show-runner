@@ -12,3 +12,5 @@ Features: device pairing and kiosk lock, server-driven screens and playlists, li
 dashboard with a live-preview screen editor, and AI screen generation through any OpenAI-compatible API.
 
 Work in progress. See `CLAUDE.md` for how to run each part.
+
+MIT licensed — see [LICENSE](LICENSE).
