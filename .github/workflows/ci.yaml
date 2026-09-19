@@ -5,9 +5,10 @@ on:
     branches: [main]
   pull_request:
 
-# Least privilege: nothing here needs to write.
+# Least privilege: gitleaks lists PR commits via the API, so it needs pull-requests: read.
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   secrets:
