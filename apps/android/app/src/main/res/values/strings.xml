@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">ShowRunner</string>
     <string name="device_admin_description">Keeps ShowRunner pinned full-screen as a kiosk.</string>
     <string name="setup_title">ShowRunner setup</string>
@@ -15,7 +15,7 @@
     <string name="leave_strict_confirm">Tap again to leave strict mode</string>
     <string name="left_strict_mode">Left strict mode. ShowRunner is no longer device owner.</string>
     <string name="leave_strict_failed">Couldn\'t leave strict mode; see the device log.</string>
-    <string name="exit_status">%1$s · Home app: %2$s</string>
+    <string name="exit_status"><xliff:g id="mode" example="Strict (device owner lock)">%1$s</xliff:g> · Home app: <xliff:g id="home" example="ShowRunner">%2$s</xliff:g></string>
     <string name="home_showrunner">ShowRunner</string>
     <string name="home_other_app">another app</string>
     <string name="strict_locks_home">Strict mode locks Home. Leave strict mode to choose another Home app.</string>
