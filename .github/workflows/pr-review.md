@@ -43,6 +43,16 @@ network:
     - defaults
     - openrouter.ai
 
+# gh-aw's API proxy meters every run in AI credits (1 = $0.01) against max-ai-credits and
+# rejects any model missing from its built-in pricing table with HTTP 400. OpenRouter ids,
+# especially the ~vendor/model-latest aliases, are not in that table, so give it a fallback
+# rate in $ per 1M tokens. This only feeds the credit cap; OpenRouter bills its own prices.
+# Current value matches ~deepseek/deepseek-pro-latest, rounded up.
+models:
+  default-ai-credits-pricing:
+    input: 0.6
+    output: 1.8
+
 tools:
   github:
     toolsets: [pull_requests, repos]
