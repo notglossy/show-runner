@@ -1,7 +1,10 @@
 import { randomUUID } from 'node:crypto';
+
 import { describe, expect, it } from 'vitest';
+
 import { registerDevice } from '@/lib/devices/service';
-import { subscribe, type KioskEvent } from '@/lib/events/bus';
+import { type KioskEvent, subscribe } from '@/lib/events/bus';
+
 import { defaultSettings, effectiveConfig, getSettings, updateSettings } from './service';
 
 describe('settings', () => {

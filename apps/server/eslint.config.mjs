@@ -3,13 +3,17 @@ import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 import prettierConfig from 'eslint-config-prettier/flat';
 import jsdoc from 'eslint-plugin-jsdoc';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
 
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
-    plugins: { jsdoc },
+    plugins: { jsdoc, 'simple-import-sort': simpleImportSort },
     rules: {
+      // One sorted import block; blank lines between groups.
+      'simple-import-sort/imports': 'warn',
+      'simple-import-sort/exports': 'warn',
       // JSDoc hygiene everywhere: checked when present, never mandated here.
       'jsdoc/require-description': 'warn',
       'jsdoc/no-blank-block-descriptions': 'warn',

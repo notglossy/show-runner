@@ -1,6 +1,7 @@
 'use client';
 
 import { useSyncExternalStore } from 'react';
+
 import { timeAgo } from '@/lib/client/format';
 
 // One shared 5-second clock for every <TimeAgo>.

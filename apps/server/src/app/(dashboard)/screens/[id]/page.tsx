@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+
 import { ScreenEditor } from '@/components/screen-editor';
 import { Badge, PageHeader } from '@/components/ui';
 import { requireAdminPage } from '@/lib/auth/session';

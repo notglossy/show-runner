@@ -7,8 +7,8 @@ import {
   recordHeartbeat,
   takeNativeCommands,
 } from '@/lib/devices/service';
-import { getKioskPinHash } from '@/lib/settings/service';
 import { connectionCount } from '@/lib/events/bus';
+import { getKioskPinHash } from '@/lib/settings/service';
 
 /** Device-facing. The response is the watchdog's ack. */
 export const POST = route(async (req, { params }: RouteContext<'/api/devices/[id]/heartbeat'>) => {

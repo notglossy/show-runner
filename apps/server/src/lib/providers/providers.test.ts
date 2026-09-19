@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
 import type { Device } from '@/lib/db/schema';
 import { env } from '@/lib/env';
+
 import fixture from './__fixtures__/open-meteo-la.json';
 import { clearProviderCache, resolveProvider } from './cache';
 import { wifiBars } from './device';
@@ -8,10 +10,10 @@ import { utcOffsetMinutes } from './time';
 import type { DataProvider } from './types';
 import {
   cardinal,
+  type OpenMeteoResponse,
   openMeteoUrl,
   toWeatherData,
   weatherProvider,
-  type OpenMeteoResponse,
 } from './weather';
 import { describeWeatherCode } from './weather-codes';
 

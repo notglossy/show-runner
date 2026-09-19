@@ -1,9 +1,11 @@
 import { eq } from 'drizzle-orm';
+
 import { ApiError, notFound, unauthorized } from '@/lib/api/http';
 import { getDb } from '@/lib/db/client';
-import { devices, type Device } from '@/lib/db/schema';
+import { type Device, devices } from '@/lib/db/schema';
 import { env } from '@/lib/env';
-import { isAdminRequest, bearerToken, readCookie } from './admin';
+
+import { bearerToken, isAdminRequest, readCookie } from './admin';
 import { safeEqual, sha256 } from './crypto';
 
 export const DEVICE_COOKIE = 'showrunner_device';

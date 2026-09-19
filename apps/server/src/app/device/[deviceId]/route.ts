@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+
 import { ApiError } from '@/lib/api/http';
 import { requireDeviceOrAdmin, type Viewer } from '@/lib/auth/device';
 import { currentScreenOf } from '@/lib/devices/service';

@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { PREVIOUS_TOKEN_GRACE_MS, registerDevice } from '@/lib/devices/service';
+
 import { ADMIN_SESSION_MS, createAdminSession, isAdminRequest, verifyAdminSession } from './admin';
 import { randomPairingCode, safeEqual } from './crypto';
 import { requireDevice, requireDeviceOrAdmin, requireSharedSecret } from './device';

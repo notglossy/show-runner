@@ -1,7 +1,7 @@
-import type { ProviderConfig } from './types';
 import fixture from './__fixtures__/open-meteo-la.json';
 import type { KioskDataPayload } from './payload';
-import { toWeatherData, type OpenMeteoResponse } from './weather';
+import type { ProviderConfig } from './types';
+import { type OpenMeteoResponse, toWeatherData } from './weather';
 
 /** Time fields as the kiosk runtime derives them in the browser (see public/kiosk/runtime.js). */
 export interface DerivedTimeFields {

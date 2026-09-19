@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+
 import { validateTemplate } from '@/lib/ai/validate';
+
 import { BUILTIN_SCREENS } from './screens';
 
 describe('built-in screens', () => {

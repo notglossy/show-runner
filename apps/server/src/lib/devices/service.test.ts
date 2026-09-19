@@ -1,15 +1,18 @@
 import { randomUUID } from 'node:crypto';
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { sha256 } from '@/lib/auth/crypto';
-import { subscribe, type KioskEvent } from '@/lib/events/bus';
+import { type KioskEvent, subscribe } from '@/lib/events/bus';
 import { stopScheduler } from '@/lib/playlists/scheduler';
 import { createPlaylist, deletePlaylist, updatePlaylist } from '@/lib/playlists/service';
 import { createScreen, deleteScreen, findScreen, updateScreen } from '@/lib/screens/service';
+
 import {
-  DEFAULT_SCREEN_ID,
   appendLog,
   applyAssignment,
   claimDevice,
+  DEFAULT_SCREEN_ID,
   getDeviceOr404,
   listLogs,
   recordHeartbeat,

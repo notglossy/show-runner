@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+
 import { AssignmentSelect } from '@/components/assignment-select';
 import { AutoRefresh } from '@/components/auto-refresh';
 import { ClaimDevice } from '@/components/claim-device';
@@ -11,8 +12,8 @@ import { Card, PageHeader } from '@/components/ui';
 import { requireAdminPage } from '@/lib/auth/session';
 import { duration } from '@/lib/client/format';
 import { findDevice, toDeviceView } from '@/lib/devices/service';
-import { wifiBars } from '@/lib/providers/device';
 import { getPlaylistOr404, listPlaylists } from '@/lib/playlists/service';
+import { wifiBars } from '@/lib/providers/device';
 import { listScreens } from '@/lib/screens/service';
 
 // Live state on every request; never prerender.

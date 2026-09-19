@@ -1,9 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+
+import { api } from '@/lib/client/api';
 import type { KioskDataPayload } from '@/lib/providers/payload';
 import { deviceUrls, renderKioskDocument } from '@/lib/render/document';
-import { api } from '@/lib/client/api';
+
 import { Button } from './ui';
 
 const CANVAS_W = 1280;

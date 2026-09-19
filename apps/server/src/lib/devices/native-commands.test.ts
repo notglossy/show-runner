@@ -1,7 +1,10 @@
 import { randomUUID } from 'node:crypto';
+
 import { describe, expect, it } from 'vitest';
+
 import { DeviceCommandRequestSchema, UpdateSettingsRequestSchema } from '@/lib/api/schemas';
 import { getKioskPinHash, getSettings, hashKioskPin, updateSettings } from '@/lib/settings/service';
+
 import { recordHeartbeat, registerDevice, sendCommand, takeNativeCommands } from './service';
 
 const reg = () =>

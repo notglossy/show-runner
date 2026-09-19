@@ -1,14 +1,17 @@
 import { randomUUID } from 'node:crypto';
+
 import { asc, eq, inArray } from 'drizzle-orm';
+
 import { ApiError, notFound } from '@/lib/api/http';
 import type {
   CreatePlaylistRequest,
   PlaylistItemInput,
   UpdatePlaylistRequest,
 } from '@/lib/api/types';
-import { getDb, type DbOrTx } from '@/lib/db/client';
-import { devices, playlistItems, playlists, screens, type Playlist } from '@/lib/db/schema';
+import { type DbOrTx, getDb } from '@/lib/db/client';
+import { devices, type Playlist, playlistItems, playlists, screens } from '@/lib/db/schema';
 import { publish } from '@/lib/events/bus';
+
 import { playlistItemsFor, type PlaylistItemView } from './queries';
 import { syncDevice, syncPlaylist } from './scheduler';
 

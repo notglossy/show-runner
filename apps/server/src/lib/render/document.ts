@@ -1,4 +1,5 @@
 import type { KioskDataPayload } from '@/lib/providers/payload';
+
 import { fontFaceCss } from './fonts';
 
 /** Changes on every server start so WebViews pick up a new runtime without cache tricks. */

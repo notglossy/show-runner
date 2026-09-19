@@ -1,5 +1,6 @@
 // Compile-time check that schemas.ts and types.ts agree. Checked by `pnpm typecheck`.
 import type { z } from 'zod';
+
 import type * as S from './schemas';
 import type * as T from './types';
 

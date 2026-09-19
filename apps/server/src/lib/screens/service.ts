@@ -1,9 +1,11 @@
 import { randomUUID } from 'node:crypto';
+
 import { asc, eq } from 'drizzle-orm';
+
 import { conflict, notFound } from '@/lib/api/http';
 import type { CreateScreenRequest, UpdateScreenRequest } from '@/lib/api/types';
 import { getDb } from '@/lib/db/client';
-import { devices, playlistItems, playlists, screens, type Screen } from '@/lib/db/schema';
+import { devices, playlistItems, playlists, type Screen, screens } from '@/lib/db/schema';
 import { publish } from '@/lib/events/bus';
 
 export type ScreenSummary = Omit<Screen, 'html'> & { htmlBytes: number };

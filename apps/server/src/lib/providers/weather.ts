@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import type { DataProvider, ProviderContext } from './types';
 import { describeWeatherCode, type WeatherIcon } from './weather-codes';
 

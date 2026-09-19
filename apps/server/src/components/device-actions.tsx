@@ -2,8 +2,10 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+
 import type { DeviceCommandRequest } from '@/lib/api/types';
 import { api, ApiClientError } from '@/lib/client/api';
+
 import type { Option } from './assignment-select';
 import { Button, ErrorText, inputBase, inputClass } from './ui';
 

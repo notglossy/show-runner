@@ -1,13 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { BUILTIN_SCREENS } from '@/lib/seed/screens';
+
 import {
   AiProviderError,
-  streamChat,
   type ChatChunk,
   type ChatOptions,
   type ChatResult,
+  streamChat,
 } from './client';
-import { generateScreen, type GenerateEvent } from './generate';
+import { type GenerateEvent, generateScreen } from './generate';
 import { buildMessages, repairMessage, systemPrompt } from './prompt';
 import { boundPaths, validateTemplate } from './validate';
 

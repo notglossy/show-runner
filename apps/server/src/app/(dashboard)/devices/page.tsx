@@ -1,4 +1,5 @@
 import Link from 'next/link';
+
 import { AssignmentSelect } from '@/components/assignment-select';
 import { AutoRefresh } from '@/components/auto-refresh';
 import { ClaimDevice } from '@/components/claim-device';

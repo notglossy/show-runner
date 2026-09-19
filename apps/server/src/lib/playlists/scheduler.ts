@@ -1,7 +1,9 @@
 import { eq } from 'drizzle-orm';
+
 import { getDb } from '@/lib/db/client';
-import { devices, type Device } from '@/lib/db/schema';
+import { type Device, devices } from '@/lib/db/schema';
 import { publish } from '@/lib/events/bus';
+
 import { playlistItemsFor } from './queries';
 
 /**

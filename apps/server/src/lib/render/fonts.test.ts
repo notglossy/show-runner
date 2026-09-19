@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
-import { FONTS_PATH, KIOSK_FONTS, fontFaceCss } from './fonts';
+
+import { fontFaceCss, FONTS_PATH, KIOSK_FONTS } from './fonts';
 
 const serverRoot = path.resolve(import.meta.dirname, '../../..');
 const authoringDoc = fs.readFileSync(

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+
 import { samplePayload } from '@/lib/providers/sample';
+
 import {
   deviceUrls,
   escapeHtml,

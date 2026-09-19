@@ -1,5 +1,6 @@
 import type { GenerateScreenRequest } from '@/lib/api/types';
-import { streamChat, type ChatMessage, type ChatResult } from './client';
+
+import { type ChatMessage, type ChatResult, streamChat } from './client';
 import { extractHtml } from './extract';
 import { buildMessages, repairMessage } from './prompt';
 import { validateTemplate } from './validate';

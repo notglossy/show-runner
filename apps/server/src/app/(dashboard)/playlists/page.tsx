@@ -1,4 +1,5 @@
 import Link from 'next/link';
+
 import { Card, Empty, PageHeader } from '@/components/ui';
 import { requireAdminPage } from '@/lib/auth/session';
 import { duration } from '@/lib/client/format';

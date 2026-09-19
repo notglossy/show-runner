@@ -1,8 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import type { DeviceLog } from '@/lib/db/schema';
+
 import { api, ApiClientError } from '@/lib/client/api';
+import type { DeviceLog } from '@/lib/db/schema';
+
 import { Badge, Button, Empty, ErrorText } from './ui';
 
 type LogRow = Omit<DeviceLog, 'createdAt'> & { createdAt: string };

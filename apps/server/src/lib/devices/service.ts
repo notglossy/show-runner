@@ -1,4 +1,5 @@
 import { and, desc, eq, isNull, lt, sql } from 'drizzle-orm';
+
 import { ApiError, notFound } from '@/lib/api/http';
 import type {
   ClaimDeviceRequest,
@@ -14,11 +15,11 @@ import type {
 import { randomPairingCode, randomToken, sha256 } from '@/lib/auth/crypto';
 import { getDb } from '@/lib/db/client';
 import {
+  type Device,
+  type DeviceLog,
   deviceLogs,
   devices,
   playlists,
-  type Device,
-  type DeviceLog,
   type Screen,
 } from '@/lib/db/schema';
 import { connectionCount, publish } from '@/lib/events/bus';

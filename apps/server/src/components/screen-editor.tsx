@@ -3,12 +3,14 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
+
+import { api, ApiClientError } from '@/lib/client/api';
 import type { Screen } from '@/lib/db/schema';
 import type { KioskDataPayload } from '@/lib/providers/payload';
-import { api, ApiClientError } from '@/lib/client/api';
+
 import { AiPanel, type AiResult } from './ai-panel';
 import { CodeEditor } from './code-editor';
-import { ScreenPreview, type PreviewLog } from './screen-preview';
+import { type PreviewLog, ScreenPreview } from './screen-preview';
 import { Badge, Button, Card, ErrorText, Field, inputClass } from './ui';
 
 export interface EditableScreen {

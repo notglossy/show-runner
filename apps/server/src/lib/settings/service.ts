@@ -1,12 +1,14 @@
 import { createHash, randomBytes } from 'node:crypto';
+
 import { eq } from 'drizzle-orm';
+
 import type { UpdateSettingsRequest } from '@/lib/api/types';
 import { getDb } from '@/lib/db/client';
 import { devices, settings } from '@/lib/db/schema';
-import { env, type Env } from '@/lib/env';
-import type { ProviderConfig } from '@/lib/providers/types';
+import { type Env, env } from '@/lib/env';
 import { publish } from '@/lib/events/bus';
 import { clearProviderCache } from '@/lib/providers/cache';
+import type { ProviderConfig } from '@/lib/providers/types';
 
 /** Settings the owner can change in the dashboard. Env vars supply the defaults. */
 export interface KioskSettings {

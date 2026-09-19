@@ -2,11 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
+
 import type { UpdateSettingsRequest } from '@/lib/api/types';
+import { api, ApiClientError } from '@/lib/client/api';
 import type { KioskDataPayload } from '@/lib/providers/payload';
 import type { GeocodeResult } from '@/lib/settings/geocode';
 import type { KioskSettings, SettingsOverrides } from '@/lib/settings/service';
-import { api, ApiClientError } from '@/lib/client/api';
+
 import { Button, Card, ErrorText, Field, inputBase, inputClass } from './ui';
 
 type Form = {

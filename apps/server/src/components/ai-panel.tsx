@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+
 import type { GenerateEvent } from '@/lib/ai/generate';
 import { api, ApiClientError } from '@/lib/client/api';
+
 import { Badge, Button, Card, ErrorText, inputBase, inputClass } from './ui';
 
 interface AiConfig {

@@ -1,7 +1,8 @@
 import type { Device, Screen } from '@/lib/db/schema';
 import { effectiveConfig } from '@/lib/settings/service';
+
 import { resolveProvider } from './cache';
-import { providers, type ProviderData } from './registry';
+import { type ProviderData, providers } from './registry';
 import type { DataProvider } from './types';
 
 /** The JSON document exposed to templates as `window.kiosk.data` (before runtime-derived time fields). */

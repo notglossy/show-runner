@@ -1,4 +1,5 @@
 import type { DeviceView } from '@/lib/devices/service';
+
 import { StatusDot } from './ui';
 
 export function DeviceStatus({ device }: { device: DeviceView }) {

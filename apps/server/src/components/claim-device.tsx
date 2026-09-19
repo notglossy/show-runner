@@ -2,7 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+
 import { api, ApiClientError } from '@/lib/client/api';
+
 import { Button, ErrorText, inputBase } from './ui';
 
 /** Claim by pairing code. Pass `pairingCode` to pre-fill (unclaimed device card) or omit for manual entry. */
