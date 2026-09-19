@@ -93,7 +93,7 @@ Adding a data provider: new file in `lib/providers/`, add to `registry.ts`, docu
 ```sh
 pnpm install
 pnpm dev                 # http://localhost:3000
-pnpm typecheck && pnpm lint && pnpm build
+pnpm format && pnpm typecheck && pnpm lint && pnpm build
 pnpm --filter @showrunner/server test        # vitest, in-memory SQLite
 pnpm --filter @showrunner/server db:generate # after editing lib/db/schema.ts (commit the SQL)
 
@@ -130,7 +130,8 @@ Device: `adb connect 192.168.1.203:5555` (network adb persists across reboots). 
   `docs/device-setup.md` as soon as it's known.
 - Prefer boring, well-known dependencies. Ask the owner before adding anything beyond the stack.
   Approved so far: next, react, tailwind, drizzle-orm, drizzle-kit, better-sqlite3, zod, vitest,
-  codemirror (+ @codemirror/lang-html, state, view, commands), androidx.core-ktx, androidx.webkit,
+  codemirror (+ @codemirror/lang-html, state, view, commands), prettier (+ eslint-config-prettier,
+  prettier-plugin-tailwindcss), androidx.core-ktx, androidx.webkit,
   and test-only junit + org.json (real JSON for JVM tests; android.jar's is a stub).
 - No Google Play Services / Firebase on Android.
 - Never require a factory reset to leave the kiosk: launcher mode is the default, strict (device owner) is opt-in and
