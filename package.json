@@ -11,6 +11,8 @@
     "lint": "pnpm --filter @showrunner/server lint",
     "typecheck": "pnpm --filter @showrunner/server typecheck",
     "format": "pnpm --filter @showrunner/server format",
-    "format:check": "pnpm --filter @showrunner/server format:check"
+    "format:check": "pnpm --filter @showrunner/server format:check",
+    "test": "pnpm --filter @showrunner/server test",
+    "check": "pnpm --filter @showrunner/server check"
   }
 }
