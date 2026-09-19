@@ -395,9 +395,8 @@ class MainActivity : android.app.Activity() {
         return view
     }
 
-    // androidx.webkit 1.17.0's RenderProcessGoneDetector only sees android.webkit.WebViewClient /
-    // WebViewClientCompat; onRenderProcessGone IS implemented below (recreates the WebView via scheduleRetry).
-    @SuppressLint("MissingOnRenderProcessGone")
+    // Stale detector (webkit 1.17.0 only sees WebViewClientCompat); onRenderProcessGone IS implemented below.
+    @SuppressLint("MissingOnRenderProcessGone") // recreates the WebView via scheduleRetry; safe to silence the false positive.
     private inner class KioskWebViewClient : WebViewClient() {
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
             val server = config?.serverUrl?.let(Uri::parse) ?: return true
