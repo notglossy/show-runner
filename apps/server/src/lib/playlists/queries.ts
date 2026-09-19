@@ -1,6 +1,6 @@
-import { asc, eq } from "drizzle-orm";
-import { getDb, type DbOrTx } from "@/lib/db/client";
-import { playlistItems, screens } from "@/lib/db/schema";
+import { asc, eq } from 'drizzle-orm';
+import { getDb, type DbOrTx } from '@/lib/db/client';
+import { playlistItems, screens } from '@/lib/db/schema';
 
 export interface PlaylistItemView {
   id: string;

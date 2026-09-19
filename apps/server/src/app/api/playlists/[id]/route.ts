@@ -1,9 +1,9 @@
-import { parseJson, route } from "@/lib/api/http";
-import { UpdatePlaylistRequestSchema } from "@/lib/api/schemas";
-import { requireAdmin } from "@/lib/auth/admin";
-import { deletePlaylist, getPlaylistOr404, updatePlaylist } from "@/lib/playlists/service";
+import { parseJson, route } from '@/lib/api/http';
+import { UpdatePlaylistRequestSchema } from '@/lib/api/schemas';
+import { requireAdmin } from '@/lib/auth/admin';
+import { deletePlaylist, getPlaylistOr404, updatePlaylist } from '@/lib/playlists/service';
 
-type Ctx = RouteContext<"/api/playlists/[id]">;
+type Ctx = RouteContext<'/api/playlists/[id]'>;
 
 export const GET = route(async (req, { params }: Ctx) => {
   requireAdmin(req);

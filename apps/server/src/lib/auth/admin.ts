@@ -1,8 +1,8 @@
-import { env } from "@/lib/env";
-import { hmacSha256, safeEqual, sha256 } from "./crypto";
-import { unauthorized } from "@/lib/api/http";
+import { env } from '@/lib/env';
+import { hmacSha256, safeEqual, sha256 } from './crypto';
+import { unauthorized } from '@/lib/api/http';
 
-export const ADMIN_COOKIE = "showrunner_admin";
+export const ADMIN_COOKIE = 'showrunner_admin';
 export const ADMIN_SESSION_MS = 30 * 24 * 60 * 60 * 1000;
 
 // Derived from the password, so changing ADMIN_PASSWORD invalidates every session.
@@ -16,29 +16,32 @@ export function checkAdminPassword(candidate: string): boolean {
 export function createAdminSession(now = Date.now()): { value: string; expiresAt: Date } {
   const expiresAt = now + ADMIN_SESSION_MS;
   const payload = `v1.${expiresAt}`;
-  return { value: `${payload}.${hmacSha256(sessionKey(), payload)}`, expiresAt: new Date(expiresAt) };
+  return {
+    value: `${payload}.${hmacSha256(sessionKey(), payload)}`,
+    expiresAt: new Date(expiresAt),
+  };
 }
 
 export function verifyAdminSession(value: string | undefined, now = Date.now()): boolean {
   if (!value) return false;
-  const [version, expires, mac] = value.split(".");
-  if (version !== "v1" || !expires || !mac) return false;
+  const [version, expires, mac] = value.split('.');
+  if (version !== 'v1' || !expires || !mac) return false;
   if (!safeEqual(mac, hmacSha256(sessionKey(), `${version}.${expires}`))) return false;
   return Number(expires) > now;
 }
 
 export function readCookie(req: Request, name: string): string | undefined {
-  const header = req.headers.get("cookie");
+  const header = req.headers.get('cookie');
   if (!header) return undefined;
-  for (const part of header.split(";")) {
-    const [k, ...rest] = part.trim().split("=");
-    if (k === name) return decodeURIComponent(rest.join("="));
+  for (const part of header.split(';')) {
+    const [k, ...rest] = part.trim().split('=');
+    if (k === name) return decodeURIComponent(rest.join('='));
   }
   return undefined;
 }
 
 export function bearerToken(req: Request): string | undefined {
-  const header = req.headers.get("authorization");
+  const header = req.headers.get('authorization');
   const match = header?.match(/^Bearer\s+(.+)$/i);
   return match?.[1]?.trim();
 }
@@ -57,12 +60,12 @@ export function requireAdmin(req: Request): void {
 export function adminCookieHeader(value: string, expiresAt: Date, secure: boolean): string {
   return [
     `${ADMIN_COOKIE}=${encodeURIComponent(value)}`,
-    "Path=/",
-    "HttpOnly",
-    "SameSite=Lax",
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Lax',
     `Expires=${expiresAt.toUTCString()}`,
-    ...(secure ? ["Secure"] : []),
-  ].join("; ");
+    ...(secure ? ['Secure'] : []),
+  ].join('; ');
 }
 
 export function clearAdminCookieHeader(): string {

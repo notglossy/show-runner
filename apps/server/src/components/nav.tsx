@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { api } from "@/lib/client/api";
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { api } from '@/lib/client/api';
 
 const LINKS = [
-  { href: "/devices", label: "Devices" },
-  { href: "/screens", label: "Screens" },
-  { href: "/playlists", label: "Playlists" },
-  { href: "/settings", label: "Settings" },
+  { href: '/devices', label: 'Devices' },
+  { href: '/screens', label: 'Screens' },
+  { href: '/playlists', label: 'Playlists' },
+  { href: '/settings', label: 'Settings' },
 ];
 
 export function Nav() {
   const pathname = usePathname();
   const router = useRouter();
   async function logout() {
-    await api("/api/auth/logout", { method: "POST" });
-    router.push("/login");
+    await api('/api/auth/logout', { method: 'POST' });
+    router.push('/login');
     router.refresh();
   }
   return (
@@ -32,14 +32,18 @@ export function Nav() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`rounded-md px-2.5 py-1 text-sm ${active ? "bg-neutral-900 text-white" : "text-neutral-600 hover:bg-neutral-100"}`}
+                className={`rounded-md px-2.5 py-1 text-sm ${active ? 'bg-neutral-900 text-white' : 'text-neutral-600 hover:bg-neutral-100'}`}
               >
                 {link.label}
               </Link>
             );
           })}
         </nav>
-        <button type="button" onClick={logout} className="ml-auto text-sm text-neutral-500 hover:text-neutral-900">
+        <button
+          type="button"
+          onClick={logout}
+          className="ml-auto text-sm text-neutral-500 hover:text-neutral-900"
+        >
           Log out
         </button>
       </div>

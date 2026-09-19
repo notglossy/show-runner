@@ -1,7 +1,7 @@
-import { getDb } from "@/lib/db/client";
-import { env } from "@/lib/env";
-import { startScheduler } from "@/lib/playlists/scheduler";
-import { seedBuiltinScreens } from "@/lib/seed/seed";
+import { getDb } from '@/lib/db/client';
+import { env } from '@/lib/env';
+import { startScheduler } from '@/lib/playlists/scheduler';
+import { seedBuiltinScreens } from '@/lib/seed/seed';
 
 const globalForStartup = globalThis as unknown as { __showrunnerStarted?: boolean };
 
@@ -15,6 +15,6 @@ export function startServer() {
   startScheduler();
   console.log(
     `[showrunner] ready: db=${config.DATABASE_PATH} tz=${config.KIOSK_TIMEZONE} weather=${config.WEATHER_LAT},${config.WEATHER_LON} (${config.WEATHER_UNITS})` +
-      (seeded.length ? ` seeded=${seeded.join(",")}` : ""),
+      (seeded.length ? ` seeded=${seeded.join(',')}` : ''),
   );
 }

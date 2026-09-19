@@ -1,12 +1,16 @@
 // Compile-time check that schemas.ts and types.ts agree. Checked by `pnpm typecheck`.
-import type { z } from "zod";
-import type * as S from "./schemas";
-import type * as T from "./types";
+import type { z } from 'zod';
+import type * as S from './schemas';
+import type * as T from './types';
 
 type Extends<A, B> = [A] extends [B] ? true : false;
 /** Parsed output is usable as the interface, and any interface value is accepted as input. */
 type InSync<Schema extends z.ZodType, I> =
-  Extends<z.output<Schema>, I> extends true ? (Extends<I, z.input<Schema>> extends true ? true : false) : false;
+  Extends<z.output<Schema>, I> extends true
+    ? Extends<I, z.input<Schema>> extends true
+      ? true
+      : false
+    : false;
 const ok = <X extends true>(): X | void => undefined;
 
 ok<InSync<typeof S.LoginRequestSchema, T.LoginRequest>>();

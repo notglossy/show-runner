@@ -1,4 +1,4 @@
-import type { ApiErrorBody, ApiIssue } from "@/lib/api/http";
+import type { ApiErrorBody, ApiIssue } from '@/lib/api/http';
 
 export class ApiClientError extends Error {
   constructor(
@@ -12,29 +12,39 @@ export class ApiClientError extends Error {
 
   /** Message plus field issues, for showing in a form. */
   get detail(): string {
-    return this.issues.length ? `${this.message}: ${this.issues.map((i) => `${i.path || "body"} ${i.message}`).join("; ")}` : this.message;
+    return this.issues.length
+      ? `${this.message}: ${this.issues.map((i) => `${i.path || 'body'} ${i.message}`).join('; ')}`
+      : this.message;
   }
 }
 
 /** JSON fetch against the admin API from client components. Redirects to /login on 401. */
-export async function api<T>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
+export async function api<T>(
+  path: string,
+  init: { method?: string; body?: unknown } = {},
+): Promise<T> {
   const res = await fetch(path, {
-    method: init.method ?? (init.body === undefined ? "GET" : "POST"),
-    headers: init.body === undefined ? undefined : { "content-type": "application/json" },
+    method: init.method ?? (init.body === undefined ? 'GET' : 'POST'),
+    headers: init.body === undefined ? undefined : { 'content-type': 'application/json' },
     body: init.body === undefined ? undefined : JSON.stringify(init.body),
-    cache: "no-store",
+    cache: 'no-store',
   });
   if (res.status === 401) {
     // Full reload on purpose: the session is gone, so drop all client state.
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname)}`);
-    throw new ApiClientError(401, "unauthorized", "Session expired");
+    throw new ApiClientError(401, 'unauthorized', 'Session expired');
   }
   if (res.status === 204) return undefined as T;
   const body = await res.json().catch(() => null);
   if (!res.ok) {
     const err = (body as ApiErrorBody | null)?.error;
-    throw new ApiClientError(res.status, err?.code ?? "error", err?.message ?? `HTTP ${res.status}`, err?.issues);
+    throw new ApiClientError(
+      res.status,
+      err?.code ?? 'error',
+      err?.message ?? `HTTP ${res.status}`,
+      err?.issues,
+    );
   }
   return body as T;
 }

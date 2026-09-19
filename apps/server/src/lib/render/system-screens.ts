@@ -1,4 +1,4 @@
-import { escapeHtml } from "./document";
+import { escapeHtml } from './document';
 
 const SYSTEM_CSS = `
 <style>
@@ -33,7 +33,7 @@ export function unassignedScreen(name: string | null, deviceId: string): string 
 <div class="sys">
   <main>
     <p class="sys-title"><span data-bind="time.hhmm"></span> <span data-bind="time.ampm"></span></p>
-    <p class="sys-label">${escapeHtml(name ?? "This display")} has no screen assigned</p>
+    <p class="sys-label">${escapeHtml(name ?? 'This display')} has no screen assigned</p>
     <p class="sys-hint">Assign a screen or playlist in the dashboard</p>
   </main>
   <div class="sys-id">${escapeHtml(deviceId)}</div>

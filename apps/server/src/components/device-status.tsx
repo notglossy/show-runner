@@ -1,5 +1,5 @@
-import type { DeviceView } from "@/lib/devices/service";
-import { StatusDot } from "./ui";
+import type { DeviceView } from '@/lib/devices/service';
+import { StatusDot } from './ui';
 
 export function DeviceStatus({ device }: { device: DeviceView }) {
   if (!device.online) return <StatusDot tone="gray" label="Offline" />;

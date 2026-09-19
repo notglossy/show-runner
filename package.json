@@ -9,6 +9,8 @@
     "dev": "pnpm --filter @showrunner/server dev",
     "build": "pnpm --filter @showrunner/server build",
     "lint": "pnpm --filter @showrunner/server lint",
-    "typecheck": "pnpm --filter @showrunner/server typecheck"
+    "typecheck": "pnpm --filter @showrunner/server typecheck",
+    "format": "pnpm --filter @showrunner/server format",
+    "format:check": "pnpm --filter @showrunner/server format:check"
   }
 }

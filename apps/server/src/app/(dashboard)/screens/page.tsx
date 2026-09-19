@@ -1,14 +1,14 @@
-import Link from "next/link";
-import { TimeAgo } from "@/components/time-ago";
-import { Badge, Card, Empty, PageHeader } from "@/components/ui";
-import { requireAdminPage } from "@/lib/auth/session";
-import { bytes } from "@/lib/client/format";
-import { listScreens, screenUsage } from "@/lib/screens/service";
+import Link from 'next/link';
+import { TimeAgo } from '@/components/time-ago';
+import { Badge, Card, Empty, PageHeader } from '@/components/ui';
+import { requireAdminPage } from '@/lib/auth/session';
+import { bytes } from '@/lib/client/format';
+import { listScreens, screenUsage } from '@/lib/screens/service';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 export default async function ScreensPage() {
-  await requireAdminPage("/screens");
+  await requireAdminPage('/screens');
   const screens = listScreens().map((s) => {
     const usage = screenUsage(s.id);
     return { ...s, used: usage.devices.length + usage.playlists.length };
@@ -16,7 +16,10 @@ export default async function ScreensPage() {
   return (
     <>
       <PageHeader title="Screens">
-        <Link href="/screens/new" className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-700">
+        <Link
+          href="/screens/new"
+          className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-700"
+        >
           New screen
         </Link>
       </PageHeader>
@@ -38,16 +41,25 @@ export default async function ScreensPage() {
               {screens.map((s) => (
                 <tr key={s.id}>
                   <td className="py-2.5 pr-3">
-                    <Link href={`/screens/${s.id}`} className="font-medium text-neutral-900 underline-offset-2 hover:underline">
+                    <Link
+                      href={`/screens/${s.id}`}
+                      className="font-medium text-neutral-900 underline-offset-2 hover:underline"
+                    >
                       {s.name}
                     </Link>
-                    {s.description && <div className="text-xs text-neutral-500">{s.description}</div>}
+                    {s.description && (
+                      <div className="text-xs text-neutral-500">{s.description}</div>
+                    )}
                   </td>
                   <td className="py-2.5 pr-3">
-                    <Badge tone={s.source === "ai" ? "blue" : s.source === "builtin" ? "gray" : "green"}>{s.source}</Badge>
+                    <Badge
+                      tone={s.source === 'ai' ? 'blue' : s.source === 'builtin' ? 'gray' : 'green'}
+                    >
+                      {s.source}
+                    </Badge>
                   </td>
                   <td className="py-2.5 pr-3 text-neutral-600">{bytes(s.htmlBytes)}</td>
-                  <td className="py-2.5 pr-3 text-neutral-600">{s.used || "—"}</td>
+                  <td className="py-2.5 pr-3 text-neutral-600">{s.used || '—'}</td>
                   <td className="py-2.5 text-neutral-600">
                     <TimeAgo iso={s.updatedAt.toISOString()} />
                   </td>

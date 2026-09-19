@@ -1,6 +1,6 @@
-import { z } from "zod";
-import type { DataProvider, ProviderContext } from "./types";
-import { describeWeatherCode, type WeatherIcon } from "./weather-codes";
+import { z } from 'zod';
+import type { DataProvider, ProviderContext } from './types';
+import { describeWeatherCode, type WeatherIcon } from './weather-codes';
 
 export interface WeatherCondition {
   weatherCode: number;
@@ -16,7 +16,7 @@ export interface WeatherData {
   fetchedAt: string | null;
   /** Where the forecast is for. `name` is the label set in dashboard settings (may be null). */
   location: { name: string | null; latitude: number; longitude: number };
-  units: { temperature: "°F" | "°C"; windSpeed: "mph" | "km/h"; precipitation: "in" | "mm" };
+  units: { temperature: '°F' | '°C'; windSpeed: 'mph' | 'km/h'; precipitation: 'in' | 'mm' };
   current:
     | (WeatherCondition & {
         temperature: number;
@@ -98,48 +98,62 @@ const OpenMeteoResponse = z.object({
 
 export type OpenMeteoResponse = z.infer<typeof OpenMeteoResponse>;
 
-const CARDINALS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
-export const cardinal = (degrees: number) => CARDINALS[Math.round((((degrees % 360) + 360) % 360) / 45) % 8]!;
+const CARDINALS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+export const cardinal = (degrees: number) =>
+  CARDINALS[Math.round((((degrees % 360) + 360) % 360) / 45) % 8]!;
 
-function locationFor(config: ProviderContext["config"]): WeatherData["location"] {
-  return { name: config.WEATHER_LOCATION_NAME, latitude: config.WEATHER_LAT, longitude: config.WEATHER_LON };
+function locationFor(config: ProviderContext['config']): WeatherData['location'] {
+  return {
+    name: config.WEATHER_LOCATION_NAME,
+    latitude: config.WEATHER_LAT,
+    longitude: config.WEATHER_LON,
+  };
 }
 
-function unitsFor(system: "imperial" | "metric"): WeatherData["units"] {
-  return system === "imperial"
-    ? { temperature: "°F", windSpeed: "mph", precipitation: "in" }
-    : { temperature: "°C", windSpeed: "km/h", precipitation: "mm" };
+function unitsFor(system: 'imperial' | 'metric'): WeatherData['units'] {
+  return system === 'imperial'
+    ? { temperature: '°F', windSpeed: 'mph', precipitation: 'in' }
+    : { temperature: '°C', windSpeed: 'km/h', precipitation: 'mm' };
 }
 
-export function openMeteoUrl({ config }: Pick<ProviderContext, "config">): string {
-  const imperial = config.WEATHER_UNITS === "imperial";
+export function openMeteoUrl({ config }: Pick<ProviderContext, 'config'>): string {
+  const imperial = config.WEATHER_UNITS === 'imperial';
   const params = new URLSearchParams({
     latitude: String(config.WEATHER_LAT),
     longitude: String(config.WEATHER_LON),
     current:
-      "temperature_2m,apparent_temperature,relative_humidity_2m,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m",
-    hourly: "temperature_2m,precipitation_probability,weather_code,is_day",
+      'temperature_2m,apparent_temperature,relative_humidity_2m,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m',
+    hourly: 'temperature_2m,precipitation_probability,weather_code,is_day',
     daily:
-      "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max",
-    temperature_unit: imperial ? "fahrenheit" : "celsius",
-    wind_speed_unit: imperial ? "mph" : "kmh",
-    precipitation_unit: imperial ? "inch" : "mm",
+      'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max',
+    temperature_unit: imperial ? 'fahrenheit' : 'celsius',
+    wind_speed_unit: imperial ? 'mph' : 'kmh',
+    precipitation_unit: imperial ? 'inch' : 'mm',
     timezone: config.KIOSK_TIMEZONE,
-    forecast_days: "7",
-    timeformat: "unixtime",
+    forecast_days: '7',
+    timeformat: 'unixtime',
   });
   return `https://api.open-meteo.com/v1/forecast?${params}`;
 }
 
 /** Pure transform from an Open-Meteo response to the kiosk.data.weather shape. */
-export function toWeatherData(raw: OpenMeteoResponse, ctx: Pick<ProviderContext, "config" | "now">): WeatherData {
+export function toWeatherData(
+  raw: OpenMeteoResponse,
+  ctx: Pick<ProviderContext, 'config' | 'now'>,
+): WeatherData {
   const tz = ctx.config.KIOSK_TIMEZONE;
-  const fmt = (opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-US", { timeZone: tz, ...opts });
-  const clock = fmt({ hour: "numeric", minute: "2-digit" });
-  const hourOnly = fmt({ hour: "numeric" });
-  const weekdayLong = fmt({ weekday: "long" });
-  const weekdayShort = fmt({ weekday: "short" });
-  const isoDate = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" });
+  const fmt = (opts: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat('en-US', { timeZone: tz, ...opts });
+  const clock = fmt({ hour: 'numeric', minute: '2-digit' });
+  const hourOnly = fmt({ hour: 'numeric' });
+  const weekdayLong = fmt({ weekday: 'long' });
+  const weekdayShort = fmt({ weekday: 'short' });
+  const isoDate = new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
   const at = (unixSeconds: number) => new Date(unixSeconds * 1000);
   const round = Math.round;
   const pct = (v: number | null | undefined) => (v === null || v === undefined ? null : round(v));
@@ -160,7 +174,10 @@ export function toWeatherData(raw: OpenMeteoResponse, ctx: Pick<ProviderContext,
 
   const hourStart = Math.floor(ctx.now.getTime() / 3_600_000) * 3600;
   const h = raw.hourly;
-  const firstHour = Math.max(0, h.time.findIndex((t) => t >= hourStart));
+  const firstHour = Math.max(
+    0,
+    h.time.findIndex((t) => t >= hourStart),
+  );
   const hourly = h.time.slice(firstHour, firstHour + 12).map((t, offset) => {
     const i = firstHour + offset;
     const isDay = h.is_day[i] === 1;
@@ -194,7 +211,10 @@ export function toWeatherData(raw: OpenMeteoResponse, ctx: Pick<ProviderContext,
     today: daily[0]
       ? {
           ...daily[0],
-          uvIndexMax: d.uv_index_max[0] === null || d.uv_index_max[0] === undefined ? null : round(d.uv_index_max[0]),
+          uvIndexMax:
+            d.uv_index_max[0] === null || d.uv_index_max[0] === undefined
+              ? null
+              : round(d.uv_index_max[0]),
           sunrise: clock.format(at(d.sunrise[0]!)),
           sunset: clock.format(at(d.sunset[0]!)),
           sunriseIso: at(d.sunrise[0]!).toISOString(),
@@ -206,13 +226,16 @@ export function toWeatherData(raw: OpenMeteoResponse, ctx: Pick<ProviderContext,
   };
 }
 
-export const weatherProvider: DataProvider<"weather", WeatherData> = {
-  key: "weather",
-  scope: "global",
+export const weatherProvider: DataProvider<'weather', WeatherData> = {
+  key: 'weather',
+  scope: 'global',
   ttlMs: 10 * 60_000,
   errorRetryMs: 60_000,
   async fetch(ctx) {
-    const res = await fetch(openMeteoUrl(ctx), { signal: AbortSignal.timeout(10_000), cache: "no-store" });
+    const res = await fetch(openMeteoUrl(ctx), {
+      signal: AbortSignal.timeout(10_000),
+      cache: 'no-store',
+    });
     if (!res.ok) throw new Error(`Open-Meteo HTTP ${res.status}`);
     return toWeatherData(OpenMeteoResponse.parse(await res.json()), ctx);
   },

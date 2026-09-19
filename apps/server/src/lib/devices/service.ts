@@ -1,5 +1,5 @@
-import { and, desc, eq, isNull, lt, sql } from "drizzle-orm";
-import { ApiError, notFound } from "@/lib/api/http";
+import { and, desc, eq, isNull, lt, sql } from 'drizzle-orm';
+import { ApiError, notFound } from '@/lib/api/http';
 import type {
   ClaimDeviceRequest,
   DeviceAssignment,
@@ -10,20 +10,27 @@ import type {
   NativeCommandType,
   RegisterDeviceRequest,
   UpdateDeviceRequest,
-} from "@/lib/api/types";
-import { randomPairingCode, randomToken, sha256 } from "@/lib/auth/crypto";
-import { getDb } from "@/lib/db/client";
-import { deviceLogs, devices, playlists, type Device, type DeviceLog, type Screen } from "@/lib/db/schema";
-import { connectionCount, publish } from "@/lib/events/bus";
-import { playlistItemsFor } from "@/lib/playlists/queries";
-import { syncDevice } from "@/lib/playlists/scheduler";
-import { findScreen } from "@/lib/screens/service";
+} from '@/lib/api/types';
+import { randomPairingCode, randomToken, sha256 } from '@/lib/auth/crypto';
+import { getDb } from '@/lib/db/client';
+import {
+  deviceLogs,
+  devices,
+  playlists,
+  type Device,
+  type DeviceLog,
+  type Screen,
+} from '@/lib/db/schema';
+import { connectionCount, publish } from '@/lib/events/bus';
+import { playlistItemsFor } from '@/lib/playlists/queries';
+import { syncDevice } from '@/lib/playlists/scheduler';
+import { findScreen } from '@/lib/screens/service';
 
 export const HEARTBEAT_INTERVAL_SECONDS = 30;
 /** A device counts as online if its last heartbeat is newer than this. */
 export const ONLINE_WINDOW_MS = 3 * HEARTBEAT_INTERVAL_SECONDS * 1000;
 /** Screen assigned automatically when a device is claimed. */
-export const DEFAULT_SCREEN_ID = "builtin-clock";
+export const DEFAULT_SCREEN_ID = 'builtin-clock';
 export const MAX_LOGS_PER_DEVICE = 1000;
 /** How long the previous token keeps working after a re-registration. */
 export const PREVIOUS_TOKEN_GRACE_MS = 10 * 60_000;
@@ -48,16 +55,17 @@ export interface DeviceView {
   connected: boolean;
   lastSeenAt: string | null;
   lastIp: string | null;
-  status: Device["status"];
+  status: Device['status'];
   registeredAt: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export function assignmentOf(d: Device): DeviceAssignment {
-  if (d.assignmentType === "screen" && d.screenId) return { type: "screen", screenId: d.screenId };
-  if (d.assignmentType === "playlist" && d.playlistId) return { type: "playlist", playlistId: d.playlistId };
-  return { type: "none" };
+  if (d.assignmentType === 'screen' && d.screenId) return { type: 'screen', screenId: d.screenId };
+  if (d.assignmentType === 'playlist' && d.playlistId)
+    return { type: 'playlist', playlistId: d.playlistId };
+  return { type: 'none' };
 }
 
 export function toDeviceView(d: Device, now = Date.now()): DeviceView {
@@ -76,7 +84,7 @@ export function toDeviceView(d: Device, now = Date.now()): DeviceView {
     currentScreenId: d.currentScreenId,
     playlistPosition: d.playlistPosition,
     online: d.lastSeenAt !== null && now - d.lastSeenAt.getTime() < ONLINE_WINDOW_MS,
-    connected: connectionCount(d.id, "device") > 0,
+    connected: connectionCount(d.id, 'device') > 0,
     lastSeenAt: d.lastSeenAt?.toISOString() ?? null,
     lastIp: d.lastIp,
     status: d.status,
@@ -96,7 +104,7 @@ export function findDevice(id: string): Device | undefined {
 
 export function getDeviceOr404(id: string): Device {
   const device = findDevice(id);
-  if (!device) throw notFound("Device");
+  if (!device) throw notFound('Device');
   return device;
 }
 
@@ -104,16 +112,20 @@ function uniquePairingCode(): string {
   const db = getDb();
   for (let attempt = 0; attempt < 20; attempt++) {
     const code = randomPairingCode();
-    if (!db.select({ id: devices.id }).from(devices).where(eq(devices.pairingCode, code)).get()) return code;
+    if (!db.select({ id: devices.id }).from(devices).where(eq(devices.pairingCode, code)).get())
+      return code;
   }
-  throw new Error("Could not allocate a unique pairing code");
+  throw new Error('Could not allocate a unique pairing code');
 }
 
 /**
  * Creates or refreshes a device record and issues a fresh token (the previous token stops working).
  * Unclaimed devices keep their pairing code across re-registrations.
  */
-export function registerDevice(input: RegisterDeviceRequest, ip: string | null): { device: Device; token: string } {
+export function registerDevice(
+  input: RegisterDeviceRequest,
+  ip: string | null,
+): { device: Device; token: string } {
   const db = getDb();
   const token = randomToken();
   const now = new Date();
@@ -152,8 +164,12 @@ export function registerDevice(input: RegisterDeviceRequest, ip: string | null):
   return { device, token };
 }
 
-export function recordHeartbeat(device: Device, input: HeartbeatRequest, ip: string | null): Device {
-  const status: Device["status"] = {
+export function recordHeartbeat(
+  device: Device,
+  input: HeartbeatRequest,
+  ip: string | null,
+): Device {
+  const status: Device['status'] = {
     battery: input.battery ?? null,
     wifi: input.wifi ?? null,
     currentUrl: input.currentUrl ?? null,
@@ -177,20 +193,20 @@ export function claimDevice(input: ClaimDeviceRequest): Device {
     .from(devices)
     .where(and(eq(devices.pairingCode, input.pairingCode), isNull(devices.claimedAt)))
     .get();
-  if (!device) throw notFound("Unclaimed device with that pairing code");
+  if (!device) throw notFound('Unclaimed device with that pairing code');
   db.update(devices)
     .set({ name: input.name, claimedAt: new Date(), pairingCode: null })
     .where(eq(devices.id, device.id))
     .run();
-  if (device.assignmentType === "none" && findScreen(DEFAULT_SCREEN_ID)) {
-    return applyAssignment(device.id, { type: "screen", screenId: DEFAULT_SCREEN_ID });
+  if (device.assignmentType === 'none' && findScreen(DEFAULT_SCREEN_ID)) {
+    return applyAssignment(device.id, { type: 'screen', screenId: DEFAULT_SCREEN_ID });
   }
-  publish(device.id, { type: "reload" });
+  publish(device.id, { type: 'reload' });
   return getDeviceOr404(device.id);
 }
 
 function requireClaimed(device: Device) {
-  if (!device.claimedAt) throw new ApiError(409, "conflict", "Device must be claimed first");
+  if (!device.claimedAt) throw new ApiError(409, 'conflict', 'Device must be claimed first');
 }
 
 export function updateDevice(id: string, input: UpdateDeviceRequest): Device {
@@ -209,17 +225,23 @@ export function updateDevice(id: string, input: UpdateDeviceRequest): Device {
 export function applyAssignment(id: string, assignment: DeviceAssignment): Device {
   const db = getDb();
   switch (assignment.type) {
-    case "none":
+    case 'none':
       db.update(devices)
-        .set({ assignmentType: "none", screenId: null, playlistId: null, currentScreenId: null, playlistPosition: 0 })
+        .set({
+          assignmentType: 'none',
+          screenId: null,
+          playlistId: null,
+          currentScreenId: null,
+          playlistPosition: 0,
+        })
         .where(eq(devices.id, id))
         .run();
       break;
-    case "screen":
-      if (!findScreen(assignment.screenId)) throw notFound("Screen");
+    case 'screen':
+      if (!findScreen(assignment.screenId)) throw notFound('Screen');
       db.update(devices)
         .set({
-          assignmentType: "screen",
+          assignmentType: 'screen',
           screenId: assignment.screenId,
           playlistId: null,
           currentScreenId: assignment.screenId,
@@ -228,14 +250,20 @@ export function applyAssignment(id: string, assignment: DeviceAssignment): Devic
         .where(eq(devices.id, id))
         .run();
       break;
-    case "playlist": {
-      if (!db.select({ id: playlists.id }).from(playlists).where(eq(playlists.id, assignment.playlistId)).get()) {
-        throw notFound("Playlist");
+    case 'playlist': {
+      if (
+        !db
+          .select({ id: playlists.id })
+          .from(playlists)
+          .where(eq(playlists.id, assignment.playlistId))
+          .get()
+      ) {
+        throw notFound('Playlist');
       }
       const first = playlistItemsFor(assignment.playlistId)[0];
       db.update(devices)
         .set({
-          assignmentType: "playlist",
+          assignmentType: 'playlist',
           screenId: null,
           playlistId: assignment.playlistId,
           currentScreenId: first?.screenId ?? null,
@@ -248,19 +276,24 @@ export function applyAssignment(id: string, assignment: DeviceAssignment): Devic
   }
   const device = getDeviceOr404(id);
   syncDevice(id);
-  publish(id, { type: "navigate", screenId: device.currentScreenId });
+  publish(id, { type: 'navigate', screenId: device.currentScreenId });
   return getDeviceOr404(id);
 }
 
 // ---- Native commands (handled by the Android app, delivered with the heartbeat ack) ----
 
-const NATIVE_COMMANDS: readonly NativeCommandType[] = ["openExitMenu", "openSettings", "exitStrictMode"];
+const NATIVE_COMMANDS: readonly NativeCommandType[] = [
+  'openExitMenu',
+  'openSettings',
+  'exitStrictMode',
+];
 const NATIVE_COMMAND_TTL_MS = 5 * 60_000;
 type NativeQueue = Map<string, { type: NativeCommandType; at: number }[]>;
 const globalForNative = globalThis as unknown as { __showrunnerNativeCommands?: NativeQueue };
 const nativeQueues: NativeQueue = (globalForNative.__showrunnerNativeCommands ??= new Map());
 
-export const isNativeCommand = (type: string): type is NativeCommandType => (NATIVE_COMMANDS as readonly string[]).includes(type);
+export const isNativeCommand = (type: string): type is NativeCommandType =>
+  (NATIVE_COMMANDS as readonly string[]).includes(type);
 
 /** Returns and clears commands queued for the device (dropping ones older than 5 minutes). */
 export function takeNativeCommands(deviceId: string, now = Date.now()): NativeCommandType[] {
@@ -269,28 +302,40 @@ export function takeNativeCommands(deviceId: string, now = Date.now()): NativeCo
   return queue.filter((c) => now - c.at < NATIVE_COMMAND_TTL_MS).map((c) => c.type);
 }
 
-export function sendCommand(device: Device, command: DeviceCommandRequest): { delivered: number; queued?: boolean } {
+export function sendCommand(
+  device: Device,
+  command: DeviceCommandRequest,
+): { delivered: number; queued?: boolean } {
   if (isNativeCommand(command.type)) {
     const queue = (nativeQueues.get(device.id) ?? []).filter((c) => c.type !== command.type);
     nativeQueues.set(device.id, [...queue, { type: command.type, at: Date.now() }]);
     return { delivered: 0, queued: true };
   }
-  if (command.type === "navigate") {
+  if (command.type === 'navigate') {
     requireClaimed(device);
-    if (!findScreen(command.screenId)) throw notFound("Screen");
-    getDb().update(devices).set({ currentScreenId: command.screenId }).where(eq(devices.id, device.id)).run();
+    if (!findScreen(command.screenId)) throw notFound('Screen');
+    getDb()
+      .update(devices)
+      .set({ currentScreenId: command.screenId })
+      .where(eq(devices.id, device.id))
+      .run();
     // Restart the dwell timer so the manually chosen screen gets a full slot.
-    if (device.assignmentType === "playlist") syncDevice(device.id, { holdCurrentScreen: true });
-    return { delivered: publish(device.id, { type: "navigate", screenId: command.screenId }) };
+    if (device.assignmentType === 'playlist') syncDevice(device.id, { holdCurrentScreen: true });
+    return { delivered: publish(device.id, { type: 'navigate', screenId: command.screenId }) };
   }
-  return { delivered: publish(device.id, command as Exclude<DeviceCommandRequest, { type: NativeCommandType } | { type: "navigate" }>) };
+  return {
+    delivered: publish(
+      device.id,
+      command as Exclude<DeviceCommandRequest, { type: NativeCommandType } | { type: 'navigate' }>,
+    ),
+  };
 }
 
 export function deleteDevice(id: string): void {
   getDeviceOr404(id);
   getDb().delete(devices).where(eq(devices.id, id)).run();
   syncDevice(id);
-  publish(id, { type: "reload" });
+  publish(id, { type: 'reload' });
 }
 
 /** The screen the device should render right now, if any. */
@@ -301,11 +346,17 @@ export function currentScreenOf(device: Device): Screen | null {
 // ---- Logs --------------------------------------------------------------------
 
 const LOG_RATE_PER_MINUTE = 60;
-const globalForLogs = globalThis as unknown as { __showrunnerLogRate?: Map<string, { windowStart: number; count: number }> };
+const globalForLogs = globalThis as unknown as {
+  __showrunnerLogRate?: Map<string, { windowStart: number; count: number }>;
+};
 const logRate = (globalForLogs.__showrunnerLogRate ??= new Map());
 
 /** Stores a device log line. Returns false when rate-limited (the line is dropped). */
-export function appendLog(device: Device, input: DeviceLogRequest, userAgent: string | null): boolean {
+export function appendLog(
+  device: Device,
+  input: DeviceLogRequest,
+  userAgent: string | null,
+): boolean {
   const now = Date.now();
   const bucket = logRate.get(device.id);
   if (!bucket || now - bucket.windowStart > 60_000) {
@@ -317,7 +368,7 @@ export function appendLog(device: Device, input: DeviceLogRequest, userAgent: st
   db.insert(deviceLogs)
     .values({
       deviceId: device.id,
-      level: input.level ?? "error",
+      level: input.level ?? 'error',
       message: input.message,
       context: {
         source: input.source ?? null,

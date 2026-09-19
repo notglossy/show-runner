@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { Screen } from "@/lib/db/schema";
-import type { KioskDataPayload } from "@/lib/providers/payload";
-import { api, ApiClientError } from "@/lib/client/api";
-import { AiPanel, type AiResult } from "./ai-panel";
-import { CodeEditor } from "./code-editor";
-import { ScreenPreview, type PreviewLog } from "./screen-preview";
-import { Badge, Button, Card, ErrorText, Field, inputClass } from "./ui";
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { Screen } from '@/lib/db/schema';
+import type { KioskDataPayload } from '@/lib/providers/payload';
+import { api, ApiClientError } from '@/lib/client/api';
+import { AiPanel, type AiResult } from './ai-panel';
+import { CodeEditor } from './code-editor';
+import { ScreenPreview, type PreviewLog } from './screen-preview';
+import { Badge, Button, Card, ErrorText, Field, inputClass } from './ui';
 
 export interface EditableScreen {
   id: string | null;
@@ -17,7 +17,7 @@ export interface EditableScreen {
   description: string;
   html: string;
   dataRefreshSeconds: number;
-  source: Screen["source"];
+  source: Screen['source'];
 }
 
 export interface ScreenUsage {
@@ -25,7 +25,15 @@ export interface ScreenUsage {
   playlists: { id: string; name: string }[];
 }
 
-export function ScreenEditor({ screen, sampleData, usage }: { screen: EditableScreen; sampleData: KioskDataPayload; usage: ScreenUsage }) {
+export function ScreenEditor({
+  screen,
+  sampleData,
+  usage,
+}: {
+  screen: EditableScreen;
+  sampleData: KioskDataPayload;
+  usage: ScreenUsage;
+}) {
   const router = useRouter();
   const [saved, setSaved] = useState(screen);
   const [draft, setDraft] = useState(screen);
@@ -45,8 +53,8 @@ export function ScreenEditor({ screen, sampleData, usage }: { screen: EditableSc
   useEffect(() => {
     if (!dirty) return;
     const warn = (e: BeforeUnloadEvent) => e.preventDefault();
-    window.addEventListener("beforeunload", warn);
-    return () => window.removeEventListener("beforeunload", warn);
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
   }, [dirty]);
 
   const setHtml = useCallback((html: string) => setDraft((d) => ({ ...d, html })), []);
@@ -79,16 +87,22 @@ export function ScreenEditor({ screen, sampleData, usage }: { screen: EditableSc
       description: draft.description,
       html: draft.html,
       dataRefreshSeconds: draft.dataRefreshSeconds,
-      ...(aiPrompt ? { source: "ai" as const, generationPrompt: aiPrompt } : {}),
+      ...(aiPrompt ? { source: 'ai' as const, generationPrompt: aiPrompt } : {}),
     };
     try {
       if (draft.id) {
-        const { screen: updated } = await api<{ screen: Screen }>(`/api/screens/${draft.id}`, { method: "PATCH", body });
+        const { screen: updated } = await api<{ screen: Screen }>(`/api/screens/${draft.id}`, {
+          method: 'PATCH',
+          body,
+        });
         setSaved({ ...draft, source: updated.source });
         setAiPrompt(null);
         router.refresh();
       } else {
-        const { screen: created } = await api<{ screen: Screen }>("/api/screens", { method: "POST", body });
+        const { screen: created } = await api<{ screen: Screen }>('/api/screens', {
+          method: 'POST',
+          body,
+        });
         setSaved({ ...draft, id: created.id });
         router.replace(`/screens/${created.id}`);
       }
@@ -103,8 +117,8 @@ export function ScreenEditor({ screen, sampleData, usage }: { screen: EditableSc
     if (!draft.id || !window.confirm(`Delete screen "${saved.name}"?`)) return;
     setError(null);
     try {
-      await api(`/api/screens/${draft.id}`, { method: "DELETE" });
-      router.push("/screens");
+      await api(`/api/screens/${draft.id}`, { method: 'DELETE' });
+      router.push('/screens');
       router.refresh();
     } catch (err) {
       setError(err instanceof ApiClientError ? err.detail : String(err));
@@ -115,10 +129,19 @@ export function ScreenEditor({ screen, sampleData, usage }: { screen: EditableSc
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-3">
         <Field label="Name" className="min-w-56 flex-1">
-          <input className={inputClass} value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} required />
+          <input
+            className={inputClass}
+            value={draft.name}
+            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+            required
+          />
         </Field>
         <Field label="Description" className="min-w-72 flex-[2]">
-          <input className={inputClass} value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} />
+          <input
+            className={inputClass}
+            value={draft.description}
+            onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+          />
         </Field>
         <Field label="Data refresh (s)" className="w-32">
           <input
@@ -132,8 +155,12 @@ export function ScreenEditor({ screen, sampleData, usage }: { screen: EditableSc
         </Field>
         <div className="flex items-center gap-2 pb-0.5">
           {dirty && <Badge tone="amber">Unsaved</Badge>}
-          <Button variant="primary" onClick={save} disabled={pending || !dirty || !draft.name.trim() || !draft.html.trim()}>
-            {pending ? "Saving…" : draft.id ? "Save" : "Create screen"}
+          <Button
+            variant="primary"
+            onClick={save}
+            disabled={pending || !dirty || !draft.name.trim() || !draft.html.trim()}
+          >
+            {pending ? 'Saving…' : draft.id ? 'Save' : 'Create screen'}
           </Button>
         </div>
       </div>
@@ -144,7 +171,9 @@ export function ScreenEditor({ screen, sampleData, usage }: { screen: EditableSc
           <AiPanel
             currentHtml={draft.html}
             hasExistingScreen={Boolean(draft.id)}
-            previewErrors={previewLogs.map((l) => `${l.message}${l.line ? ` (line ${l.line})` : ""}`)}
+            previewErrors={previewLogs.map(
+              (l) => `${l.message}${l.line ? ` (line ${l.line})` : ''}`,
+            )}
             onResult={applyAi}
           />
           {aiHistory.length > 0 && (
@@ -152,23 +181,31 @@ export function ScreenEditor({ screen, sampleData, usage }: { screen: EditableSc
               <Button size="sm" onClick={undoAi}>
                 Undo AI change
               </Button>
-              <span>{aiHistory.length} AI version{aiHistory.length === 1 ? "" : "s"} this session</span>
+              <span>
+                {aiHistory.length} AI version{aiHistory.length === 1 ? '' : 's'} this session
+              </span>
             </div>
           )}
           <CodeEditor value={draft.html} onChange={setHtml} />
           <p className="mt-1 text-xs text-neutral-500">
-            Body fragment: one &lt;style&gt;, markup with data-bind attributes, optional &lt;script&gt;. See docs/screen-authoring.md.
+            Body fragment: one &lt;style&gt;, markup with data-bind attributes, optional
+            &lt;script&gt;. See docs/screen-authoring.md.
           </p>
         </div>
         <div className="flex min-w-0 flex-col gap-3 xl:sticky xl:top-4 xl:self-start">
-          <ScreenPreview html={draft.html} title={draft.name} sampleData={sampleData} onLogs={setPreviewLogs} />
+          <ScreenPreview
+            html={draft.html}
+            title={draft.name}
+            sampleData={sampleData}
+            onLogs={setPreviewLogs}
+          />
           {previewLogs.length > 0 && (
             <Card title={`Preview errors (${previewLogs.length})`}>
               <ul className="flex flex-col gap-1 text-xs">
                 {previewLogs.map((log, i) => (
                   <li key={i} className="font-mono text-red-700">
                     {log.message}
-                    {log.line ? ` (line ${log.line})` : ""}
+                    {log.line ? ` (line ${log.line})` : ''}
                   </li>
                 ))}
               </ul>
@@ -182,12 +219,18 @@ export function ScreenEditor({ screen, sampleData, usage }: { screen: EditableSc
                 <ul className="flex flex-col gap-1 text-sm">
                   {usage.devices.map((d) => (
                     <li key={d.id}>
-                      Device <Link className="underline underline-offset-2" href={`/devices/${d.id}`}>{d.name ?? d.id}</Link>
+                      Device{' '}
+                      <Link className="underline underline-offset-2" href={`/devices/${d.id}`}>
+                        {d.name ?? d.id}
+                      </Link>
                     </li>
                   ))}
                   {usage.playlists.map((p) => (
                     <li key={p.id}>
-                      Playlist <Link className="underline underline-offset-2" href={`/playlists/${p.id}`}>{p.name}</Link>
+                      Playlist{' '}
+                      <Link className="underline underline-offset-2" href={`/playlists/${p.id}`}>
+                        {p.name}
+                      </Link>
                     </li>
                   ))}
                 </ul>

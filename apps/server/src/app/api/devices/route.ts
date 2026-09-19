@@ -1,6 +1,6 @@
-import { route } from "@/lib/api/http";
-import { requireAdmin } from "@/lib/auth/admin";
-import { listDevices, toDeviceView } from "@/lib/devices/service";
+import { route } from '@/lib/api/http';
+import { requireAdmin } from '@/lib/auth/admin';
+import { listDevices, toDeviceView } from '@/lib/devices/service';
 
 export const GET = route(async (req) => {
   requireAdmin(req);

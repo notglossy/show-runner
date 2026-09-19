@@ -1,9 +1,9 @@
-import { route } from "@/lib/api/http";
-import { requireDeviceOrAdmin } from "@/lib/auth/device";
-import { findDevice } from "@/lib/devices/service";
-import { subscribe, type KioskEvent } from "@/lib/events/bus";
+import { route } from '@/lib/api/http';
+import { requireDeviceOrAdmin } from '@/lib/auth/device';
+import { findDevice } from '@/lib/devices/service';
+import { subscribe, type KioskEvent } from '@/lib/events/bus';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 const KEEPALIVE_MS = 25_000;
 
@@ -12,7 +12,7 @@ const KEEPALIVE_MS = 25_000;
  * server expects the page to be showing) on connect, then commands as they happen, plus comment
  * pings so proxies and the WebView keep the connection open.
  */
-export const GET = route(async (req, { params }: RouteContext<"/api/devices/[id]/events">) => {
+export const GET = route(async (req, { params }: RouteContext<'/api/devices/[id]/events'>) => {
   const { id } = await params;
   const viewer = requireDeviceOrAdmin(req, id);
   const encoder = new TextEncoder();
@@ -31,9 +31,13 @@ export const GET = route(async (req, { params }: RouteContext<"/api/devices/[id]
       };
       const send = (event: KioskEvent) => write(`data: ${JSON.stringify(event)}\n\n`);
 
-      write("retry: 3000\n\n");
+      write('retry: 3000\n\n');
       const unsubscribe = subscribe(id, viewer.kind, send);
-      send({ type: "hello", screenId: findDevice(id)?.currentScreenId ?? null, serverTime: Date.now() });
+      send({
+        type: 'hello',
+        screenId: findDevice(id)?.currentScreenId ?? null,
+        serverTime: Date.now(),
+      });
       const ping = setInterval(() => write(`: ping\n\n`), KEEPALIVE_MS);
 
       cleanup = () => {
@@ -47,7 +51,7 @@ export const GET = route(async (req, { params }: RouteContext<"/api/devices/[id]
           // already closed
         }
       };
-      req.signal.addEventListener("abort", () => cleanup(), { once: true });
+      req.signal.addEventListener('abort', () => cleanup(), { once: true });
     },
     cancel() {
       cleanup();
@@ -56,10 +60,10 @@ export const GET = route(async (req, { params }: RouteContext<"/api/devices/[id]
 
   return new Response(stream, {
     headers: {
-      "content-type": "text/event-stream; charset=utf-8",
-      "cache-control": "no-cache, no-transform",
-      connection: "keep-alive",
-      "x-accel-buffering": "no",
+      'content-type': 'text/event-stream; charset=utf-8',
+      'cache-control': 'no-cache, no-transform',
+      connection: 'keep-alive',
+      'x-accel-buffering': 'no',
     },
   });
 });

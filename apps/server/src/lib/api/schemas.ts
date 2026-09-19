@@ -3,7 +3,7 @@
  * Keep the two files in sync: every interface/type in types.ts
  * gets one exported schema named `<TypeName>Schema`.
  */
-import { z } from "zod";
+import { z } from 'zod';
 
 export const LoginRequestSchema = z.object({
   password: z.string().min(1).max(1024),
@@ -37,12 +37,12 @@ export const HeartbeatRequestSchema = z.object({
   currentUrl: z.string().max(2048).nullable().optional(),
   currentScreenId: z.string().max(100).nullable().optional(),
   uptimeSeconds: z.int().min(0).nullable().optional(),
-  kioskMode: z.enum(["launcher", "strict", "immersive"]).nullable().optional(),
+  kioskMode: z.enum(['launcher', 'strict', 'immersive']).nullable().optional(),
   isDefaultHome: z.boolean().nullable().optional(),
 });
 
 export const DeviceLogRequestSchema = z.object({
-  level: z.enum(["error", "warn", "info"]).default("error"),
+  level: z.enum(['error', 'warn', 'info']).default('error'),
   message: z.string().min(1).max(4000),
   source: z.string().max(2048).nullable().optional(),
   line: z.int().min(0).nullable().optional(),
@@ -53,14 +53,18 @@ export const DeviceLogRequestSchema = z.object({
 });
 
 export const ClaimDeviceRequestSchema = z.object({
-  pairingCode: z.string().trim().toUpperCase().regex(/^[A-HJKMNP-Z2-9]{6}$/, "Pairing code must be 6 characters"),
+  pairingCode: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^[A-HJKMNP-Z2-9]{6}$/, 'Pairing code must be 6 characters'),
   name: z.string().trim().min(1).max(100),
 });
 
-export const DeviceAssignmentSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("none") }),
-  z.object({ type: z.literal("screen"), screenId: z.string().min(1).max(100) }),
-  z.object({ type: z.literal("playlist"), playlistId: z.string().min(1).max(100) }),
+export const DeviceAssignmentSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('none') }),
+  z.object({ type: z.literal('screen'), screenId: z.string().min(1).max(100) }),
+  z.object({ type: z.literal('playlist'), playlistId: z.string().min(1).max(100) }),
 ]);
 
 export const UpdateDeviceRequestSchema = z
@@ -69,16 +73,16 @@ export const UpdateDeviceRequestSchema = z
     assignment: DeviceAssignmentSchema.optional(),
   })
   .refine((obj) => Object.keys(obj).length > 0, {
-    message: "At least one field is required",
+    message: 'At least one field is required',
   });
 
-export const DeviceCommandRequestSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("reload") }),
-  z.object({ type: z.literal("refreshData") }),
-  z.object({ type: z.literal("navigate"), screenId: z.string().min(1).max(100) }),
-  z.object({ type: z.literal("openExitMenu") }),
-  z.object({ type: z.literal("openSettings") }),
-  z.object({ type: z.literal("exitStrictMode") }),
+export const DeviceCommandRequestSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('reload') }),
+  z.object({ type: z.literal('refreshData') }),
+  z.object({ type: z.literal('navigate'), screenId: z.string().min(1).max(100) }),
+  z.object({ type: z.literal('openExitMenu') }),
+  z.object({ type: z.literal('openSettings') }),
+  z.object({ type: z.literal('exitStrictMode') }),
 ]);
 
 export const DeviceLogsQuerySchema = z.object({
@@ -88,10 +92,10 @@ export const DeviceLogsQuerySchema = z.object({
 
 export const CreateScreenRequestSchema = z.object({
   name: z.string().trim().min(1).max(100),
-  description: z.string().max(500).default(""),
+  description: z.string().max(500).default(''),
   html: z.string().min(1).max(512000),
   dataRefreshSeconds: z.int().min(5).max(3600).default(60),
-  source: z.enum(["user", "ai"]).default("user"),
+  source: z.enum(['user', 'ai']).default('user'),
   generationPrompt: z.string().max(4000).nullable().optional(),
 });
 
@@ -101,11 +105,11 @@ export const UpdateScreenRequestSchema = z
     description: z.string().max(500).optional(),
     html: z.string().min(1).max(512000).optional(),
     dataRefreshSeconds: z.int().min(5).max(3600).optional(),
-    source: z.enum(["user", "ai"]).optional(),
+    source: z.enum(['user', 'ai']).optional(),
     generationPrompt: z.string().max(4000).nullable().optional(),
   })
   .refine((obj) => Object.keys(obj).length > 0, {
-    message: "At least one field is required",
+    message: 'At least one field is required',
   });
 
 export const PlaylistItemInputSchema = z.object({
@@ -124,35 +128,36 @@ export const UpdatePlaylistRequestSchema = z
     items: z.array(PlaylistItemInputSchema).max(200).optional(),
   })
   .refine((obj) => Object.keys(obj).length > 0, {
-    message: "At least one field is required",
+    message: 'At least one field is required',
   });
 
 export const UpdateSettingsRequestSchema = z
   .object({
     weatherLatitude: z.number().min(-90).max(90).nullable().optional(),
     weatherLongitude: z.number().min(-180).max(180).nullable().optional(),
-    weatherUnits: z.enum(["imperial", "metric"]).nullable().optional(),
+    weatherUnits: z.enum(['imperial', 'metric']).nullable().optional(),
     weatherLocationName: z.string().trim().min(1).max(100).nullable().optional(),
     timezone: z
       .string()
       .min(1)
-      .refine(
-        (tz) => {
-          try {
-            new Intl.DateTimeFormat("en-US", { timeZone: tz });
-            return true;
-          } catch {
-            return false;
-          }
-        },
-        "Invalid IANA timezone",
-      )
+      .refine((tz) => {
+        try {
+          new Intl.DateTimeFormat('en-US', { timeZone: tz });
+          return true;
+        } catch {
+          return false;
+        }
+      }, 'Invalid IANA timezone')
       .nullable()
       .optional(),
-    kioskExitPin: z.string().regex(/^\d{4,8}$/, "PIN must be 4-8 digits").nullable().optional(),
+    kioskExitPin: z
+      .string()
+      .regex(/^\d{4,8}$/, 'PIN must be 4-8 digits')
+      .nullable()
+      .optional(),
   })
   .refine((obj) => Object.keys(obj).length > 0, {
-    message: "At least one field is required",
+    message: 'At least one field is required',
   });
 
 export const GeocodeQuerySchema = z.object({

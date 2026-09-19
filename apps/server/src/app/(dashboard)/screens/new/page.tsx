@@ -1,9 +1,9 @@
-import { ScreenEditor } from "@/components/screen-editor";
-import { PageHeader } from "@/components/ui";
-import { requireAdminPage } from "@/lib/auth/session";
-import { samplePayload } from "@/lib/providers/sample";
+import { ScreenEditor } from '@/components/screen-editor';
+import { PageHeader } from '@/components/ui';
+import { requireAdminPage } from '@/lib/auth/session';
+import { samplePayload } from '@/lib/providers/sample';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 const STARTER = `<style>
   .screen { position: fixed; inset: 0; display: grid; place-content: center; text-align: center;
@@ -19,12 +19,19 @@ const STARTER = `<style>
 `;
 
 export default async function NewScreenPage() {
-  await requireAdminPage("/screens/new");
+  await requireAdminPage('/screens/new');
   return (
     <>
       <PageHeader title="New screen" />
       <ScreenEditor
-        screen={{ id: null, name: "", description: "", html: STARTER, dataRefreshSeconds: 60, source: "user" }}
+        screen={{
+          id: null,
+          name: '',
+          description: '',
+          html: STARTER,
+          dataRefreshSeconds: 60,
+          source: 'user',
+        }}
         sampleData={samplePayload()}
         usage={{ devices: [], playlists: [] }}
       />

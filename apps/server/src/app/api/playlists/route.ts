@@ -1,7 +1,7 @@
-import { parseJson, route } from "@/lib/api/http";
-import { CreatePlaylistRequestSchema } from "@/lib/api/schemas";
-import { requireAdmin } from "@/lib/auth/admin";
-import { createPlaylist, listPlaylists } from "@/lib/playlists/service";
+import { parseJson, route } from '@/lib/api/http';
+import { CreatePlaylistRequestSchema } from '@/lib/api/schemas';
+import { requireAdmin } from '@/lib/auth/admin';
+import { createPlaylist, listPlaylists } from '@/lib/playlists/service';
 
 export const GET = route(async (req) => {
   requireAdmin(req);

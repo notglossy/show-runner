@@ -1,4 +1,4 @@
-import type { DataProvider } from "./types";
+import type { DataProvider } from './types';
 
 export interface DeviceData {
   id: string;
@@ -22,9 +22,9 @@ export function wifiBars(rssi: number): number {
   return 0;
 }
 
-export const deviceProvider: DataProvider<"device", DeviceData> = {
-  key: "device",
-  scope: "device",
+export const deviceProvider: DataProvider<'device', DeviceData> = {
+  key: 'device',
+  scope: 'device',
   ttlMs: 0,
   async fetch({ device }) {
     const { battery, wifi } = device.status;

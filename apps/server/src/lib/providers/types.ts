@@ -1,5 +1,5 @@
-import type { Device } from "@/lib/db/schema";
-import type { Env } from "@/lib/env";
+import type { Device } from '@/lib/db/schema';
+import type { Env } from '@/lib/env';
 
 /** Env config with dashboard settings applied (see lib/settings/service.ts). */
 export type ProviderConfig = Env & { WEATHER_LOCATION_NAME: string | null };
@@ -18,7 +18,7 @@ export interface ProviderContext {
 export interface DataProvider<K extends string = string, T = unknown> {
   readonly key: K;
   /** "global" results are shared by all devices; "device" results are cached per device. */
-  readonly scope: "global" | "device";
+  readonly scope: 'global' | 'device';
   /** How long a successful result is reused. 0 = compute on every request. */
   readonly ttlMs: number;
   /** How long to wait before retrying after a failure. */

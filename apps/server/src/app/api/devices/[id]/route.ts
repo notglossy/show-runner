@@ -1,9 +1,9 @@
-import { parseJson, route } from "@/lib/api/http";
-import { UpdateDeviceRequestSchema } from "@/lib/api/schemas";
-import { requireAdmin } from "@/lib/auth/admin";
-import { deleteDevice, getDeviceOr404, toDeviceView, updateDevice } from "@/lib/devices/service";
+import { parseJson, route } from '@/lib/api/http';
+import { UpdateDeviceRequestSchema } from '@/lib/api/schemas';
+import { requireAdmin } from '@/lib/auth/admin';
+import { deleteDevice, getDeviceOr404, toDeviceView, updateDevice } from '@/lib/devices/service';
 
-type Ctx = RouteContext<"/api/devices/[id]">;
+type Ctx = RouteContext<'/api/devices/[id]'>;
 
 export const GET = route(async (req, { params }: Ctx) => {
   requireAdmin(req);
