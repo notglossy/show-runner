@@ -31,9 +31,7 @@ cd apps/android && ./gradlew lintDebug assembleDebug testDebugUnitTest
 Google Android Kotlin style (https://developer.android.com/kotlin/style-guide); on
 conflict with the Kotlin conventions it wins. Views codebase — no Compose.
 
-- 4-space indent (`.editorconfig`), 100-col limit, trailing commas in multi-line lists.
-- Imports: `android.*`, then `androidx.*`, then third-party, then `java.*`/`javax.*`,
-  blank line between groups, alphabetical within.
+- Imports: alphabetical, no blank lines between groups (matches the tree as-is).
 - One top-level class per file, PascalCase, file named after the class. Pure logic lives
   in testable helpers (see `KioskLogic.kt`), not the activity.
 - KDoc (`/** ... */`) on public/internal classes, functions, properties; `[Symbol]` links;

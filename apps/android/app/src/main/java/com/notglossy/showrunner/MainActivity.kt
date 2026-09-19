@@ -142,7 +142,7 @@ class MainActivity : android.app.Activity() {
     }
 
     @Deprecated("Kiosk: back closes the exit menu, otherwise does nothing")
-    @SuppressLint("MissingSuperCall", "GestureBackNavigation")
+    @SuppressLint("MissingSuperCall", "GestureBackNavigation") // kiosk owns back: menu or nothing; gesture nav is re-locked by hideSystemBars.
     override fun onBackPressed() {
         if (exitMenu.isVisible) closeExitMenu()
     }
@@ -358,7 +358,7 @@ class MainActivity : android.app.Activity() {
         view.loadUrl(url)
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
+    @SuppressLint("SetJavaScriptEnabled") // kiosk renders first-party screens only; same-origin navigation enforced in shouldOverrideUrlLoading.
     private fun createWebView(): WebView {
         val view = WebView(this)
         view.setBackgroundColor(Color.BLACK)
@@ -515,7 +515,7 @@ class MainActivity : android.app.Activity() {
 
     // ---- Exit menu + native commands ----------------------------------------------------
 
-    @SuppressLint("ClickableViewAccessibility")
+    @SuppressLint("ClickableViewAccessibility") // exit-menu long-press zones perform actions on release; no hover/talkback content to announce.
     private fun setupExitMenu() {
         exitMenu = findViewById(R.id.exit_menu)
         exitStatus = findViewById(R.id.exit_status)
