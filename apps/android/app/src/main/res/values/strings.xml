@@ -9,7 +9,15 @@
     <string name="exit_unlock">Unlock</string>
     <string name="exit_choose_home">Choose Home app…</string>
     <string name="exit_open_settings">Open Android settings</string>
-    <string name="exit_leave_strict">Leave strict mode</string>
     <string name="exit_reload">Reload</string>
     <string name="exit_close">Close</string>
+    <string name="exit_leave_strict">Leave strict mode</string>
+    <string name="leave_strict_confirm">Tap again to leave strict mode</string>
+    <string name="left_strict_mode">Left strict mode. ShowRunner is no longer device owner.</string>
+    <string name="leave_strict_failed">Couldn\'t leave strict mode; see the device log.</string>
+    <string name="exit_status">%1$s · Home app: %2$s</string>
+    <string name="home_showrunner">ShowRunner</string>
+    <string name="home_other_app">another app</string>
+    <string name="strict_locks_home">Strict mode locks Home. Leave strict mode to choose another Home app.</string>
+    <string name="wrong_pin">Wrong PIN</string>
 </resources>

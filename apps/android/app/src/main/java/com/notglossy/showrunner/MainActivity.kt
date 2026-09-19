@@ -34,6 +34,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.webkit.WebViewCompat
 import org.json.JSONObject
 import java.lang.ref.WeakReference
@@ -143,7 +144,7 @@ class MainActivity : android.app.Activity() {
     @Deprecated("Kiosk: back closes the exit menu, otherwise does nothing")
     @SuppressLint("MissingSuperCall", "GestureBackNavigation")
     override fun onBackPressed() {
-        if (exitMenu.visibility == View.VISIBLE) closeExitMenu()
+        if (exitMenu.isVisible) closeExitMenu()
     }
 
     override fun onDestroy() {
@@ -394,6 +395,9 @@ class MainActivity : android.app.Activity() {
         return view
     }
 
+    // androidx.webkit 1.17.0's RenderProcessGoneDetector only sees android.webkit.WebViewClient /
+    // WebViewClientCompat; onRenderProcessGone IS implemented below (recreates the WebView via scheduleRetry).
+    @SuppressLint("MissingOnRenderProcessGone")
     private inner class KioskWebViewClient : WebViewClient() {
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
             val server = config?.serverUrl?.let(Uri::parse) ?: return true
@@ -543,7 +547,7 @@ class MainActivity : android.app.Activity() {
         exitLeaveStrict.setOnClickListener {
             if (!leaveStrictArmed) {
                 leaveStrictArmed = true
-                exitLeaveStrict.text = "Tap again to leave strict mode"
+                exitLeaveStrict.text = getString(R.string.leave_strict_confirm)
             } else {
                 runNativeCommand("exitStrictMode")
             }
@@ -562,8 +566,13 @@ class MainActivity : android.app.Activity() {
         exitLeaveStrict.text = getString(R.string.exit_leave_strict)
         exitLeaveStrict.visibility = if (mode == KioskMode.Mode.STRICT) View.VISIBLE else View.GONE
         exitChooseHome.isEnabled = mode != KioskMode.Mode.STRICT
-        exitStatus.text = "${describeMode(mode)} · Home app: ${if (KioskMode.isDefaultHome(this)) "ShowRunner" else "another app"}"
-        exitMessage.text = if (mode == KioskMode.Mode.STRICT) "Strict mode locks Home. Leave strict mode to choose another Home app." else ""
+        exitStatus.text = getString(
+            R.string.exit_status,
+            describeMode(mode),
+            getString(if (KioskMode.isDefaultHome(this)) R.string.home_showrunner else R.string.home_other_app),
+        )
+        exitMessage.text =
+            if (mode == KioskMode.Mode.STRICT) getString(R.string.strict_locks_home) else ""
         exitPin.setText("")
         exitPinRow.visibility = if (pinRequired) View.VISIBLE else View.GONE
         exitActions.visibility = if (pinRequired) View.GONE else View.VISIBLE
@@ -595,7 +604,7 @@ class MainActivity : android.app.Activity() {
             exitMessage.text = exitMessage.text.takeIf { KioskMode.current(this) == KioskMode.Mode.STRICT } ?: ""
         } else {
             exitPin.setText("")
-            exitMessage.text = "Wrong PIN"
+            exitMessage.text = getString(R.string.wrong_pin)
         }
         main.removeCallbacks(autoCloseExitMenu)
         main.postDelayed(autoCloseExitMenu, EXIT_MENU_IDLE_MS)
@@ -618,10 +627,11 @@ class MainActivity : android.app.Activity() {
             "exitStrictMode" -> {
                 val ok = KioskMode.leaveStrictMode(this)
                 kioskMode = KioskMode.apply(this)
-                if (exitMenu.visibility == View.VISIBLE) openExitMenu(requirePin = false)
-                exitMessage.text = if (ok) "Left strict mode. ShowRunner is no longer device owner." else "Couldn't leave strict mode; see the device log."
+                if (exitMenu.isVisible) openExitMenu(requirePin = false)
+                exitMessage.text =
+                    if (ok) getString(R.string.left_strict_mode)
+                    else getString(R.string.leave_strict_failed)
             }
-            else -> Log.w(TAG, "Unknown kiosk command: $command")
         }
     }
 

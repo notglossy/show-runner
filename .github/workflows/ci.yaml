@@ -49,5 +49,5 @@ jobs:
       - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
       - run: sdkmanager "platforms;android-37" "build-tools;36.0.0"
         working-directory: apps/android
-      - run: ./gradlew assembleDebug testDebugUnitTest --warning-mode all
+      - run: ./gradlew lintDebug assembleDebug testDebugUnitTest --warning-mode all
         working-directory: apps/android
