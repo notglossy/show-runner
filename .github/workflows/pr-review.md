@@ -21,9 +21,9 @@ permissions:
   # BYOK routes inference to OpenRouter; no Copilot billing or token is involved.
   copilot-requests: none
 
-# The runner is intentional (see ai-review-instructions.md). gh-aw's sandbox needs a
-# working Docker daemon and Node on it; the compiler adds a setup-node step itself.
-runs-on: self-hosted
+# GitHub-hosted, like gh-aw's helper jobs. The sandbox needs Docker, which ubuntu-latest
+# has; a self-hosted runner would need Docker and Node installed on it.
+runs-on: ubuntu-latest
 
 engine:
   id: copilot

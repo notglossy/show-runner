@@ -29,11 +29,8 @@ These were raised by earlier reviews, checked, and decided. They are not finding
   (`allowed-events: [COMMENT]`; the Actions token cannot approve in any case).
 - **Event and fork guard.** The workflow uses `pull_request`, not `pull_request_target`. The compiled guard rejects
   PRs whose head repository id differs from the base repository, and the `if:` skips drafts. Fork PRs never run.
-- **Self-hosted runner.** The agent job runs on the owner's self-hosted runner on purpose; it needs Docker and Node
-  there. gh-aw's helper jobs (activation, threat detection, safe outputs) run on GitHub-hosted runners by design.
-  The remaining risk (a fork PR editing the workflow to run code on the runner) is handled by the repository
-  setting "Require approval for all external contributors" before the repo goes public. Do not ask for
-  runner-hardening docs or workflow changes for this.
+- **GitHub-hosted runners.** Every job runs on `ubuntu-latest` or gh-aw's `ubuntu-slim` helper runners. There is no
+  self-hosted runner in this workflow, so runner-hardening findings do not apply.
 - **Review history.** The prompt tells the agent to read the PR's existing review comments and not re-raise
   answered findings. There is no separate digest step to harden.
 - **Instructions file read from the PR head.** This file is pulled in with `{{#runtime-import? ...}}` from the
