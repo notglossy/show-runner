@@ -31,7 +31,9 @@ apps/android/.kotlin/
 
 # os / editors
 .DS_Store
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 
 # tool output
 .playwright-mcp/
