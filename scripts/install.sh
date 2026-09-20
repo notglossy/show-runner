@@ -81,8 +81,14 @@ if [[ "$serial" == *:* ]]; then
   step "Connecting to $serial"
   "$adb_bin" connect "$serial" >/dev/null || true
 fi
-state=$(adb get-state 2>/dev/null || true)
-[[ "$state" == device ]] || { echo "install: ${serial:-device} is '${state:-unreachable}'. Wake the device, accept the debugging prompt, or pass --serial." >&2; exit 1; }
+# Keep stderr: with several devices and no serial, adb refuses with "more than one
+# device/emulator" rather than picking one, and that text is the useful error here.
+state=$(adb get-state 2>&1 || true)
+if [[ "$state" != device ]]; then
+  echo "install: ${serial:-device} is '${state:-unreachable}'. Wake the device and accept the debugging prompt." >&2
+  [[ -n "$serial" ]] || echo "install: with more than one device attached, set ANDROID_SERIAL or pass --serial." >&2
+  exit 1
+fi
 
 if $reinstall; then
   step "Uninstalling the current app (config.json and device-id on /sdcard are kept)"
