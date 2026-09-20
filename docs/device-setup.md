@@ -21,12 +21,12 @@ Collected 2026-09-13 from the development unit.
 
 Notes:
 - `dpm list-owners` does **not** exist on Android 11; use `dumpsys device_policy`.
-- A lock screen (swipe keyguard, no PIN) appears after screen-off. The kiosk handles this
-  in Phase 2. To dismiss manually: `adb shell input keyevent KEYCODE_WAKEUP && adb shell wm dismiss-keyguard`.
+- A lock screen (swipe keyguard, no PIN) appears after screen-off. The app dismisses it
+  itself. To dismiss manually: `adb shell input keyevent KEYCODE_WAKEUP && adb shell wm dismiss-keyguard`.
 - Wi-Fi ping is 5–30 ms while awake, but was 100–2000 ms while the screen was off
   (Wi-Fi power save). Keep the screen on and use generous watchdog timeouts.
 
-## Verified on the device (Phase 2, 2026-09-13)
+## Verified on the device (2026-09-13)
 
 - **Viewport.** The WebView lays screens out at 1280×800 CSS px (scale 0.751), matching the desktop
   preview. This needs `useWideViewPort` + `loadWithOverviewMode` in the shell **and** a viewport meta

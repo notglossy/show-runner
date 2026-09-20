@@ -12,7 +12,7 @@ The admin action in the dashboard that names an unclaimed device and takes owner
 
 ## Command
 
-A message the server pushes to a device over Server-Sent Events, one of `reload`, `navigate`, or `refreshData`, with `screenshot` coming later.
+A message the server pushes to a device over Server-Sent Events, one of `reload`, `navigate`, or `refreshData`. Native kiosk commands (open the exit menu, open settings, leave strict mode) travel in the heartbeat reply instead.
 
 ## Data payload
 
@@ -80,7 +80,7 @@ A database row holding an HTML/CSS/JS template that a device can display.
 
 ## Shared secret
 
-The `DEVICE_SHARED_SECRET` value the Android shell sends in a header when registering and sending heartbeats.
+The `DEVICE_SHARED_SECRET` value the Android shell sends in a header when registering. Everything after registration uses the per-device token.
 
 ## Shell
 
