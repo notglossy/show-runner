@@ -12,7 +12,8 @@
 #   --reinstall        uninstall first; needed once when switching between debug and release signing.
 #                      The device keeps its ID (/sdcard/showrunner/device-id) and config, so no re-claim.
 #   --no-build         install the existing APK without rebuilding
-#   --serial S         adb target (default: $ANDROID_SERIAL or 192.168.1.203:5555)
+#   --serial S         adb target, e.g. 192.168.1.50:5555 (default: $ANDROID_SERIAL, else the
+#                      only connected device)
 #
 # Everything this script does on the device is also written out in docs/device-setup.md.
 set -euo pipefail
@@ -29,7 +30,7 @@ home=false
 build=true
 variant=debug
 reinstall=false
-serial=${ANDROID_SERIAL:-192.168.1.203:5555}
+serial=${ANDROID_SERIAL:-}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -59,7 +60,8 @@ sdk=${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}
 adb_bin=$(command -v adb || true)
 [[ -z "$adb_bin" && -x "$sdk/platform-tools/adb" ]] && adb_bin=$sdk/platform-tools/adb
 [[ -n "$adb_bin" ]] || { echo "install: adb not found (install platform-tools or set ANDROID_HOME)" >&2; exit 2; }
-adb() { "$adb_bin" -s "$serial" "$@"; }
+# Without a serial adb picks the only connected device and fails if there are several.
+adb() { "$adb_bin" ${serial:+-s "$serial"} "$@"; }
 step() { printf '\n==> %s\n' "$*"; }
 
 if $build; then
@@ -79,8 +81,8 @@ if [[ "$serial" == *:* ]]; then
   step "Connecting to $serial"
   "$adb_bin" connect "$serial" >/dev/null || true
 fi
-state=$("$adb_bin" -s "$serial" get-state 2>/dev/null || true)
-[[ "$state" == device ]] || { echo "install: $serial is '${state:-unreachable}'. Wake the device and accept the debugging prompt." >&2; exit 1; }
+state=$(adb get-state 2>/dev/null || true)
+[[ "$state" == device ]] || { echo "install: ${serial:-device} is '${state:-unreachable}'. Wake the device, accept the debugging prompt, or pass --serial." >&2; exit 1; }
 
 if $reinstall; then
   step "Uninstalling the current app (config.json and device-id on /sdcard are kept)"
@@ -140,4 +142,4 @@ sleep 2
 
 step "Done"
 echo "Device ID: $(adb shell cat /sdcard/showrunner/device-id 2>/dev/null | tr -d '\r')"
-echo "Logs:      $adb_bin -s $serial logcat -s ShowRunner ShowRunner.Web ShowRunner.Kiosk ShowRunner.Config"
+echo "Logs:      $adb_bin${serial:+ -s $serial} logcat -s ShowRunner ShowRunner.Web ShowRunner.Kiosk ShowRunner.Config"

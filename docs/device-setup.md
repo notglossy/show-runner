@@ -36,7 +36,7 @@ Notes:
   LAN are ~5–20 ms. While the screen dozes they rise to 100–2000 ms.
 - **adb over Wi-Fi is fragile for big transfers.** A stalled `adb install` over the network kept the
   adb server pushing data and made the Echo's HTTP connections take 5–20 s. Install APKs over
-  **USB**, or `adb disconnect 192.168.1.203:5555` if a network transfer hangs.
+  **USB**, or `adb disconnect <device-ip>:5555` if a network transfer hangs.
 - **Kiosk modes.** Launcher mode: Home returns to ShowRunner, the Home picker switches to Trebuchet /
   Nova / View Assist and ShowRunner doesn't take the screen back, and it comes back after reboot.
   Strict mode: Home, Recents and other apps are blocked and there's no keyguard; leaving it from the
@@ -61,15 +61,16 @@ Notes:
    ```
 5. Unplug and connect over Wi-Fi (accept the RSA prompt again if shown):
    ```sh
-   adb connect 192.168.1.203:5555
+   adb connect <device-ip>:5555
    adb devices -l
    ```
 
 > Android 11's **Wireless debugging** toggle is a different mechanism (pairing code, random
 > port, TLS). Don't use it for this project; scripts expect the fixed `:5555` port.
 
-The development unit is at `192.168.1.203` (DHCP reservation recommended).
-Scripts read the target from `ANDROID_SERIAL` (default `192.168.1.203:5555`).
+Give the device a DHCP reservation so its address stays put. Scripts read the adb target from
+`ANDROID_SERIAL` (for example `export ANDROID_SERIAL=<device-ip>:5555`); with it unset they use the
+only connected device.
 
 If `adb` is not on your PATH it lives at `~/Library/Android/sdk/platform-tools/adb` on macOS.
 
