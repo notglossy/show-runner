@@ -32,7 +32,8 @@ Google Android Kotlin style (https://developer.android.com/kotlin/style-guide); 
 conflict with the Kotlin conventions it wins. Views codebase — no Compose.
 
 - Imports: alphabetical, no blank lines between groups (matches the tree as-is).
-- One top-level class per file, PascalCase, file named after the class. Pure logic lives
+- One primary type per file, PascalCase, file named after it; closely-related value
+  classes may share it (see `DeviceIdentity.kt`, `KioskConfig.kt`). Pure logic lives
   in testable helpers (see `KioskLogic.kt`), not the activity.
 - KDoc (`/** ... */`) on classes and on anything non-obvious; `[Symbol]` links;
   `@param`/`@return` only when they add beyond the signature. Comments explain why
