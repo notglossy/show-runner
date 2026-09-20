@@ -82,8 +82,9 @@ if [[ "$serial" == *:* ]]; then
   "$adb_bin" connect "$serial" >/dev/null || true
 fi
 # Keep stderr: with several devices and no serial, adb refuses with "more than one
-# device/emulator" rather than picking one, and that text is the useful error here.
-state=$(adb get-state 2>&1 || true)
+# device/emulator" rather than picking one, and that text is the useful error here. Only
+# the last line counts, so a cold adb server's "daemon started" banner does not mask it.
+state=$(adb get-state 2>&1 | tail -n1 || true)
 if [[ "$state" != device ]]; then
   echo "install: ${serial:-device} is '${state:-unreachable}'. Wake the device and accept the debugging prompt." >&2
   [[ -n "$serial" ]] || echo "install: with more than one device attached, set ANDROID_SERIAL or pass --serial." >&2
