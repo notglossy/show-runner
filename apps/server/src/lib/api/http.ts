@@ -58,7 +58,8 @@ export function route<Ctx>(handler: (req: NextRequest, ctx: Ctx) => Promise<Resp
       return await handler(req, ctx);
     } catch (err) {
       if (err instanceof ApiError) return errorResponse(err);
-      console.error(`[api] ${req.method} ${req.nextUrl.pathname}`, err);
+      // Constant format string: a path containing %s or %o would otherwise swallow `err`.
+      console.error('[api] %s %s', req.method, req.nextUrl.pathname, err);
       return errorResponse(new ApiError(500, 'internal_error', 'Internal server error'));
     }
   };
