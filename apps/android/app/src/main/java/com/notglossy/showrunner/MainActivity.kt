@@ -4,24 +4,22 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.net.wifi.WifiManager
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.Uri
+import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.provider.Settings
+import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
-import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
-import android.widget.Button
-import android.widget.EditText
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.webkit.ConsoleMessage
 import android.webkit.CookieManager
 import android.webkit.RenderProcessGoneDetail
@@ -32,6 +30,8 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Button
+import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.core.view.isVisible
@@ -142,7 +142,7 @@ class MainActivity : android.app.Activity() {
     }
 
     @Deprecated("Kiosk: back closes the exit menu, otherwise does nothing")
-    @SuppressLint("MissingSuperCall", "GestureBackNavigation")
+    @SuppressLint("MissingSuperCall", "GestureBackNavigation") // kiosk owns back: close the menu or swallow; no fragment stack, never call super.
     override fun onBackPressed() {
         if (exitMenu.isVisible) closeExitMenu()
     }
@@ -358,7 +358,7 @@ class MainActivity : android.app.Activity() {
         view.loadUrl(url)
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
+    @SuppressLint("SetJavaScriptEnabled") // kiosk renders first-party screens only; same-origin navigation enforced in shouldOverrideUrlLoading.
     private fun createWebView(): WebView {
         val view = WebView(this)
         view.setBackgroundColor(Color.BLACK)
@@ -395,9 +395,8 @@ class MainActivity : android.app.Activity() {
         return view
     }
 
-    // androidx.webkit 1.17.0's RenderProcessGoneDetector only sees android.webkit.WebViewClient /
-    // WebViewClientCompat; onRenderProcessGone IS implemented below (recreates the WebView via scheduleRetry).
-    @SuppressLint("MissingOnRenderProcessGone")
+    // Stale detector (webkit 1.17.0 only sees WebViewClientCompat); onRenderProcessGone IS implemented below.
+    @SuppressLint("MissingOnRenderProcessGone") // recreates the WebView via scheduleRetry; safe to silence the false positive.
     private inner class KioskWebViewClient : WebViewClient() {
         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
             val server = config?.serverUrl?.let(Uri::parse) ?: return true
@@ -515,7 +514,7 @@ class MainActivity : android.app.Activity() {
 
     // ---- Exit menu + native commands ----------------------------------------------------
 
-    @SuppressLint("ClickableViewAccessibility")
+    @SuppressLint("ClickableViewAccessibility") // exit-menu long-press zones perform actions on release; no hover/talkback content to announce.
     private fun setupExitMenu() {
         exitMenu = findViewById(R.id.exit_menu)
         exitStatus = findViewById(R.id.exit_status)
