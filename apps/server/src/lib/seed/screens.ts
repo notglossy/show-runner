@@ -348,7 +348,8 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
     }
     ticks.innerHTML = tickMarkup;
 
-    /* second hand: cumulative angle so the sweep never runs backwards */
+    /* second hand: cumulative angle so the sweep never runs backwards; it
+       re-syncs to t.second on every tick so a late or skipped tick does not drift */
     let secondDeg = null;
 
     /* sun arc geometry (top half of a circle, centre + radius) */
@@ -417,15 +418,20 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
       handHour.style.transform = "rotate(" + hourDeg.toFixed(3) + "deg)";
       handMin.style.transform = "rotate(" + minuteDeg.toFixed(3) + "deg)";
 
+      const target = seconds * 6;
       if (secondDeg === null) {
-        secondDeg = seconds * 6;
+        secondDeg = target;
         handSec.style.transition = "none";
         handSec.style.transform = "rotate(" + secondDeg + "deg)";
         handSec.getBoundingClientRect();
         handSec.style.transition = "";
       } else {
-        secondDeg += 6;
-        handSec.style.transform = "rotate(" + secondDeg + "deg)";
+        let delta = target - (secondDeg % 360);
+        if (delta < 0) delta += 360;
+        if (delta > 0) {
+          secondDeg += delta;
+          handSec.style.transform = "rotate(" + secondDeg + "deg)";
+        }
       }
 
       updateSun(Number(t.epochMs));
