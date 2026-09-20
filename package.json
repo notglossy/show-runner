@@ -14,5 +14,10 @@
     "format:check": "pnpm --filter @showrunner/server format:check",
     "test": "pnpm --filter @showrunner/server test",
     "check": "pnpm --filter @showrunner/server check"
+  },
+  "pnpm": {
+    "overrides": {
+      "esbuild": "^0.28.2"
+    }
   }
 }

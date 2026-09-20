@@ -101,7 +101,7 @@ cd apps/android
 ./gradlew testDebugUnitTest      # JVM unit tests, no device needed
 ```
 
-Every pull request runs the same checks plus an AI review. See
+Every pull request runs the same checks, a CodeQL scan and an AI review. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for conventions.
 
 ## Documentation

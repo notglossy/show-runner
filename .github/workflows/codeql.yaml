@@ -1,0 +1,66 @@
+# CodeQL "advanced setup". Default setup cannot analyze this repository: Kotlin needs a real
+# build, default setup only offers autobuild, and autobuild looks for a Gradle project at the
+# repository root while ours lives in apps/android. Default setup must be switched off in
+# Settings > Code security > CodeQL analysis before this workflow's uploads are accepted.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: actions
+            build-mode: none
+          - language: javascript-typescript
+            build-mode: none
+          # Kotlin has no buildless extraction: compile the app the same way CI does.
+          - language: java-kotlin
+            build-mode: manual
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: github/codeql-action/init@c23de5a82f64bb08c6d9f28844551440ca298e76 # v4.38.1
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      - if: matrix.build-mode == 'manual'
+        uses: actions/setup-java@1aa87b638dacaa70f1c903fa9ec9cbd91058e2ff # v5.2.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - if: matrix.build-mode == 'manual'
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
+      # Same SDK step as ci.yaml: the image ships platforms;android-37, only build-tools is pinned.
+      - if: matrix.build-mode == 'manual'
+        run: sdkmanager "build-tools;36.0.0"
+        working-directory: apps/android
+      - if: matrix.build-mode == 'manual'
+        run: ./gradlew assembleDebug --warning-mode all
+        working-directory: apps/android
+
+      - uses: github/codeql-action/analyze@c23de5a82f64bb08c6d9f28844551440ca298e76 # v4.38.1
+        with:
+          category: /language:${{ matrix.language }}
