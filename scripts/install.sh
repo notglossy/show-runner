@@ -87,7 +87,7 @@ fi
 state=$(adb get-state 2>&1 | tail -n1 || true)
 if [[ "$state" != device ]]; then
   echo "install: ${serial:-device} is '${state:-unreachable}'. Wake the device and accept the debugging prompt." >&2
-  [[ -n "$serial" ]] || echo "install: with more than one device attached, set ANDROID_SERIAL or pass --serial." >&2
+  [[ "$state" == *"more than one device"* ]] && echo "install: several devices attached; set ANDROID_SERIAL or pass --serial." >&2
   exit 1
 fi
 
