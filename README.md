@@ -7,6 +7,10 @@ so you design screens in a browser and never touch the device again.
 Built for one household: a single admin user, a single shared device secret, and a LAN with no
 inbound exposure. Only the Echo Show 8 (2nd gen, LineageOS 18.1 / Android 11) is tested.
 
+![An Echo Show 8 running ShowRunner: an analog clock with a yellow second hand, the current temperature and conditions, a sunrise-to-sunset arc and an hourly temperature curve](docs/images/showcase.jpg)
+
+*A screen generated from a text description in the dashboard, running on the device.*
+
 ## How it works
 
 The device registers with the server, loads `/device/<id>`, and obeys server-sent events
@@ -21,7 +25,8 @@ request flow: [docs/architecture.md](docs/architecture.md).
 - Pairing by on-screen code; claim, name and assign devices from the dashboard.
 - Launcher kiosk mode by default; optional strict mode (device owner + lock task) that can always
   be left from the on-device exit menu or the dashboard, never by factory reset.
-- Screen editor with a live 1280×800 preview and two built-in screens (clock, clock + weather).
+- Screen editor with a live 1280×800 preview and three built-in screens (clock, clock + weather, and
+  the analog dial pictured above).
 - AI screen generation from a description through any OpenAI-compatible API (optional).
 - Playlists, per-device commands, device logs and heartbeat status in the dashboard.
 
