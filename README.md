@@ -25,7 +25,8 @@ request flow: [docs/architecture.md](docs/architecture.md).
 - Pairing by on-screen code; claim, name and assign devices from the dashboard.
 - Launcher kiosk mode by default; optional strict mode (device owner + lock task) that can always
   be left from the on-device exit menu or the dashboard, never by factory reset.
-- Screen editor with a live 1280×800 preview and two built-in screens (clock, clock + weather).
+- Screen editor with a live 1280×800 preview and three built-in screens (clock, clock + weather, and
+  the analog dial pictured above).
 - AI screen generation from a description through any OpenAI-compatible API (optional).
 - Playlists, per-device commands, device logs and heartbeat status in the dashboard.
 
