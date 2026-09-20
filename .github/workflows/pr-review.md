@@ -83,14 +83,18 @@ safe-outputs:
     allowed-events: [COMMENT]
 
 timeout-minutes: 30
-max-turns: 100
+# Cost ceilings. A review of a small PR takes 5 to 40 turns; a model that loops on a denied
+# command burned 76 turns in one run before it was cancelled. 200 credits is $2 at the
+# fallback rate above.
+max-turns: 40
+max-ai-credits: 200
 # The proxy blocks inference (HTTP 403) after N consecutive requests that report no
 # prompt-cache hits. OpenRouter does not surface cache reads for every model, so treat every
 # turn as a miss and let the limit equal max-turns.
-max-turn-cache-misses: 100
+max-turn-cache-misses: 40
 # The daily guardrail (default 5000 credits) fails closed when any run in the last 24 h
 # has a cancelled agent job with no usage accounting, which a new push causes every time
-# via cancel-in-progress. The per-run max-ai-credits cap (default 1000) still applies.
+# via cancel-in-progress. The fixed per-run max-ai-credits cap above still applies.
 max-daily-ai-credits: -1
 ---
 
@@ -119,6 +123,15 @@ race and concurrency protection); fail-closed error handling and error handling 
 prevents data loss; accessibility; test infrastructure that exists to make one of the
 above testable; or a single smoke test. In security-sensitive code, defense-in-depth is
 intentional redundancy. If a line has both a bug and bloat, report the bug.
+
+## Tool rules
+
+The only shell commands allowed are `cat`, `find`, `git`, `grep`, `head`, `ls`, `pwd`, `sort`,
+`tail`, `uniq` and `wc`. Anything else (`bash`, `sh`, `node`, `pnpm`, `python`, `jq`, ...) is
+denied by the sandbox and will stay denied: a denied command must never be retried, with or
+without changes. Note what you could not run in the review summary (or via `missing_tool`)
+and continue with what you can read. You cannot execute or build the code; review it by
+reading it.
 
 ## How to work
 

@@ -118,7 +118,7 @@ cd apps/android && ./gradlew assembleDebug      # or assembleRelease (signing: ~
 
 Never commit keystores (`*.jks` is gitignored) or put signing passwords in the repo or `.env`.
 
-Device: `adb connect 192.168.1.203:5555` (network adb persists across reboots). adb lives at
+Device: `adb connect <device-ip>:5555` (network adb persists across reboots). adb lives at
 `~/Library/Android/sdk/platform-tools/adb` and isn't on PATH. Scripts honor `ANDROID_SERIAL`.
 
 ## Conventions
