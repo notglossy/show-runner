@@ -22,6 +22,11 @@ Codes: `bad_request` 400, `validation_failed` 400, `unauthorized` 401, `forbidde
 Per-device read endpoints (`/device/:id`, `data`, `events`) also accept an admin so the owner can
 preview a device in a browser. For non-admins an unknown device and a bad token both return 401.
 
+## Unauthenticated
+
+### `GET /api/health`
+`{ "ok": true, "service": "showrunner", "time": "…" }`. Used by the Docker health check.
+
 ## Device-facing
 
 ### `POST /api/devices/register`

@@ -62,7 +62,7 @@ sequenceDiagram
 - **Playlists rotate on the server.** The server sends `navigate` when a dwell time expires.
 - **Data binding.** Templates use `data-bind="weather.temp"` and `kiosk.on('data', fn)`.
   The full contract is in [`screen-authoring.md`](screen-authoring.md) which also serves as
-  the system prompt for AI screen generation (Phase 4).
+  the system prompt for AI screen generation.
 - **Providers.** One file per provider (`fetch()` + TTL) plus one registry entry.
 - **Auth.** One admin password (env var): dashboard session cookie, or `Bearer <password>` for
   scripting. Devices send the shared secret **only to register**. Registration returns a
@@ -78,6 +78,6 @@ sequenceDiagram
 
 ## Deployment
 
-- Dev: `pnpm dev` on the Mac, or `docker compose up` (native arm64).
-- Prod: the home server (amd64) builds the same `apps/server/Dockerfile` via Komodo.
-  DB lives on the `showrunner-data` named volume at `/data/showrunner.db`.
+- Dev: `pnpm dev`, or `docker compose up` (the image builds on amd64 and arm64).
+- Prod: any Docker host on the LAN builds the same `apps/server/Dockerfile` (the author uses Komodo).
+  The DB lives on the `showrunner-data` named volume at `/data/showrunner.db`.
