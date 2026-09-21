@@ -53,10 +53,12 @@ install.
    `/api/health`. The SQLite database lives on the `showrunner-data` volume.
 
 3. **Prepare the display** once, following [docs/device-setup.md](docs/device-setup.md):
-   enable adb, then build and install the app with the server address and secret:
+   enable adb, then install the app with the server address and secret. Use the APK from the
+   [latest release](https://github.com/notglossy/show-runner/releases), or drop `--apk` to build it
+   yourself with Android Studio's JDK:
 
    ```sh
-   scripts/install.sh --server http://<server-lan-ip>:3000 --secret "$DEVICE_SHARED_SECRET" --home
+   scripts/install.sh --apk showrunner-<version>.apk --server http://<server-lan-ip>:3000 --secret "$DEVICE_SHARED_SECRET" --home
    ```
 
    The display shows a pairing code. In the dashboard, open **Devices**, claim the code and give

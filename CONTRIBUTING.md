@@ -45,6 +45,22 @@ conflict with the Kotlin conventions it wins. Views codebase — no Compose.
 - Device quirks and adb steps go in `docs/device-setup.md` as soon as they're known.
 - Never require a factory reset to leave the kiosk.
 
+## Releasing
+
+Releases are GitHub releases with the signed kiosk APK attached, built by
+`.github/workflows/release.yaml` from a tag.
+
+1. Set `versionName` in `apps/android/app/build.gradle.kts` and merge it to `main`. Use a
+   pre-release suffix (`0.2.0-beta.1`) for betas; a bare version (`0.2.0`) is a full release.
+2. Tag that commit `v` + `versionName` and push the tag:
+   ```sh
+   git tag v0.2.0-beta.1 && git push origin v0.2.0-beta.1
+   ```
+   The workflow refuses a tag that doesn't match `versionName`, builds and verifies the APK,
+   and publishes the release (a pre-release when the tag has a suffix) with generated notes.
+3. Signing comes from the repository secrets listed in `docs/device-setup.md` (release
+   builds). Without them the job fails before building.
+
 ## Reporting bugs
 
 Include: server (`docker compose`) or Android build, device model if relevant,
