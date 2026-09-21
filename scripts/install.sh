@@ -12,7 +12,7 @@
 #   --reinstall        uninstall first; needed once when switching between debug and release signing.
 #                      The device keeps its ID (/sdcard/showrunner/device-id) and config, so no re-claim.
 #   --no-build         install the existing APK without rebuilding
-#   --apk PATH         install this APK instead of building, e.g. one downloaded from GitHub Releases
+#   --apk PATH         install this APK as-is instead of building (e.g. from GitHub Releases); not with --release
 #   --serial S         adb target, e.g. 192.168.1.50:5555 (default: $ANDROID_SERIAL, else the
 #                      only connected device)
 #
@@ -77,8 +77,14 @@ if $build; then
   [[ $variant == release ]] && task=assembleRelease
   (cd "$android_dir" && ./gradlew "$task" --console=plain -q)
 fi
-apk=${apk_path:-$(apk_for "$variant")}
-[[ -f "$apk" ]] || { echo "install: $apk not found; run without --no-build" >&2; exit 1; }
+if [[ -n "$apk_path" ]]; then
+  [[ $variant == debug ]] || { echo "install: --apk installs the given file as-is; drop --release" >&2; exit 2; }
+  apk=$apk_path
+  [[ -f "$apk" ]] || { echo "install: $apk not found; check the --apk path" >&2; exit 1; }
+else
+  apk=$(apk_for "$variant")
+  [[ -f "$apk" ]] || { echo "install: $apk not found; run without --no-build" >&2; exit 1; }
+fi
 
 if [[ "$serial" == *:* ]]; then
   step "Connecting to $serial"

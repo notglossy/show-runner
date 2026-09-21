@@ -30,6 +30,7 @@ jobs:
             exit 1
           fi
           # Only commits that reached main (and so passed CI on push) can become releases.
+          git fetch -q origin main
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
             echo "::error::tag $GITHUB_REF_NAME points at a commit that is not on main"
             exit 1
