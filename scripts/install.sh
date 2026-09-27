@@ -91,12 +91,22 @@ if [[ "$serial" == *:* ]]; then
   "$adb_bin" connect "$serial" >/dev/null || true
 fi
 # Keep stderr: with several devices and no serial, adb refuses with "more than one
-# device/emulator" rather than picking one, and that text is the useful error here. Only
-# the last line counts, so a cold adb server's "daemon started" banner does not mask it.
-state=$(adb get-state 2>&1 | tail -n1 || true)
+# device/emulator" rather than picking one, and that text is the useful error here. The
+# state is the last line, so a cold adb server's "daemon started" banner does not mask it;
+# the whole output is searched for adb's multi-line hints.
+state_out=$(adb get-state 2>&1 || true)
+state=$(tail -n1 <<<"$state_out")
 if [[ "$state" != device ]]; then
-  echo "install: ${serial:-device} is '${state:-unreachable}'. Wake the device and accept the debugging prompt." >&2
-  [[ "$state" == *"more than one device"* ]] && echo "install: several devices attached; set ANDROID_SERIAL or pass --serial." >&2
+  if [[ "$state_out" == *unauthorized* ]]; then
+    echo "install: ${serial:-device} has not authorized this computer's adb key. Look for the" >&2
+    echo "  'Allow USB debugging?' dialog on the device (leave the kiosk first if it hides it) and" >&2
+    echo "  tick 'Always allow'. No dialog: adb kill-server, reconnect, or revoke USB debugging" >&2
+    echo "  authorizations in Developer options and reconnect." >&2
+  elif [[ "$state_out" == *"more than one device"* ]]; then
+    echo "install: several devices attached; set ANDROID_SERIAL or pass --serial." >&2
+  else
+    echo "install: ${serial:-device} is '${state:-unreachable}'. Wake the device and accept the debugging prompt." >&2
+  fi
   exit 1
 fi
 
