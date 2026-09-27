@@ -55,8 +55,7 @@ export default async function DevicesPage() {
                 <DeleteDevice
                   deviceId={d.id}
                   name={`unclaimed display ${d.pairingCode ?? d.id}`}
-                  label="Delete"
-                  size="sm"
+                  icon
                 />
               </li>
             ))}
@@ -112,12 +111,7 @@ export default async function DevicesPage() {
                       />
                     </td>
                     <td className="py-2.5 text-right">
-                      <DeleteDevice
-                        deviceId={d.id}
-                        name={d.name ?? d.id}
-                        label="Delete"
-                        size="sm"
-                      />
+                      <DeleteDevice deviceId={d.id} name={d.name ?? d.id} icon />
                     </td>
                   </tr>
                 ))}
