@@ -132,7 +132,29 @@ machine that has the key.
    claimed display. Intent-extras config and a strict-mode device owner don't survive the uninstall. Leave strict mode
    first, and re-send extras if you used them.
 
+5. **CI releases** (`.github/workflows/release.yaml`) build the same signed APK from the same key when a `v*` tag
+   is pushed and attach it to a GitHub release (a pre-release when the tag has a suffix like `-beta.1`). Give the
+   repository the key once, as Actions secrets, never as files in the repo:
+   ```sh
+   gh secret set SHOWRUNNER_KEYSTORE_BASE64 --body "$(base64 < ~/keys/showrunner-release.jks)"
+   gh secret set SHOWRUNNER_KEY_ALIAS --body showrunner
+   gh secret set SHOWRUNNER_KEYSTORE_PASSWORD   # prompts; add SHOWRUNNER_KEY_PASSWORD only if it differs
+   ```
+   The release job prints the signing certificate's SHA-256 in its summary and release notes so an APK can be
+   checked against it with `apksigner verify --print-certs`.
+
 Check which key an APK uses: `apksigner verify --print-certs app-release.apk` (in `~/Library/Android/sdk/build-tools/*/`).
+
+### Installing a published release
+
+Releases on GitHub carry a release-signed APK, so no Android build is needed on your machine, only adb:
+
+```sh
+scripts/install.sh --apk ~/Downloads/showrunner-v0.2.0-beta.1.apk --home --serial <usb-serial> \
+  --server http://<server-lan-ip>:3000 --secret "$DEVICE_SHARED_SECRET"
+```
+
+Updating from a debug build to a release APK needs `--reinstall` once (different signing key), as in step 4 above.
 
 ## 3. Configure the server URL and secret
 
