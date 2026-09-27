@@ -139,21 +139,42 @@ export function RenameDevice({ deviceId, name }: { deviceId: string; name: strin
   );
 }
 
+/** Outline trash can, sized by the surrounding font. */
+function TrashIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+      <path d="M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6" />
+      <path d="M10 11v6M14 11v6" />
+    </svg>
+  );
+}
+
 /**
- * Deletes a device after a confirm. Pass `redirectTo` from pages that stop existing with the
- * device (its detail page); list pages just refresh in place.
+ * Deletes a device after a confirm. `icon` renders a compact trash button for list rows; pass
+ * `redirectTo` from pages that stop existing with the device (its detail page), list pages just
+ * refresh in place.
  */
 export function DeleteDevice({
   deviceId,
   name,
-  label = 'Delete device',
-  size = 'md',
+  icon = false,
   redirectTo,
 }: {
   deviceId: string;
   name: string;
-  label?: string;
-  size?: 'sm' | 'md';
+  icon?: boolean;
   redirectTo?: string;
 }) {
   const router = useRouter();
@@ -177,10 +198,28 @@ export function DeleteDevice({
       setPending(false);
     }
   }
+  if (icon) {
+    return (
+      <div className="flex flex-col items-end gap-1">
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-neutral-500 hover:text-red-700"
+          onClick={remove}
+          disabled={pending}
+          aria-label={`Delete ${name}`}
+          title="Delete"
+        >
+          <TrashIcon />
+        </Button>
+        <ErrorText>{error}</ErrorText>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-1">
-      <Button variant="danger" size={size} onClick={remove} disabled={pending}>
-        {pending ? 'Deleting…' : label}
+      <Button variant="danger" onClick={remove} disabled={pending}>
+        {pending ? 'Deleting…' : 'Delete device'}
       </Button>
       <ErrorText>{error}</ErrorText>
     </div>
