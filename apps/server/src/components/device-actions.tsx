@@ -139,9 +139,26 @@ export function RenameDevice({ deviceId, name }: { deviceId: string; name: strin
   );
 }
 
-export function DeleteDevice({ deviceId, name }: { deviceId: string; name: string }) {
+/**
+ * Deletes a device after a confirm. Pass `redirectTo` from pages that stop existing with the
+ * device (its detail page); list pages just refresh in place.
+ */
+export function DeleteDevice({
+  deviceId,
+  name,
+  label = 'Delete device',
+  size = 'md',
+  redirectTo,
+}: {
+  deviceId: string;
+  name: string;
+  label?: string;
+  size?: 'sm' | 'md';
+  redirectTo?: string;
+}) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
   async function remove() {
     if (
       !window.confirm(
@@ -149,18 +166,21 @@ export function DeleteDevice({ deviceId, name }: { deviceId: string; name: strin
       )
     )
       return;
+    setPending(true);
+    setError(null);
     try {
       await api(`/api/devices/${deviceId}`, { method: 'DELETE' });
-      router.push('/devices');
+      if (redirectTo) router.push(redirectTo);
       router.refresh();
     } catch (err) {
       setError(err instanceof ApiClientError ? err.detail : String(err));
+      setPending(false);
     }
   }
   return (
     <div className="flex flex-col gap-1">
-      <Button variant="danger" onClick={remove}>
-        Delete device
+      <Button variant="danger" size={size} onClick={remove} disabled={pending}>
+        {pending ? 'Deleting…' : label}
       </Button>
       <ErrorText>{error}</ErrorText>
     </div>

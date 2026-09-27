@@ -158,7 +158,11 @@ export default async function DevicePage({ params }: PageProps<'/devices/[id]'>)
             <DeviceLogs deviceId={device.id} screenNames={screenNames} />
           </Card>
           <div className="flex justify-end">
-            <DeleteDevice deviceId={device.id} name={device.name ?? device.id} />
+            <DeleteDevice
+              deviceId={device.id}
+              name={device.name ?? device.id}
+              redirectTo="/devices"
+            />
           </div>
         </div>
       </div>
