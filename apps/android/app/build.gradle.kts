@@ -64,6 +64,9 @@ android {
     lint {
         abortOnError = true
         warningsAsErrors = true
+        // Version-freshness checks turn every upstream Gradle, AGP or library release into a red
+        // main without any code change. Updates are a deliberate step, not a lint failure.
+        disable += listOf("AndroidGradlePluginVersion", "GradleDependency", "NewerVersionAvailable")
     }
 }
 
