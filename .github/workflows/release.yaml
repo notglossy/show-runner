@@ -90,7 +90,8 @@ jobs:
           notes="Sideload \`$APK\` on the display with adb set up as in [docs/device-setup.md](https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_REF_NAME/docs/device-setup.md):
 
           \`\`\`sh
-          scripts/install.sh --apk $APK --home --server http://<server-lan-ip>:3000 --secret \"\$DEVICE_SHARED_SECRET\"
+          scripts/install.sh --apk $APK --home        # then enter the server address on the display
+          # or preconfigure it: --server http://<server-lan-ip>:3000 [--secret \"\$DEVICE_SHARED_SECRET\"]
           \`\`\`
 
           Signing certificate SHA-256: \`$CERT_SHA256\`"
