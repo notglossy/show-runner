@@ -255,10 +255,10 @@ screens (JavaScript) can't trigger them.
 | Launcher3 shows after a reboot | Check the Home role (`adb shell dumpsys role \| grep -A2 role.HOME`) and that the `SYSTEM_ALERT_WINDOW` app op is allowed (step 2); the boot receiver needs it to bring ShowRunner forward. |
 | Can't get out of the kiosk | Hold the top-left corner 3 s. Forgot the PIN? Remove it in dashboard → Settings, or use the dashboard's Open exit menu command. |
 | Moving to a new server | `adb shell am start -n com.notglossy.showrunner/.MainActivity --es serverUrl http://<new-server>:3000 --es sharedSecret <secret>`, then claim the new pairing code in that server's dashboard. Extras outrank an older `config.json`, but a config file pushed *later* wins, so update or delete the file too if you keep using it. |
+| Screen stays awake after uninstalling | `adb shell settings put global stay_on_while_plugged_in 0` |
 
 **Known limitation, app 0.2 and older:** the app keeps its device token in memory only, so after a
 reboot it registers from scratch. That works with `DEVICE_SHARED_SECRET` set (the secret is enough)
 but not on a server without one, where a claimed display can only re-register with its token.
 Keep the secret set until every display runs app 0.3 or later, which persists the token; the server
 logs a warning at startup when the secret is unset.
-| Screen stays awake after uninstalling | `adb shell settings put global stay_on_while_plugged_in 0` |
