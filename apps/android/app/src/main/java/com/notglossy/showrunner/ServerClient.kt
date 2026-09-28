@@ -33,7 +33,12 @@ class ServerClient(private val origin: String) {
         val commands: List<String>,
     )
 
-    fun register(sharedSecret: String, info: DeviceInfo): Registration {
+    /**
+     * Registers (or re-registers) the device. `sharedSecret` is sent when the config has one; `token` is
+     * the previous registration's token, which lets a claimed display re-register on a server without a
+     * secret. Either may be null.
+     */
+    fun register(info: DeviceInfo, sharedSecret: String?, token: String?): Registration {
         val body = JSONObject()
             .put("deviceId", info.deviceId)
             .put("model", info.model)
@@ -41,7 +46,11 @@ class ServerClient(private val origin: String) {
             .put("appVersion", info.appVersion)
             .put("screenWidth", info.screenWidth)
             .put("screenHeight", info.screenHeight)
-        val json = post("/api/devices/register", body, mapOf("X-Kiosk-Secret" to sharedSecret))
+        val headers = buildMap {
+            if (sharedSecret != null) put("X-Kiosk-Secret", sharedSecret)
+            if (token != null) put("Authorization", "Bearer $token")
+        }
+        val json = post("/api/devices/register", body, headers)
         val cookie = json.getJSONObject("cookie")
         return Registration(
             deviceId = json.getString("deviceId"),

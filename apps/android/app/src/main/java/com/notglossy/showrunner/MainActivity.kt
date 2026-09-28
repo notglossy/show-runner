@@ -243,9 +243,10 @@ class MainActivity : android.app.Activity() {
         val gen = generation
         val info = deviceInfo
         if (io.isShutdown) return
+        val token = DeviceToken.load(this, cfg.serverUrl)
         io.execute {
             try {
-                val reg = ServerClient(cfg.serverUrl).register(cfg.sharedSecret, info)
+                val reg = ServerClient(cfg.serverUrl).register(info, cfg.sharedSecret, token)
                 main.post { if (gen == generation) onRegistered(cfg, reg) }
             } catch (e: Exception) {
                 Log.w(TAG, "Registration failed", e)
@@ -258,6 +259,7 @@ class MainActivity : android.app.Activity() {
         Log.i(TAG, "Registered ${reg.deviceId} claimed=${reg.claimed}")
         generation++ // retires the previous heartbeat loop (it used the old token)
         registration = reg
+        DeviceToken.save(this, cfg.serverUrl, reg.token)
         heartbeatIntervalMs = KioskLogic.heartbeatIntervalMs(reg.heartbeatIntervalSeconds)
         lastAckAt = SystemClock.elapsedRealtime()
         eventsDownBeats = 0
@@ -468,7 +470,7 @@ class MainActivity : android.app.Activity() {
         val id = deviceInfo.deviceId
         val pkg = packageName
         setupBody.text = buildString {
-            appendLine("This display needs a server URL and the device shared secret.")
+            appendLine("This display needs a server URL (plus the shared secret, if the server has one).")
             appendLine()
             appendLine("Device ID:  $id")
             appendLine("Kiosk mode: ${describeMode(KioskMode.current(this@MainActivity))}")
@@ -477,11 +479,11 @@ class MainActivity : android.app.Activity() {
             appendLine("  adb shell appops set $pkg MANAGE_EXTERNAL_STORAGE allow")
             appendLine("  adb shell mkdir -p /sdcard/showrunner")
             appendLine("  adb push config.json /sdcard/showrunner/config.json")
-            appendLine("  config.json: {\"serverUrl\": \"http://192.168.1.10:3000\", \"sharedSecret\": \"…\"}")
+            appendLine("  config.json: {\"serverUrl\": \"http://192.168.1.10:3000\"}  (add \"sharedSecret\" if needed)")
             appendLine()
             appendLine("Option 2: intent extras")
             appendLine("  adb shell am start -n $pkg/.MainActivity \\")
-            appendLine("    --es serverUrl http://192.168.1.10:3000 --es sharedSecret …")
+            appendLine("    --es serverUrl http://192.168.1.10:3000 [--es sharedSecret …]")
             appendLine()
             appendLine("Checking again every 5 seconds.")
             if (problems.isNotEmpty()) {

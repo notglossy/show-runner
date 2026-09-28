@@ -21,6 +21,15 @@ class KioskLogicTest {
     }
 
     @Test
+    fun `a stored token is only used for the server it came from`() {
+        assertEquals("tok", KioskLogic.usableToken("http://a:3000", "tok", "http://a:3000"))
+        assertNull(KioskLogic.usableToken("http://a:3000", "tok", "http://b:3000"))
+        assertNull(KioskLogic.usableToken(null, "tok", "http://a:3000"))
+        assertNull(KioskLogic.usableToken("http://a:3000", " ", "http://a:3000"))
+        assertNull(KioskLogic.usableToken("http://a:3000", null, "http://a:3000"))
+    }
+
+    @Test
     fun `network callback right after registering the listener is ignored`() {
         assertFalse(KioskLogic.shouldRecoverOnNetwork(lostForMs = 0, registered = true, reconnecting = false))
     }

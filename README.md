@@ -61,6 +61,9 @@ install.
    scripts/install.sh --apk showrunner-<version>.apk --server http://<server-lan-ip>:3000 --secret "$DEVICE_SHARED_SECRET" --home
    ```
 
+   Leave out `--secret` if the server has no `DEVICE_SHARED_SECRET`; then open **Add a display** in the
+   dashboard so the display can register.
+
    The display shows a pairing code. In the dashboard, open **Devices**, claim the code and give
    the device a name. It starts on the built-in clock screen.
 

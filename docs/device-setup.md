@@ -170,6 +170,9 @@ different server, use option 2, which applies immediately, or push the file and 
 { "serverUrl": "http://192.168.1.34:3000", "sharedSecret": "<DEVICE_SHARED_SECRET>" }
 ```
 
+`sharedSecret` is only needed when the server sets `DEVICE_SHARED_SECRET`; without it, the display
+registers while **Add a display** is open in the dashboard (app 0.3 or later).
+
 ```sh
 adb shell mkdir -p /sdcard/showrunner
 adb push config.json /sdcard/showrunner/config.json
@@ -179,7 +182,7 @@ adb push config.json /sdcard/showrunner/config.json
 
 ```sh
 adb shell am start -n com.notglossy.showrunner/.MainActivity \
-  --es serverUrl http://192.168.1.34:3000 --es sharedSecret <DEVICE_SHARED_SECRET>
+  --es serverUrl http://192.168.1.34:3000 --es sharedSecret <DEVICE_SHARED_SECRET>   # sharedSecret optional
 ```
 
 Option 2 is the way to **change servers on a locked kiosk**: the running app saves the values,

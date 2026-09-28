@@ -51,12 +51,13 @@ class ServerClientTest {
                 "claimed":false,"name":null,"pairingCode":"BGAQ6G","pageUrl":"/device/b0fdf118-e71b-4c48-8d1f-3cfce530446c",
                 "heartbeatIntervalSeconds":30,"kiosk":{"exitPin":null}}"""
         }
-        val reg = ServerClient(origin).register("secret", info)
+        val reg = ServerClient(origin).register(info, "secret", null)
 
         val request = requests.single()
         assertEquals("POST", request.method)
         assertEquals("/api/devices/register", request.path)
         assertEquals("secret", request.headers["x-kiosk-secret"])
+        assertNull(request.headers["authorization"])
         val sent = JSONObject(request.body)
         assertEquals(info.deviceId, sent.getString("deviceId"))
         assertEquals(1280, sent.getInt("screenWidth"))
@@ -74,10 +75,34 @@ class ServerClientTest {
         respond = {
             200 to """{"deviceId":"d","token":"t","cookie":{"name":"n","value":"v"},"claimed":true,"name":"Kitchen","pairingCode":null,"pageUrl":"/device/d"}"""
         }
-        val reg = ServerClient(origin).register("secret", info)
+        val reg = ServerClient(origin).register(info, "secret", null)
         assertTrue(reg.claimed)
         assertNull(reg.pairingCode)
         assertEquals(30, reg.heartbeatIntervalSeconds)
+    }
+
+    @Test
+    fun `re-registration presents the previous token and no secret on a server without one`() {
+        respond = {
+            200 to """{"deviceId":"d","token":"t2","cookie":{"name":"n","value":"v"},"claimed":true,"name":"Kitchen","pairingCode":null,"pageUrl":"/device/d"}"""
+        }
+        val reg = ServerClient(origin).register(info, null, "t1")
+        val request = requests.single()
+        assertEquals("Bearer t1", request.headers["authorization"])
+        assertNull(request.headers["x-kiosk-secret"])
+        assertEquals("t2", reg.token)
+    }
+
+    @Test
+    fun `a closed registration window is reported with the server's instructions`() {
+        respond = { 403 to """{"error":{"code":"registration_closed","message":"Registration is closed. In the dashboard, open Devices and choose \"Add a display\"."}}""" }
+        try {
+            ServerClient(origin).register(info, null, null)
+            fail("expected HttpException")
+        } catch (e: ServerClient.HttpException) {
+            assertEquals(403, e.status)
+            assertTrue(e.message!!.contains("Add a display"))
+        }
     }
 
     @Test
@@ -126,7 +151,7 @@ class ServerClientTest {
     fun `non-JSON error bodies are still reported`() {
         respond = { 502 to "Bad Gateway" }
         try {
-            ServerClient(origin).register("secret", info)
+            ServerClient(origin).register(info, "secret", null)
             fail("expected HttpException")
         } catch (e: ServerClient.HttpException) {
             assertEquals(502, e.status)

@@ -3,8 +3,8 @@
 #
 #   scripts/install.sh [options]
 #
-#   --server URL       write /sdcard/showrunner/config.json with this server URL (needs --secret)
-#   --secret SECRET    DEVICE_SHARED_SECRET for the config file
+#   --server URL       write /sdcard/showrunner/config.json with this server URL
+#   --secret SECRET    DEVICE_SHARED_SECRET for the config file; only for servers that set one
 #   --home             make ShowRunner the default Home app (launcher kiosk mode; the normal setup)
 #   --strict           also make it device owner (strict lock task mode; optional). Requires zero accounts.
 #                      Leave strict mode any time from the on-device exit menu or the dashboard.
@@ -50,8 +50,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -n "$server" && -z "$secret" ]] || [[ -z "$server" && -n "$secret" ]]; then
-  echo "install: --server and --secret must be given together" >&2
+if [[ -z "$server" && -n "$secret" ]]; then
+  echo "install: --secret needs --server" >&2
   exit 2
 fi
 
@@ -136,7 +136,7 @@ if [[ -n "$server" ]]; then
   step "Writing $CONFIG_PATH"
   tmp=$(mktemp -t showrunner-config.XXXXXX)
   trap 'rm -f "$tmp"' EXIT
-  python3 -c 'import json,sys; print(json.dumps({"serverUrl": sys.argv[1], "sharedSecret": sys.argv[2]}, indent=2))' "$server" "$secret" >"$tmp"
+  python3 -c 'import json,sys; cfg={"serverUrl": sys.argv[1]}; cfg.update({"sharedSecret": sys.argv[2]} if sys.argv[2] else {}); print(json.dumps(cfg, indent=2))' "$server" "$secret" >"$tmp"
   adb shell mkdir -p "$(dirname $CONFIG_PATH)"
   adb push "$tmp" "$CONFIG_PATH" >/dev/null
 fi
