@@ -158,11 +158,17 @@ Updating from a debug build to a release APK needs `--reinstall` once (different
 
 ## 3. Configure the server URL and secret
 
-Without config the app shows a setup screen (device ID, kiosk mode, both options below) and checks
-again every 5 seconds, so pushing a config file is enough; no restart needed.
+Without config the app (0.3 or later) shows a setup wizard on the display: **Before we start** (once),
+then **Server address**. Type the server's address (`http://<server-lan-ip>:3000`), tap **Connect**, and the
+app checks the server's `/api/health`: it asks for the shared secret only when that server requires one,
+and says so when the server's registration window is closed (dashboard → Devices → **Add a display**,
+then tap Connect again). Then it registers and shows the pairing code. The wizard is enough for a
+home install; the two adb options below do the same without touching the display, and the wizard
+keeps checking for them every 5 seconds.
 
 A **running** app (already showing a screen) only reads `config.json` when it starts. To point it at a
-different server, use option 2, which applies immediately, or push the file and `adb reboot`.
+different server, use the exit menu's **Change server…** (hold the top-left corner 3 s, PIN if set),
+or option 2, which applies immediately, or push the file and `adb reboot`.
 
 **Option 1: config file** (needs the `MANAGE_EXTERNAL_STORAGE` app op from step 2):
 
@@ -237,7 +243,8 @@ While strict mode is on, `am force-stop` has no effect; reconfigure with intent 
 **Press and hold the top-left corner for 3 seconds.** If a PIN is set (dashboard → Settings → Kiosk exit menu,
 4-8 digits) the menu asks for it. The device keeps a salted hash, so this works while the server is down. It's a
 convenience lock, not strong security. Options: Choose Home app (not in strict mode), Open Android settings,
-Leave strict mode (strict only), Reload.
+Leave strict mode (strict only), Change server… (the setup wizard, prefilled; Cancel returns to the screen),
+Reload.
 
 From the dashboard (device page → Commands): **Open exit menu** (no PIN), **Open Android settings**, **Leave strict
 mode**. These are delivered with the device's next heartbeat reply, so they arrive within about 30 seconds, and
@@ -250,14 +257,14 @@ screens (JavaScript) can't trigger them.
 | Setup screen says all-files access not granted | `adb shell appops set com.notglossy.showrunner MANAGE_EXTERNAL_STORAGE allow` |
 | "Reconnecting…" overlay | Shows after 2 min without a heartbeat ack or when the page fails to load. It lists the server URL and device ID and retries with 5–60 s backoff. Check the server is reachable from the device: `adb shell curl -s http://<server>:3000/api/health` |
 | Page or heartbeat HTTP 401 | The app re-registers automatically. If it persists, check `DEVICE_SHARED_SECRET` matches the config. On a server without a secret, a claimed display that lost its token cannot re-register on its own (see the known limitation below): delete it in the dashboard (Devices → trash), open **Add a display**, and it registers again with a new pairing code within about 30 seconds; claim it again. |
-| "Registration is closed" | The server has no `DEVICE_SHARED_SECRET` and the dashboard's registration window is not open: Devices → **Add a display**, then retry within 10 minutes. |
+| "Registration is closed" | The server has no `DEVICE_SHARED_SECRET` and the dashboard's registration window is not open: Devices → **Add a display**, then tap Connect again (or wait: the app retries on its own) within 10 minutes. |
 | Inspect the page | Debug builds enable WebView debugging: `adb forward tcp:9222 localabstract:$(adb shell cat /proc/net/unix \| grep -oE 'webview_devtools_remote_[0-9]+' \| head -1)` then open `chrome://inspect` (or `http://localhost:9222/json`). |
 | adb says `unauthorized` (`adb devices`, or `install.sh` reports it) | The device has not accepted this computer's adb key: the dialog was declined, adb's key changed, or authorizations were revoked. Accept the "Allow USB debugging?" dialog on the device with "Always allow", leaving the kiosk (exit menu) if the dialog is hidden behind it. Still nothing: `adb kill-server && adb connect <device-ip>:5555`, or Developer options → Revoke USB debugging authorizations, then reconnect. |
 | Device went back to pairing | It was deleted on the server, or now points at a different server; claim it there. |
 | `am force-stop` does nothing / "intent has been delivered to currently running top-most instance" | Strict mode is on, or the app is already running. Reconfigure with intent extras (step 3) or `adb reboot`. |
 | Launcher3 shows after a reboot | Check the Home role (`adb shell dumpsys role \| grep -A2 role.HOME`) and that the `SYSTEM_ALERT_WINDOW` app op is allowed (step 2); the boot receiver needs it to bring ShowRunner forward. |
 | Can't get out of the kiosk | Hold the top-left corner 3 s. Forgot the PIN? Remove it in dashboard → Settings, or use the dashboard's Open exit menu command. |
-| Moving to a new server | `adb shell am start -n com.notglossy.showrunner/.MainActivity --es serverUrl http://<new-server>:3000 --es sharedSecret <secret>`, then claim the new pairing code in that server's dashboard. Extras outrank an older `config.json`, but a config file pushed *later* wins, so update or delete the file too if you keep using it. |
+| Moving to a new server | Exit menu → **Change server…**, or `adb shell am start -n com.notglossy.showrunner/.MainActivity --es serverUrl http://<new-server>:3000 --es sharedSecret <secret>`, then claim the new pairing code in that server's dashboard. Extras outrank an older `config.json`, but a config file pushed *later* wins, so update or delete the file too if you keep using it. |
 | Screen stays awake after uninstalling | `adb shell settings put global stay_on_while_plugged_in 0` |
 
 **Known limitation, app 0.2 and older:** the app keeps its device token in memory only, so after a

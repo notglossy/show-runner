@@ -2,7 +2,22 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">ShowRunner</string>
     <string name="device_admin_description">Keeps ShowRunner pinned full-screen as a kiosk.</string>
-    <string name="setup_title">ShowRunner setup</string>
+    <string name="setup_intro_title">Before we start</string>
+    <string name="setup_intro_body">Make sure this display is connected to Wi\u2011Fi and the ShowRunner server is running and reachable on the network.</string>
+    <string name="setup_intro_ok">Got it!</string>
+    <string name="setup_server_title">Server address</string>
+    <string name="setup_server_body">Enter the address of the ShowRunner server:</string>
+    <string name="setup_url_hint">http://server-name-or-ip:3000</string>
+    <string name="setup_secret_hint">Shared secret</string>
+    <string name="setup_connect">Connect</string>
+    <string name="setup_connecting">Connecting…</string>
+    <string name="setup_cancel">Cancel</string>
+    <string name="setup_invalid_url">Enter a full address, for example http://192.168.1.10:3000</string>
+    <string name="setup_cant_connect">Can\'t connect to <xliff:g id="url" example="http://host:3000">%1$s</xliff:g>: <xliff:g id="reason" example="timed out">%2$s</xliff:g></string>
+    <string name="setup_need_secret">This server requires its shared secret. Enter it and tap Connect again.</string>
+    <string name="setup_registration_closed">Registration is closed on this server. In the dashboard, open Devices and tap Add a display, then tap Connect again.</string>
+    <string name="setup_version">version <xliff:g id="version" example="0.3.0">%1$s</xliff:g></string>
+    <string name="exit_change_server">Change server…</string>
     <string name="reconnecting">Reconnecting…</string>
     <string name="exit_menu_title">ShowRunner kiosk</string>
     <string name="exit_pin_hint">PIN</string>

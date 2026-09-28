@@ -12,41 +12,167 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Shown when no config exists. -->
-    <ScrollView
+    <!-- Setup wizard: shown when no config exists, or from the exit menu to change servers. -->
+    <FrameLayout
         android:id="@+id/setup"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/black"
-        android:fillViewport="true"
+        android:background="#FFFFFFFF"
+        android:clickable="true"
+        android:focusable="true"
         android:visibility="gone">
 
         <LinearLayout
+            android:id="@+id/setup_intro"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:paddingHorizontal="48dp"
-            android:paddingVertical="32dp">
+            android:paddingHorizontal="96dp"
+            android:paddingVertical="56dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/setup_title"
-                android:textColor="#FFFFFF"
-                android:textSize="34sp" />
+                android:text="@string/setup_intro_title"
+                android:textColor="#000000"
+                android:textSize="56sp" />
 
             <TextView
-                android:id="@+id/setup_body"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:fontFamily="monospace"
-                android:lineSpacingExtra="4dp"
-                android:textColor="#C9CED8"
-                android:textIsSelectable="false"
-                android:textSize="15sp" />
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                android:lineSpacingExtra="6dp"
+                android:text="@string/setup_intro_body"
+                android:textColor="#222222"
+                android:textSize="24sp" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/setup_intro_ok"
+                android:layout_width="440dp"
+                android:layout_height="64dp"
+                android:text="@string/setup_intro_ok"
+                android:textSize="22sp" />
         </LinearLayout>
-    </ScrollView>
+
+        <ScrollView
+            android:id="@+id/setup_server"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:paddingHorizontal="96dp"
+                android:paddingVertical="40dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/setup_server_title"
+                    android:textColor="#000000"
+                    android:textSize="56sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/setup_server_body"
+                    android:textColor="#222222"
+                    android:textSize="24sp" />
+
+                <EditText
+                    android:id="@+id/setup_url"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:autofillHints=""
+                    android:gravity="center"
+                    android:hint="@string/setup_url_hint"
+                    android:imeOptions="actionGo"
+                    android:inputType="textUri"
+                    android:maxLines="1"
+                    android:textColor="#000000"
+                    android:textColorHint="#9A9A9A"
+                    android:textSize="28sp" />
+
+                <EditText
+                    android:id="@+id/setup_secret"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:autofillHints=""
+                    android:gravity="center"
+                    android:hint="@string/setup_secret_hint"
+                    android:imeOptions="actionGo"
+                    android:inputType="textPassword"
+                    android:maxLines="1"
+                    android:textColor="#000000"
+                    android:textColorHint="#9A9A9A"
+                    android:textSize="24sp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/setup_error"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:gravity="center"
+                    android:textColor="#E5261F"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:id="@+id/setup_note"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:textColor="#777777"
+                    android:textSize="15sp" />
+
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <Button
+                    android:id="@+id/setup_connect"
+                    android:layout_width="440dp"
+                    android:layout_height="64dp"
+                    android:text="@string/setup_connect"
+                    android:textSize="22sp" />
+
+                <Button
+                    android:id="@+id/setup_cancel"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/setup_cancel"
+                    android:textColor="#444444"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </ScrollView>
+
+        <TextView
+            android:id="@+id/setup_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="20dp"
+            android:textColor="#444444"
+            android:textSize="15sp" />
+    </FrameLayout>
 
     <!-- Shown by the watchdog while the server is unreachable. -->
     <LinearLayout
@@ -179,6 +305,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/exit_leave_strict" />
+
+                <Button
+                    android:id="@+id/exit_change_server"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/exit_change_server" />
 
                 <Button
                     android:id="@+id/exit_reload"

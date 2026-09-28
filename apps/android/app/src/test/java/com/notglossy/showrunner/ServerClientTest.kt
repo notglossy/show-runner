@@ -106,6 +106,23 @@ class ServerClientTest {
     }
 
     @Test
+    fun `health reports how the server admits displays`() {
+        respond = { 200 to """{"ok":true,"registration":{"mode":"window","open":true,"closesAt":"2026-09-28T02:00:00.000Z"}}""" }
+        val health = ServerClient(origin).health()
+        val request = requests.single()
+        assertEquals("GET", request.method)
+        assertEquals("/api/health", request.path)
+        assertEquals("", request.body)
+        assertEquals(ServerClient.Health("window", true), health)
+    }
+
+    @Test
+    fun `health from an older server without a registration block`() {
+        respond = { 200 to """{"ok":true}""" }
+        assertEquals(ServerClient.Health(null, false), ServerClient(origin).health())
+    }
+
+    @Test
     fun `heartbeat sends the bearer token and parses kiosk commands and PIN hash`() {
         respond = {
             200 to """{"ok":true,"serverTime":1,"claimed":true,"currentScreenId":"builtin-clock","eventsConnected":false,"heartbeatIntervalSeconds":45,

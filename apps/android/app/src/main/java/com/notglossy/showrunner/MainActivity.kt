@@ -34,6 +34,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
+import androidx.core.content.edit
 import androidx.core.view.isVisible
 import androidx.webkit.WebViewCompat
 import org.json.JSONObject
@@ -56,7 +57,18 @@ class MainActivity : android.app.Activity() {
 
     private lateinit var webContainer: FrameLayout
     private lateinit var setupView: View
-    private lateinit var setupBody: TextView
+    private lateinit var setupIntro: View
+    private lateinit var setupServer: View
+    private lateinit var setupUrl: EditText
+    private lateinit var setupSecret: EditText
+    private lateinit var setupError: TextView
+    private lateinit var setupNote: TextView
+    private lateinit var setupConnect: Button
+    private lateinit var setupCancel: Button
+    /** True while the wizard owns the screen: registration errors show there instead of the overlay. */
+    private var wizardActive = false
+    /** Where "Cancel" returns to when the wizard was opened over a running session. */
+    private var wizardReturnState: State? = null
     private lateinit var overlay: View
     private lateinit var overlayBody: TextView
     private lateinit var exitMenu: View
@@ -104,8 +116,7 @@ class MainActivity : android.app.Activity() {
         activeInstance = WeakReference(this)
         setContentView(R.layout.activity_main)
         webContainer = findViewById(R.id.web_container)
-        setupView = findViewById(R.id.setup)
-        setupBody = findViewById(R.id.setup_body)
+        setupWizard()
         overlay = findViewById(R.id.overlay)
         overlayBody = findViewById(R.id.overlay_body)
         setupExitMenu()
@@ -232,6 +243,7 @@ class MainActivity : android.app.Activity() {
             is ConfigResult.Missing -> showSetup(result.problems)
             is ConfigResult.Ready -> {
                 config = result.config
+                if (wizardActive) setupUrl.setText(result.config.serverUrl)
                 setState(State.CONNECTING)
                 register()
             }
@@ -259,6 +271,7 @@ class MainActivity : android.app.Activity() {
         Log.i(TAG, "Registered ${reg.deviceId} claimed=${reg.claimed}")
         generation++ // retires the previous heartbeat loop (it used the old token)
         registration = reg
+        wizardActive = false
         DeviceToken.save(this, cfg.serverUrl, reg.token)
         heartbeatIntervalMs = KioskLogic.heartbeatIntervalMs(reg.heartbeatIntervalSeconds)
         lastAckAt = SystemClock.elapsedRealtime()
@@ -278,7 +291,15 @@ class MainActivity : android.app.Activity() {
         val delay = KioskLogic.retryDelayMs(retryAttempt)
         retryAttempt++
         nextRetryAt = SystemClock.elapsedRealtime() + delay
-        setState(State.RECONNECTING)
+        if (wizardActive) {
+            // First registration from the wizard: keep its page up with the reason, and keep retrying
+            // quietly (the dashboard's registration window may open any moment).
+            setupError.text = error.removePrefix("Can't register: ")
+            setupConnect.isEnabled = true
+            setupConnect.text = getString(R.string.setup_connect)
+        } else {
+            setState(State.RECONNECTING)
+        }
         val gen = generation
         main.postDelayed({
             if (gen != generation) return@postDelayed
@@ -460,39 +481,143 @@ class MainActivity : android.app.Activity() {
 
     private fun setState(next: State) {
         state = next
-        setupView.visibility = if (next == State.SETUP) View.VISIBLE else View.GONE
+        // While the wizard is up, the first registration attempt runs behind it; its errors land there.
+        setupView.visibility = if (next == State.SETUP || (wizardActive && next == State.CONNECTING)) View.VISIBLE else View.GONE
         overlay.visibility = if (next == State.RECONNECTING) View.VISIBLE else View.GONE
         renderOverlay()
     }
 
+    /** No usable config: show the wizard (intro first, once), and keep polling for a pushed config. */
     private fun showSetup(problems: List<String>) {
+        // A missing config file is the normal state on a fresh display; only real problems are worth a hint.
+        setupNote.text = problems.filterNot { it.endsWith("not found.") }.joinToString("\n")
+        if (!(wizardActive && state == State.SETUP)) { // else: don't clobber what the user is typing
+            wizardActive = true
+            wizardReturnState = null
+            setupCancel.visibility = View.GONE
+            setupUrl.setText(config?.serverUrl ?: "")
+            setupSecret.setText("")
+            setupSecret.visibility = View.GONE
+            setupError.text = ""
+            val prefs = getSharedPreferences(WIZARD_PREFS, MODE_PRIVATE)
+            showWizardPage(intro = !prefs.getBoolean("introShown", false))
+            setState(State.SETUP)
+        }
+        // Poll for a config pushed by adb/intent. Only a usable config restarts the session: a restart
+        // bumps the generation, which would drop a Connect probe the user has in flight.
+        val gen = generation
+        main.postDelayed({
+            if (gen != generation || state != State.SETUP) return@postDelayed
+            when (val result = ConfigStore.load(this)) {
+                is ConfigResult.Ready -> startSession()
+                is ConfigResult.Missing -> showSetup(result.problems)
+            }
+        }, SETUP_POLL_MS)
+    }
+
+    /** "Change server…" from the exit menu: the wizard over the running session, with Cancel. */
+    private fun openChangeServer() {
+        closeExitMenu()
+        if (state == State.SETUP) return // the wizard is already up
+        wizardActive = true
+        wizardReturnState = state
+        setupCancel.visibility = View.VISIBLE
+        setupUrl.setText(config?.serverUrl ?: "")
+        setupSecret.setText("")
+        setupSecret.visibility = View.GONE
+        setupError.text = ""
+        showWizardPage(intro = false)
         setState(State.SETUP)
-        val id = deviceInfo.deviceId
-        val pkg = packageName
-        setupBody.text = buildString {
-            appendLine("This display needs a server URL (plus the shared secret, if the server has one).")
-            appendLine()
-            appendLine("Device ID:  $id")
-            appendLine("Kiosk mode: ${describeMode(KioskMode.current(this@MainActivity))}")
-            appendLine()
-            appendLine("Option 1: config file (recommended)")
-            appendLine("  adb shell appops set $pkg MANAGE_EXTERNAL_STORAGE allow")
-            appendLine("  adb shell mkdir -p /sdcard/showrunner")
-            appendLine("  adb push config.json /sdcard/showrunner/config.json")
-            appendLine("  config.json: {\"serverUrl\": \"http://192.168.1.10:3000\"}  (add \"sharedSecret\" if needed)")
-            appendLine()
-            appendLine("Option 2: intent extras")
-            appendLine("  adb shell am start -n $pkg/.MainActivity \\")
-            appendLine("    --es serverUrl http://192.168.1.10:3000 [--es sharedSecret …]")
-            appendLine()
-            appendLine("Checking again every 5 seconds.")
-            if (problems.isNotEmpty()) {
-                appendLine()
-                problems.forEach { appendLine("• $it") }
+    }
+
+    private fun setupWizard() {
+        setupView = findViewById(R.id.setup)
+        setupIntro = findViewById(R.id.setup_intro)
+        setupServer = findViewById(R.id.setup_server)
+        setupUrl = findViewById(R.id.setup_url)
+        setupSecret = findViewById(R.id.setup_secret)
+        setupError = findViewById(R.id.setup_error)
+        setupNote = findViewById(R.id.setup_note)
+        setupConnect = findViewById(R.id.setup_connect)
+        setupCancel = findViewById(R.id.setup_cancel)
+        findViewById<TextView>(R.id.setup_version).text = getString(R.string.setup_version, BuildConfig.VERSION_NAME)
+        findViewById<Button>(R.id.setup_intro_ok).setOnClickListener {
+            getSharedPreferences(WIZARD_PREFS, MODE_PRIVATE).edit { putBoolean("introShown", true) }
+            showWizardPage(intro = false)
+        }
+        setupConnect.setOnClickListener { connectFromWizard() }
+        val go = { _: TextView, actionId: Int, event: KeyEvent? ->
+            val enter = event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN
+            if (actionId == EditorInfo.IME_ACTION_GO || enter) connectFromWizard()
+            true
+        }
+        setupUrl.setOnEditorActionListener(go)
+        setupSecret.setOnEditorActionListener(go)
+        setupCancel.setOnClickListener {
+            hideKeyboard(setupUrl)
+            wizardActive = false
+            setState(wizardReturnState ?: State.SHOWING)
+            wizardReturnState = null
+        }
+    }
+
+    private fun showWizardPage(intro: Boolean) {
+        setupIntro.visibility = if (intro) View.VISIBLE else View.GONE
+        setupServer.visibility = if (intro) View.GONE else View.VISIBLE
+        if (!intro) {
+            setupUrl.requestFocus()
+            getSystemService(InputMethodManager::class.java).showSoftInput(setupUrl, InputMethodManager.SHOW_IMPLICIT)
+        }
+    }
+
+    /**
+     * Connect: validate the address, ask the server how it admits displays, then save the config and
+     * register. Errors stay on the wizard page.
+     */
+    private fun connectFromWizard() {
+        val url = ConfigStore.normalizeUrl(setupUrl.text.toString()) ?: run {
+            setupError.text = getString(R.string.setup_invalid_url)
+            return
+        }
+        val secret = setupSecret.text.toString().trim().takeIf { it.isNotEmpty() }
+        hideKeyboard(setupUrl)
+        setupError.text = ""
+        setupConnect.isEnabled = false
+        setupConnect.text = getString(R.string.setup_connecting)
+        val gen = generation
+        if (io.isShutdown) return
+        io.execute {
+            val result = runCatching { ServerClient(url).health() }
+            main.post {
+                if (gen != generation) return@post
+                setupConnect.isEnabled = true
+                setupConnect.text = getString(R.string.setup_connect)
+                val health = result.getOrElse { e ->
+                    setupError.text = getString(R.string.setup_cant_connect, url, describe(e))
+                    return@post
+                }
+                when (KioskLogic.setupDecision(health.registrationMode, health.registrationOpen, secret != null)) {
+                    KioskLogic.SetupDecision.NEED_SECRET -> {
+                        setupSecret.visibility = View.VISIBLE
+                        setupSecret.requestFocus()
+                        setupError.text = getString(R.string.setup_need_secret)
+                    }
+                    KioskLogic.SetupDecision.REGISTRATION_CLOSED ->
+                        setupError.text = getString(R.string.setup_registration_closed)
+                    KioskLogic.SetupDecision.PROCEED -> {
+                        setupConnect.isEnabled = false
+                        setupConnect.text = getString(R.string.setup_connecting)
+                        ConfigStore.save(this, url, secret)
+                        wizardReturnState = null
+                        startSession()
+                    }
+                }
             }
         }
-        val gen = generation
-        main.postDelayed({ if (gen == generation && state == State.SETUP) startSession() }, SETUP_POLL_MS)
+    }
+
+    private fun hideKeyboard(view: View) {
+        getSystemService(InputMethodManager::class.java).hideSoftInputFromWindow(view.windowToken, 0)
     }
 
     private fun renderOverlay() {
@@ -553,6 +678,7 @@ class MainActivity : android.app.Activity() {
                 runNativeCommand("exitStrictMode")
             }
         }
+        findViewById<Button>(R.id.exit_change_server).setOnClickListener { openChangeServer() }
         findViewById<Button>(R.id.exit_reload).setOnClickListener {
             closeExitMenu()
             startSession()
@@ -642,7 +768,7 @@ class MainActivity : android.app.Activity() {
         KioskMode.Mode.IMMERSIVE -> "Full-screen (not the Home app)"
     }
 
-    private fun describe(e: Exception): String = when (e) {
+    private fun describe(e: Throwable): String = when (e) {
         is ServerClient.HttpException -> e.message ?: "HTTP ${e.status}"
         is java.net.UnknownHostException -> "unknown host"
         is java.net.ConnectException -> "connection refused"
@@ -660,6 +786,7 @@ class MainActivity : android.app.Activity() {
         private const val WATCHDOG_TIMEOUT_MS = 2 * 60_000L
         private const val EVENTS_DOWN_RELOAD_BEATS = 3
         private const val SETUP_POLL_MS = 5_000L
+        private const val WIZARD_PREFS = "showrunner_wizard"
         private const val NETWORK_SETTLE_MS = 1_500L
         private const val EXIT_HOLD_MS = 3_000L
         private const val EXIT_MENU_IDLE_MS = 60_000L

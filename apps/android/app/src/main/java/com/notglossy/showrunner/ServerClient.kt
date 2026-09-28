@@ -65,6 +65,22 @@ class ServerClient(private val origin: String) {
         )
     }
 
+    /** `GET /api/health`: how this server admits new displays. Servers older than 0.3 have no `registration` block. */
+    data class Health(
+        /** `secret` (send the shared secret), `window` (only while `registrationOpen`), or null for older servers. */
+        val registrationMode: String?,
+        val registrationOpen: Boolean,
+    )
+
+    fun health(): Health {
+        val json = request("GET", "/api/health", null, emptyMap())
+        val registration = json.optJSONObject("registration")
+        return Health(
+            registrationMode = registration?.optString("mode")?.takeIf { it.isNotBlank() },
+            registrationOpen = registration?.optBoolean("open", false) ?: false,
+        )
+    }
+
     fun heartbeat(deviceId: String, token: String, body: JSONObject): HeartbeatAck {
         val json = post("/api/devices/$deviceId/heartbeat", body, mapOf("Authorization" to "Bearer $token"))
         return HeartbeatAck(
@@ -79,19 +95,24 @@ class ServerClient(private val origin: String) {
         )
     }
 
-    private fun post(path: String, body: JSONObject, headers: Map<String, String>): JSONObject {
+    private fun post(path: String, body: JSONObject, headers: Map<String, String>): JSONObject =
+        request("POST", path, body, headers)
+
+    private fun request(method: String, path: String, body: JSONObject?, headers: Map<String, String>): JSONObject {
         val conn = URL(origin + path).openConnection() as HttpURLConnection
         try {
-            conn.requestMethod = "POST"
+            conn.requestMethod = method
             // Short timeouts: on flaky Wi-Fi a stalled request should fail fast and be retried.
             conn.connectTimeout = 5_000
             conn.readTimeout = 10_000
-            conn.doOutput = true
             conn.useCaches = false
-            conn.setRequestProperty("Content-Type", "application/json")
             conn.setRequestProperty("Accept", "application/json")
             headers.forEach { (k, v) -> conn.setRequestProperty(k, v) }
-            conn.outputStream.use { it.write(body.toString().toByteArray()) }
+            if (body != null) {
+                conn.doOutput = true
+                conn.setRequestProperty("Content-Type", "application/json")
+                conn.outputStream.use { it.write(body.toString().toByteArray()) }
+            }
             val status = conn.responseCode
             val stream = if (status in 200..299) conn.inputStream else conn.errorStream
             val text = stream?.bufferedReader()?.use { it.readText() }.orEmpty()

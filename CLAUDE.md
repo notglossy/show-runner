@@ -67,7 +67,7 @@ instrumentation.ts -> lib/startup.ts   env check, migrate, seed, start scheduler
 
 ```
 MainActivity.kt           session state machine: SETUP / CONNECTING / SHOWING / RECONNECTING; WebView setup,
-                          register -> cookie -> load /device/:id, heartbeat loop + watchdog, overlay, setup screen
+                          register -> cookie -> load /device/:id, heartbeat loop + watchdog, overlay, setup wizard
 KioskConfig.kt            ConfigStore: /sdcard/showrunner/config.json or am start extras (most recent wins)
 ServerClient.kt           HttpURLConnection + org.json client for register / heartbeat
 KioskMode.kt              LAUNCHER (default Home app, default) / STRICT (opt-in device owner + lock task, leavable
