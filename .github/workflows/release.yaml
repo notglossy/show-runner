@@ -1,7 +1,8 @@
-# Builds the release APK and publishes it as a GitHub release when a version tag is pushed.
-# The tag must equal "v" + versionName in apps/android/app/build.gradle.kts. A pre-release
-# suffix (v0.2.0-beta.1) marks the release as a pre-release; a bare version (v0.2.0) is a
-# full release. Signing needs repository secrets, see docs/device-setup.md.
+# Builds the signed release APK and the server image, then publishes them as one GitHub release
+# when a version tag is pushed. The tag must equal "v" + versionName in
+# apps/android/app/build.gradle.kts. A pre-release suffix (v0.2.0-beta.1) marks the release as a
+# pre-release and tags the image ":beta"; a bare version (v0.2.0) is a full release and tags the
+# image ":latest". Signing needs repository secrets, see docs/device-setup.md.
 name: Release
 
 on:
@@ -12,16 +13,13 @@ permissions:
   contents: read
 
 jobs:
-  android:
+  check:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: write # create the release and upload the APK
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0 # versionCode is the commit count
-
+          fetch-depth: 0
       - name: Check the tag against versionName and main
         run: |
           version=$(sed -n 's/^ *versionName = "\(.*\)"$/\1/p' apps/android/app/build.gradle.kts)
@@ -35,6 +33,15 @@ jobs:
             echo "::error::tag $GITHUB_REF_NAME points at a commit that is not on main"
             exit 1
           fi
+
+  android:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # versionCode is the commit count
 
       - uses: actions/setup-java@1aa87b638dacaa70f1c903fa9ec9cbd91058e2ff # v5.2.0
         with:
@@ -67,9 +74,10 @@ jobs:
 
       - name: Name, checksum and verify the APK
         run: |
-          apk="showrunner-$GITHUB_REF_NAME.apk"
+          mkdir dist
+          apk="dist/showrunner-$GITHUB_REF_NAME.apk"
           cp apps/android/app/build/outputs/apk/release/app-release.apk "$apk"
-          sha256sum "$apk" > "$apk.sha256"
+          (cd dist && sha256sum "$(basename "$apk")" > "$(basename "$apk").sha256")
           certs=$("$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$apk")
           cert_sha256=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' <<<"$certs")
           if [[ ! "$cert_sha256" =~ ^[0-9a-f]{64}$ ]]; then
@@ -77,23 +85,113 @@ jobs:
             echo "$certs"
             exit 1
           fi
-          { echo "## $apk"; echo; echo '```'; cat "$apk.sha256"; echo "$certs"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-          echo "APK=$apk" >> "$GITHUB_ENV"
-          echo "CERT_SHA256=$cert_sha256" >> "$GITHUB_ENV"
+          echo "$cert_sha256" > dist/cert-sha256.txt
+          { echo "## $(basename "$apk")"; echo; echo '```'; cat "$apk.sha256"; echo "$certs"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: apk
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  server:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write # push to GHCR
+    outputs:
+      image: ${{ steps.tags.outputs.image }}
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Image tags
+        id: tags
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          tags="$image:$GITHUB_REF_NAME"
+          # ":beta" follows pre-releases, ":latest" follows full releases; neither ever crosses over.
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then tags+=$'\n'"$image:beta"; else tags+=$'\n'"$image:latest"; fi
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          { echo "tags<<TAGS"; echo "$tags"; echo "TAGS"; } >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Build and push the server image
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: apps/server/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+          labels: |
+            org.opencontainers.image.title=ShowRunner server
+            org.opencontainers.image.description=Dashboard kiosk server for the ShowRunner Android shell
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ github.ref_name }}
+            org.opencontainers.image.licenses=MIT
+          # Shared with ci.yaml's image job, so a release mostly reuses layers CI already built.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # Attestations add an "unknown/unknown" entry to the GHCR tag listing; skip them.
+          provenance: false
+
+      - name: Summary
+        env:
+          TAGS: ${{ steps.tags.outputs.tags }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          { echo "## Server image"; echo; echo '```'; echo "$TAGS"; echo "$DIGEST"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    needs: [android, server]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # create the release and upload the APK
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: apk
+          path: dist
 
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
+          IMAGE: ${{ needs.server.outputs.image }}
+          DIGEST: ${{ needs.server.outputs.digest }}
         run: |
+          apk=$(basename dist/showrunner-*.apk)
+          cert_sha256=$(cat dist/cert-sha256.txt)
           flags=()
           [[ "$GITHUB_REF_NAME" == *-* ]] && flags+=(--prerelease)
-          notes="Sideload \`$APK\` on the display with adb set up as in [docs/device-setup.md](https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_REF_NAME/docs/device-setup.md):
+          notes="## Server
+
+          Image \`$IMAGE:$GITHUB_REF_NAME\` (linux/amd64, linux/arm64), digest \`$DIGEST\`.
+          With Docker Compose, set \`SHOWRUNNER_VERSION=$GITHUB_REF_NAME\` in \`.env\`, then \`docker compose pull && docker compose up -d\`.
+
+          ## Display
+
+          Sideload \`$apk\` on the display with adb set up as in [docs/device-setup.md](https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_REF_NAME/docs/device-setup.md):
 
           \`\`\`sh
-          scripts/install.sh --apk $APK --home        # then enter the server address on the display
+          scripts/install.sh --apk $apk --home        # then enter the server address on the display
           # or preconfigure it: --server http://<server-lan-ip>:3000 [--secret \"\$DEVICE_SHARED_SECRET\"]
           \`\`\`
 
-          Signing certificate SHA-256: \`$CERT_SHA256\`"
-          gh release create "$GITHUB_REF_NAME" "$APK" "$APK.sha256" \
+          Signing certificate SHA-256: \`$cert_sha256\`"
+          gh release create "$GITHUB_REF_NAME" "dist/$apk" "dist/$apk.sha256" \
             --verify-tag --title "$GITHUB_REF_NAME" --generate-notes --notes "$notes" "${flags[@]}"
