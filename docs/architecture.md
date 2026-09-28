@@ -80,6 +80,7 @@ sequenceDiagram
 
 ## Deployment
 
-- Dev: `pnpm dev`, or `docker compose up` (the image builds on amd64 and arm64).
-- Prod: any Docker host on the LAN builds the same `apps/server/Dockerfile` (the author uses Komodo).
+- Dev: `pnpm dev`, or `docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build`.
+- Prod: any Docker host on the LAN pulls `ghcr.io/notglossy/show-runner:<tag>` (amd64 and arm64), which the
+  release workflow builds from `apps/server/Dockerfile` for every version tag. The author uses Komodo.
   The DB lives on the `showrunner-data` named volume at `/data/showrunner.db`.
