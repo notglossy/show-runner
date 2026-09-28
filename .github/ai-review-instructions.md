@@ -8,6 +8,17 @@
 - Do not repeat a point listed under "Settled decisions" unless the PR changes the code it describes so that
   the decision no longer holds. If it does, say what changed.
 
+## Masked tool output
+
+Everything you read (`cat`, `grep`, `git show`, the PR diff and file tools) passes through the sandbox's secret
+masking before it reaches you. It replaces anything shaped like a credential with `******` or `***`. In
+particular, the HTTP authorization scheme word `Bearer` followed by a space and any value is masked as a whole,
+in source code, tests and this file alike (which is why this section never spells that shape out). So a line
+that appears to say `put("Authorization", "******")` or `assertEquals("******", ...)` is the masking, not the
+committed code: the real text is the word `Bearer`, a space, and a token variable or test value. Never report a
+masked value as a literal, a placeholder, or a broken header. Judge such lines by their context (the variable in
+the template, the test name, the server's `bearerToken()` contract) and move on.
+
 ## Settled decisions
 
 These were raised by earlier reviews, checked, and decided. They are not findings.
@@ -36,3 +47,11 @@ These were raised by earlier reviews, checked, and decided. They are not finding
 - **Instructions file read from the PR head.** This file is pulled in with `{{#runtime-import? ...}}` from the
   checked-out PR at run time, on purpose. Same-repo authors already control the workflow source, so this adds no
   attack surface, and a missing file is skipped rather than failing the run.
+
+### Android shell (`apps/android`)
+
+- **Device token auth.** `ServerClient` sets the `Authorization` header to the word `Bearer`, a space and the
+  device token, on registration (when a token is stored) and on every heartbeat, matching the server's
+  `bearerToken()` regex. The persisted token is what lets a
+  claimed display re-register after a reboot on a server without `DEVICE_SHARED_SECRET`. See "Masked tool
+  output" above before flagging the header.
