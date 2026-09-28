@@ -32,7 +32,8 @@ preview a device in a browser. For non-admins an unknown device and a bad token 
 ```
 Used by the Docker health check and by a display's setup flow: `mode` is `secret` (send
 `X-Kiosk-Secret`; `open` is always true) or `window` (register only while `open`; `closesAt` is
-null when closed).
+null when closed). Call it once per connect attempt (and no more often than the 30-second
+heartbeat while waiting for the window); the reply is `Cache-Control: no-store`.
 
 ## Device-facing
 
