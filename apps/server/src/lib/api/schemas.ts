@@ -52,6 +52,10 @@ export const DeviceLogRequestSchema = z.object({
   screenId: z.string().max(100).nullable().optional(),
 });
 
+export const SetRegistrationRequestSchema = z.object({
+  open: z.boolean(),
+});
+
 export const ClaimDeviceRequestSchema = z.object({
   pairingCode: z
     .string()

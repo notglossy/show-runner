@@ -35,7 +35,7 @@ sequenceDiagram
     participant S as Server
     participant D as Dashboard (admin)
 
-    App->>S: POST /api/devices/register {deviceId, model, …} + shared secret
+    App->>S: POST /api/devices/register {deviceId, model, …} + token, secret, or open window
     S-->>App: device token (+ cookie), claimed?, pairing code
     App->>WV: load /device/:id
     WV->>S: GET /device/:id
@@ -65,7 +65,9 @@ sequenceDiagram
   the system prompt for AI screen generation.
 - **Providers.** One file per provider (`fetch()` + TTL) plus one registry entry.
 - **Auth.** One admin password (env var): dashboard session cookie, or `Bearer <password>` for
-  scripting. Devices send the shared secret **only to register**. Registration returns a
+  scripting. Registration is gated by the device's existing token, by the optional shared secret,
+  or by the dashboard's registration window (10 minutes after "Add a display"); a claimed device
+  can only re-register with its token. Registration returns a
   **per-device token** (rotated on every registration). Native calls such as heartbeat send it as a
   Bearer header. The shell also stores it as a cookie for the server origin via `CookieManager`, so
   every WebView request (page, data, SSE, log) carries it; `EventSource` can't set headers. Details

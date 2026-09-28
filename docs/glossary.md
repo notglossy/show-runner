@@ -80,7 +80,7 @@ A database row holding an HTML/CSS/JS template that a device can display.
 
 ## Shared secret
 
-The `DEVICE_SHARED_SECRET` value the Android shell sends in a header when registering. Everything after registration uses the per-device token.
+The optional `DEVICE_SHARED_SECRET` value the Android shell sends in a header when registering. When the server has none, new displays register only while the dashboard's **registration window** ("Add a display", 10 minutes, closes on claim) is open. Everything after registration uses the per-device token, and a claimed display can only re-register with it.
 
 ## Shell
 

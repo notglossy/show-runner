@@ -40,7 +40,7 @@ install.
    ```sh
    git clone https://github.com/notglossy/show-runner.git && cd show-runner
    cp .env.example .env
-   # edit .env: set ADMIN_PASSWORD and DEVICE_SHARED_SECRET (openssl rand -hex 32)
+   # edit .env: set ADMIN_PASSWORD (and DEVICE_SHARED_SECRET, see Configuration)
    ```
 
 2. **Run it.**
@@ -75,7 +75,7 @@ Everything is environment variables, read by `docker compose` from `.env`.
 | Variable | Required | Default | Purpose |
 |---|---|---|---|
 | `ADMIN_PASSWORD` | yes | | Dashboard login, also accepted as `Authorization: Bearer` for scripting |
-| `DEVICE_SHARED_SECRET` | yes | | Sent by the app when registering a device |
+| `DEVICE_SHARED_SECRET` | | | Set: displays must send it to register (managed fleets). Unset: displays register only while the dashboard's "Add a display" window is open, which needs app 0.3 or later |
 | `WEATHER_LAT`, `WEATHER_LON` | | Los Angeles | Weather location (overridable in dashboard settings) |
 | `WEATHER_UNITS` | | `imperial` | `imperial` or `metric` |
 | `KIOSK_TIMEZONE` | | `America/Los_Angeles` | IANA timezone for time on screens |

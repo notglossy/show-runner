@@ -13,6 +13,8 @@ import {
   applyAssignment,
   claimDevice,
   DEFAULT_SCREEN_ID,
+  deleteDevice,
+  findDevice,
   getDeviceOr404,
   listLogs,
   recordHeartbeat,
@@ -191,6 +193,41 @@ describe('playlist rotation', () => {
     expect(getDeviceOr404(device.id).currentScreenId).toBe(c.id);
     vi.advanceTimersByTime(1_000);
     expect(getDeviceOr404(device.id).currentScreenId).toBe(b.id);
+  });
+});
+
+describe('delete', () => {
+  it('removes the device with its logs, stops its rotation, and tells the display to reload', () => {
+    vi.useFakeTimers();
+    const { device } = reg();
+    claimDevice({ pairingCode: device.pairingCode!, name: 'Hall' });
+    const a = screen('A3');
+    const b = screen('B3');
+    const p = createPlaylist({
+      name: 'P3',
+      items: [
+        { screenId: a.id, dwellSeconds: 10 },
+        { screenId: b.id, dwellSeconds: 10 },
+      ],
+    });
+    applyAssignment(device.id, { type: 'playlist', playlistId: p.id });
+    appendLog(device, { message: 'boom' }, null);
+    expect(listLogs(device.id, { limit: 10 })).toHaveLength(1);
+
+    const { events, off } = listen(device.id);
+    deleteDevice(device.id);
+    off();
+
+    expect(events).toEqual([{ type: 'reload' }]);
+    expect(findDevice(device.id)).toBeUndefined();
+    expect(listLogs(device.id, { limit: 10 })).toHaveLength(0);
+    expect(() => getDeviceOr404(device.id)).toThrow();
+    expect(() => deleteDevice(device.id)).toThrow();
+    // A rotation tick after deletion must not resurrect anything.
+    vi.advanceTimersByTime(30_000);
+    expect(findDevice(device.id)).toBeUndefined();
+    // A fresh registration under the same id starts over unclaimed.
+    expect(reg(device.id).device).toMatchObject({ claimedAt: null, name: null });
   });
 });
 

@@ -3,10 +3,13 @@ import Link from 'next/link';
 import { AssignmentSelect } from '@/components/assignment-select';
 import { AutoRefresh } from '@/components/auto-refresh';
 import { ClaimDevice } from '@/components/claim-device';
+import { DeleteDevice } from '@/components/device-actions';
 import { DeviceStatus } from '@/components/device-status';
+import { RegistrationWindow } from '@/components/registration-window';
 import { TimeAgo } from '@/components/time-ago';
 import { Card, Empty, PageHeader } from '@/components/ui';
 import { requireAdminPage } from '@/lib/auth/session';
+import { registrationStatus } from '@/lib/devices/registration';
 import { listDevices, toDeviceView } from '@/lib/devices/service';
 import { listPlaylists } from '@/lib/playlists/service';
 import { listScreens } from '@/lib/screens/service';
@@ -28,6 +31,10 @@ export default async function DevicesPage() {
       <AutoRefresh seconds={10} />
       <PageHeader title="Devices" />
 
+      <div className="mb-6">
+        <RegistrationWindow status={registrationStatus()} />
+      </div>
+
       {unclaimed.length > 0 && (
         <Card title="Waiting to be claimed" className="mb-6">
           <p className="mb-3 text-sm text-neutral-600">
@@ -38,9 +45,12 @@ export default async function DevicesPage() {
             {unclaimed.map((d) => (
               <li key={d.id} className="flex flex-wrap items-center gap-4 py-3">
                 <div className="w-36">
-                  <div className="font-mono text-2xl font-semibold tracking-widest text-neutral-900">
+                  <Link
+                    href={`/devices/${d.id}`}
+                    className="font-mono text-2xl font-semibold tracking-widest text-neutral-900 underline-offset-4 hover:underline"
+                  >
                     {d.pairingCode}
-                  </div>
+                  </Link>
                   <div className="text-xs text-neutral-500">
                     {d.model} · registered <TimeAgo iso={d.registeredAt} />
                   </div>
@@ -48,6 +58,11 @@ export default async function DevicesPage() {
                 <div className="min-w-72 flex-1">
                   <ClaimDevice pairingCode={d.pairingCode ?? ''} />
                 </div>
+                <DeleteDevice
+                  deviceId={d.id}
+                  name={`unclaimed display ${d.pairingCode ?? d.id}`}
+                  icon
+                />
               </li>
             ))}
           </ul>
@@ -67,6 +82,9 @@ export default async function DevicesPage() {
                   <th className="pb-2 font-medium">Last seen</th>
                   <th className="pb-2 font-medium">Showing</th>
                   <th className="w-64 pb-2 font-medium">Assigned</th>
+                  <th className="pb-2">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
@@ -90,13 +108,16 @@ export default async function DevicesPage() {
                     <td className="py-2.5 pr-3 text-neutral-700">
                       {d.currentScreenId ? (screenName.get(d.currentScreenId) ?? '—') : '—'}
                     </td>
-                    <td className="py-2.5">
+                    <td className="py-2.5 pr-3">
                       <AssignmentSelect
                         deviceId={d.id}
                         assignment={d.assignment}
                         screens={screens}
                         playlists={playlists}
                       />
+                    </td>
+                    <td className="py-2.5 text-right">
+                      <DeleteDevice deviceId={d.id} name={d.name ?? d.id} icon />
                     </td>
                   </tr>
                 ))}

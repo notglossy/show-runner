@@ -139,9 +139,47 @@ export function RenameDevice({ deviceId, name }: { deviceId: string; name: strin
   );
 }
 
-export function DeleteDevice({ deviceId, name }: { deviceId: string; name: string }) {
+/** Outline trash can, sized by the surrounding font. */
+function TrashIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+      <path d="M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6" />
+      <path d="M10 11v6M14 11v6" />
+    </svg>
+  );
+}
+
+/**
+ * Deletes a device after a confirm. `icon` renders a compact trash button for list rows; pass
+ * `redirectTo` from pages that stop existing with the device (its detail page), list pages just
+ * refresh in place.
+ */
+export function DeleteDevice({
+  deviceId,
+  name,
+  icon = false,
+  redirectTo,
+}: {
+  deviceId: string;
+  name: string;
+  icon?: boolean;
+  redirectTo?: string;
+}) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
   async function remove() {
     if (
       !window.confirm(
@@ -149,18 +187,40 @@ export function DeleteDevice({ deviceId, name }: { deviceId: string; name: strin
       )
     )
       return;
+    setPending(true);
+    setError(null);
     try {
       await api(`/api/devices/${deviceId}`, { method: 'DELETE' });
-      router.push('/devices');
+      if (redirectTo) router.push(redirectTo);
       router.refresh();
     } catch (err) {
       setError(err instanceof ApiClientError ? err.detail : String(err));
+    } finally {
+      setPending(false);
     }
+  }
+  if (icon) {
+    return (
+      <div className="flex flex-col items-end gap-1">
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-neutral-500 hover:text-red-700"
+          onClick={remove}
+          disabled={pending}
+          aria-label={`Delete ${name}`}
+          title="Delete"
+        >
+          <TrashIcon />
+        </Button>
+        <ErrorText>{error}</ErrorText>
+      </div>
+    );
   }
   return (
     <div className="flex flex-col gap-1">
-      <Button variant="danger" onClick={remove}>
-        Delete device
+      <Button variant="danger" onClick={remove} disabled={pending}>
+        {pending ? 'Deleting…' : 'Delete device'}
       </Button>
       <ErrorText>{error}</ErrorText>
     </div>

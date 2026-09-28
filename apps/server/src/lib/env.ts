@@ -2,7 +2,11 @@ import { z } from 'zod';
 
 const EnvSchema = z.object({
   ADMIN_PASSWORD: z.string().min(1, 'ADMIN_PASSWORD is required'),
-  DEVICE_SHARED_SECRET: z.string().min(1, 'DEVICE_SHARED_SECRET is required'),
+  /**
+   * Unset = devices register while the dashboard's registration window is open (needs app 0.3+).
+   * Set = devices must send it in the X-Kiosk-Secret header, any time (managed fleets).
+   */
+  DEVICE_SHARED_SECRET: z.string().min(1).optional(),
   DATABASE_PATH: z.string().min(1).default('./data/showrunner.db'),
   WEATHER_LAT: z.coerce.number().min(-90).max(90).default(34.0522),
   WEATHER_LON: z.coerce.number().min(-180).max(180).default(-118.2437),
@@ -47,4 +51,9 @@ export function env(): Env {
     cached = parsed.data;
   }
   return cached;
+}
+
+/** Drops the cached env so the next `env()` re-reads process.env. Tests only. */
+export function resetEnv(): void {
+  cached = undefined;
 }

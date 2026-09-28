@@ -10,6 +10,12 @@ export function startServer() {
   if (globalForStartup.__showrunnerStarted) return;
   globalForStartup.__showrunnerStarted = true;
   const config = env();
+  if (!config.DEVICE_SHARED_SECRET) {
+    console.warn(
+      '[showrunner] DEVICE_SHARED_SECRET is not set: displays register only while "Add a display" is open. ' +
+        'Displays running app 0.2 or older cannot re-register after a reboot on this server (see docs/device-setup.md).',
+    );
+  }
   getDb();
   const seeded = seedBuiltinScreens();
   startScheduler();
