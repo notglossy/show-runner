@@ -67,8 +67,6 @@ class MainActivity : android.app.Activity() {
     private lateinit var setupCancel: Button
     /** True while the wizard owns the screen: registration errors show there instead of the overlay. */
     private var wizardActive = false
-    /** Where "Cancel" returns to when the wizard was opened over a running session. */
-    private var wizardReturnState: State? = null
     private lateinit var overlay: View
     private lateinit var overlayBody: TextView
     private lateinit var exitMenu: View
@@ -493,7 +491,6 @@ class MainActivity : android.app.Activity() {
         setupNote.text = problems.filterNot { it.endsWith("not found.") }.joinToString("\n")
         if (!(wizardActive && state == State.SETUP)) { // else: don't clobber what the user is typing
             wizardActive = true
-            wizardReturnState = null
             setupCancel.visibility = View.GONE
             setupUrl.setText(config?.serverUrl ?: "")
             setupSecret.setText("")
@@ -519,8 +516,11 @@ class MainActivity : android.app.Activity() {
     private fun openChangeServer() {
         closeExitMenu()
         if (state == State.SETUP) return // the wizard is already up
+        // Retire the session: no heartbeats (dashboard commands would run mid-wizard and the watchdog
+        // could put the overlay over it), no pending retries. Cancel registers again with the stored token.
+        generation++
+        registration = null
         wizardActive = true
-        wizardReturnState = state
         setupCancel.visibility = View.VISIBLE
         setupUrl.setText(config?.serverUrl ?: "")
         setupSecret.setText("")
@@ -556,8 +556,7 @@ class MainActivity : android.app.Activity() {
         setupCancel.setOnClickListener {
             hideKeyboard(setupUrl)
             wizardActive = false
-            setState(wizardReturnState ?: State.SHOWING)
-            wizardReturnState = null
+            startSession() // the session was retired on entry; this re-registers and reloads the page
         }
     }
 
@@ -608,7 +607,6 @@ class MainActivity : android.app.Activity() {
                         setupConnect.isEnabled = false
                         setupConnect.text = getString(R.string.setup_connecting)
                         ConfigStore.save(this, url, secret)
-                        wizardReturnState = null
                         startSession()
                     }
                 }

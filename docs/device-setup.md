@@ -243,7 +243,7 @@ While strict mode is on, `am force-stop` has no effect; reconfigure with intent 
 **Press and hold the top-left corner for 3 seconds.** If a PIN is set (dashboard → Settings → Kiosk exit menu,
 4-8 digits) the menu asks for it. The device keeps a salted hash, so this works while the server is down. It's a
 convenience lock, not strong security. Options: Choose Home app (not in strict mode), Open Android settings,
-Leave strict mode (strict only), Change server… (the setup wizard, prefilled; Cancel returns to the screen),
+Leave strict mode (strict only), Change server… (the setup wizard, prefilled; Cancel reconnects to the current server),
 Reload.
 
 From the dashboard (device page → Commands): **Open exit menu** (no PIN), **Open Android settings**, **Leave strict
