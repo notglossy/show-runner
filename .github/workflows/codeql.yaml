@@ -55,7 +55,7 @@ jobs:
         uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
       # Same SDK step as ci.yaml: the image ships platforms;android-37, only build-tools is pinned.
       - if: matrix.build-mode == 'manual'
-        run: sdkmanager "build-tools;36.0.0"
+        run: android sdk install "build-tools;36.0.0" --no-metrics
         working-directory: apps/android
       - if: matrix.build-mode == 'manual'
         run: ./gradlew assembleDebug --warning-mode all
