@@ -21,6 +21,22 @@ object KioskLogic {
     fun shouldStartOnBroadcast(action: String?, mode: KioskMode.Mode): Boolean =
         (action == ACTION_BOOT_COMPLETED || action == ACTION_MY_PACKAGE_REPLACED) && mode != KioskMode.Mode.IMMERSIVE
 
+    enum class SetupDecision { PROCEED, NEED_SECRET, REGISTRATION_CLOSED }
+
+    /**
+     * What the setup wizard does after probing `/api/health`. Servers older than 0.3 report no mode and
+     * always require the shared secret.
+     */
+    fun setupDecision(registrationMode: String?, registrationOpen: Boolean, secretEntered: Boolean): SetupDecision = when {
+        registrationMode != "window" -> if (secretEntered) SetupDecision.PROCEED else SetupDecision.NEED_SECRET
+        !registrationOpen -> SetupDecision.REGISTRATION_CLOSED
+        else -> SetupDecision.PROCEED
+    }
+
+    /** A stored token is only presented to the server it came from; anything else would be a stale credential. */
+    fun usableToken(storedServerUrl: String?, storedToken: String?, serverUrl: String): String? =
+        storedToken?.takeIf { it.isNotBlank() && storedServerUrl == serverUrl }
+
     /** Parses the JSON result of `evaluateJavascript("window.kiosk ? window.kiosk.screenId : null")`. */
     fun parseScreenId(jsResult: String?): String? =
         jsResult?.takeUnless { it == "null" || it.isBlank() }?.removeSurrounding("\"")?.takeIf { it.isNotEmpty() }

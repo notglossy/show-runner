@@ -13,7 +13,8 @@ import java.net.URI
 data class KioskConfig(
     /** Server origin without a trailing slash, e.g. `http://192.168.1.34:3000`. */
     val serverUrl: String,
-    val sharedSecret: String,
+    /** Only needed by servers that set DEVICE_SHARED_SECRET; null registers through the dashboard's window. */
+    val sharedSecret: String?,
     val source: Source,
 ) {
     enum class Source { FILE, INTENT }
@@ -28,6 +29,7 @@ sealed interface ConfigResult {
  * Config sources, most recently written wins:
  *  - `/sdcard/showrunner/config.json`: `{"serverUrl": "http://host:3000", "sharedSecret": "..."}`
  *  - intent extras `serverUrl` + `sharedSecret` (persisted to app preferences)
+ * `sharedSecret` is optional in both.
  */
 object ConfigStore {
     private const val TAG = "ShowRunner.Config"
@@ -43,26 +45,30 @@ object ConfigStore {
     /** Saves config passed as intent extras. Returns true if the intent carried a valid config. */
     fun saveFromIntent(context: Context, intent: Intent?): Boolean {
         val url = intent?.getStringExtra(EXTRA_SERVER_URL) ?: return false
-        val secret = intent.getStringExtra(EXTRA_SHARED_SECRET) ?: return false
+        val secret = intent.getStringExtra(EXTRA_SHARED_SECRET)?.trim()?.takeIf { it.isNotEmpty() }
         val normalized = normalizeUrl(url) ?: run {
             Log.w(TAG, "Ignoring intent config: invalid serverUrl '$url'")
             return false
         }
-        if (secret.isBlank()) return false
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit {
-            putString(EXTRA_SERVER_URL, normalized)
-            putString(EXTRA_SHARED_SECRET, secret)
-            putLong("updatedAt", System.currentTimeMillis())
-        }
+        save(context, normalized, secret)
         Log.i(TAG, "Saved config from intent: $normalized")
         return true
+    }
+
+    /** Persists a server (and optional secret) to app preferences, the same slot intent extras use. */
+    fun save(context: Context, serverUrl: String, sharedSecret: String?) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit {
+            putString(EXTRA_SERVER_URL, serverUrl)
+            if (sharedSecret == null) remove(EXTRA_SHARED_SECRET) else putString(EXTRA_SHARED_SECRET, sharedSecret)
+            putLong("updatedAt", System.currentTimeMillis())
+        }
     }
 
     fun load(context: Context): ConfigResult {
         val problems = mutableListOf<String>()
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val fromIntent = prefs.getString(EXTRA_SERVER_URL, null)?.let { url ->
-            prefs.getString(EXTRA_SHARED_SECRET, null)?.let { KioskConfig(url, it, KioskConfig.Source.INTENT) }
+            KioskConfig(url, prefs.getString(EXTRA_SHARED_SECRET, null), KioskConfig.Source.INTENT)
         }
         val intentUpdatedAt = prefs.getLong("updatedAt", 0L)
 
@@ -73,7 +79,7 @@ object ConfigStore {
         } else if (file.isFile) {
             try {
                 fromFile = parse(file.readText())
-                if (fromFile == null) problems += "${file.path} must contain serverUrl (http/https) and sharedSecret."
+                if (fromFile == null) problems += "${file.path} must contain serverUrl (http/https); sharedSecret is optional."
             } catch (e: Exception) {
                 problems += "Couldn't read ${file.path}: ${e.message}"
             }
@@ -95,7 +101,7 @@ object ConfigStore {
             return null
         }
         val url = normalizeUrl(obj.optString("serverUrl")) ?: return null
-        val secret = obj.optString("sharedSecret").takeIf { it.isNotBlank() } ?: return null
+        val secret = obj.optString("sharedSecret").trim().takeIf { it.isNotEmpty() }
         return KioskConfig(url, secret, KioskConfig.Source.FILE)
     }
 

@@ -21,6 +21,27 @@ class KioskLogicTest {
     }
 
     @Test
+    fun `a stored token is only used for the server it came from`() {
+        assertEquals("tok", KioskLogic.usableToken("http://a:3000", "tok", "http://a:3000"))
+        assertNull(KioskLogic.usableToken("http://a:3000", "tok", "http://b:3000"))
+        assertNull(KioskLogic.usableToken(null, "tok", "http://a:3000"))
+        assertNull(KioskLogic.usableToken("http://a:3000", " ", "http://a:3000"))
+        assertNull(KioskLogic.usableToken("http://a:3000", null, "http://a:3000"))
+    }
+
+    @Test
+    fun `setup proceeds through an open window, waits on a closed one, and asks for the secret otherwise`() {
+        assertEquals(KioskLogic.SetupDecision.PROCEED, KioskLogic.setupDecision("window", true, secretEntered = false))
+        assertEquals(KioskLogic.SetupDecision.REGISTRATION_CLOSED, KioskLogic.setupDecision("window", false, secretEntered = false))
+        assertEquals(KioskLogic.SetupDecision.REGISTRATION_CLOSED, KioskLogic.setupDecision("window", false, secretEntered = true))
+        assertEquals(KioskLogic.SetupDecision.NEED_SECRET, KioskLogic.setupDecision("secret", true, secretEntered = false))
+        assertEquals(KioskLogic.SetupDecision.PROCEED, KioskLogic.setupDecision("secret", true, secretEntered = true))
+        // Servers older than 0.3 report no mode and always require the secret.
+        assertEquals(KioskLogic.SetupDecision.NEED_SECRET, KioskLogic.setupDecision(null, false, secretEntered = false))
+        assertEquals(KioskLogic.SetupDecision.PROCEED, KioskLogic.setupDecision(null, false, secretEntered = true))
+    }
+
+    @Test
     fun `network callback right after registering the listener is ignored`() {
         assertFalse(KioskLogic.shouldRecoverOnNetwork(lostForMs = 0, registered = true, reconnecting = false))
     }

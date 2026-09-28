@@ -28,9 +28,14 @@ class ConfigStoreTest {
     }
 
     @Test
+    fun `the shared secret is optional`() {
+        assertNull(ConfigStore.parse("""{ "serverUrl": "http://host:3000" }""")!!.sharedSecret)
+        assertNull(ConfigStore.parse("""{ "serverUrl": "http://host:3000", "sharedSecret": "   " }""")!!.sharedSecret)
+        assertEquals("x", ConfigStore.parse("""{ "serverUrl": "http://host:3000", "sharedSecret": " x " }""")!!.sharedSecret)
+    }
+
+    @Test
     fun `rejects incomplete or malformed config files`() {
-        assertNull(ConfigStore.parse("""{ "serverUrl": "http://host:3000" }"""))
-        assertNull(ConfigStore.parse("""{ "serverUrl": "http://host:3000", "sharedSecret": "   " }"""))
         assertNull(ConfigStore.parse("""{ "serverUrl": "host:3000", "sharedSecret": "x" }"""))
         assertNull(ConfigStore.parse("""{ "sharedSecret": "x" }"""))
         assertNull(ConfigStore.parse("not json"))

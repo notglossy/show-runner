@@ -33,7 +33,12 @@ class ServerClient(private val origin: String) {
         val commands: List<String>,
     )
 
-    fun register(sharedSecret: String, info: DeviceInfo): Registration {
+    /**
+     * Registers (or re-registers) the device. `sharedSecret` is sent when the config has one; `token` is
+     * the previous registration's token, which lets a claimed display re-register on a server without a
+     * secret. Either may be null.
+     */
+    fun register(info: DeviceInfo, sharedSecret: String?, token: String?): Registration {
         val body = JSONObject()
             .put("deviceId", info.deviceId)
             .put("model", info.model)
@@ -41,7 +46,11 @@ class ServerClient(private val origin: String) {
             .put("appVersion", info.appVersion)
             .put("screenWidth", info.screenWidth)
             .put("screenHeight", info.screenHeight)
-        val json = post("/api/devices/register", body, mapOf("X-Kiosk-Secret" to sharedSecret))
+        val headers = buildMap {
+            if (sharedSecret != null) put("X-Kiosk-Secret", sharedSecret)
+            if (token != null) put("Authorization", "Bearer $token")
+        }
+        val json = post("/api/devices/register", body, headers)
         val cookie = json.getJSONObject("cookie")
         return Registration(
             deviceId = json.getString("deviceId"),
@@ -53,6 +62,22 @@ class ServerClient(private val origin: String) {
             pageUrl = json.getString("pageUrl"),
             heartbeatIntervalSeconds = json.optInt("heartbeatIntervalSeconds", 30),
             kiosk = json.optJSONObject("kiosk"),
+        )
+    }
+
+    /** `GET /api/health`: how this server admits new displays. Servers older than 0.3 have no `registration` block. */
+    data class Health(
+        /** `secret` (send the shared secret), `window` (only while `registrationOpen`), or null for older servers. */
+        val registrationMode: String?,
+        val registrationOpen: Boolean,
+    )
+
+    fun health(): Health {
+        val json = request("GET", "/api/health", null, emptyMap())
+        val registration = json.optJSONObject("registration")
+        return Health(
+            registrationMode = registration?.optString("mode")?.takeIf { it.isNotBlank() },
+            registrationOpen = registration?.optBoolean("open", false) ?: false,
         )
     }
 
@@ -70,19 +95,24 @@ class ServerClient(private val origin: String) {
         )
     }
 
-    private fun post(path: String, body: JSONObject, headers: Map<String, String>): JSONObject {
+    private fun post(path: String, body: JSONObject, headers: Map<String, String>): JSONObject =
+        request("POST", path, body, headers)
+
+    private fun request(method: String, path: String, body: JSONObject?, headers: Map<String, String>): JSONObject {
         val conn = URL(origin + path).openConnection() as HttpURLConnection
         try {
-            conn.requestMethod = "POST"
+            conn.requestMethod = method
             // Short timeouts: on flaky Wi-Fi a stalled request should fail fast and be retried.
             conn.connectTimeout = 5_000
             conn.readTimeout = 10_000
-            conn.doOutput = true
             conn.useCaches = false
-            conn.setRequestProperty("Content-Type", "application/json")
             conn.setRequestProperty("Accept", "application/json")
             headers.forEach { (k, v) -> conn.setRequestProperty(k, v) }
-            conn.outputStream.use { it.write(body.toString().toByteArray()) }
+            if (body != null) {
+                conn.doOutput = true
+                conn.setRequestProperty("Content-Type", "application/json")
+                conn.outputStream.use { it.write(body.toString().toByteArray()) }
+            }
             val status = conn.responseCode
             val stream = if (status in 200..299) conn.inputStream else conn.errorStream
             val text = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
