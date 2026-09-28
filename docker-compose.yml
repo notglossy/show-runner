@@ -10,7 +10,8 @@ services:
       - "${SHOWRUNNER_PORT:-3000}:3000"
     environment:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
-      DEVICE_SHARED_SECRET: ${DEVICE_SHARED_SECRET:?set DEVICE_SHARED_SECRET in .env}
+      # Optional since app 0.3: unset, displays register while "Add a display" is open in the dashboard.
+      DEVICE_SHARED_SECRET: ${DEVICE_SHARED_SECRET:-}
       WEATHER_LAT: ${WEATHER_LAT:-34.0522}
       WEATHER_LON: ${WEATHER_LON:--118.2437}
       WEATHER_UNITS: ${WEATHER_UNITS:-imperial}
