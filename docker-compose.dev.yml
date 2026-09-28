@@ -1,0 +1,8 @@
+# Development override: build the server from this checkout instead of pulling the released image.
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
+services:
+  showrunner:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    image: showrunner-server:dev

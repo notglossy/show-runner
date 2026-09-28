@@ -35,22 +35,28 @@ request flow: [docs/architecture.md](docs/architecture.md).
 You need Docker on a machine on the same LAN as the display, and adb for the one-time device
 install.
 
-1. **Configure the server.**
+1. **Configure the server.** The server ships as a container image,
+   `ghcr.io/notglossy/show-runner`, built for amd64 and arm64 by every
+   [release](https://github.com/notglossy/show-runner/releases). The image is public, so no
+   registry login is needed. You only need the compose file and an `.env`:
 
    ```sh
-   git clone https://github.com/notglossy/show-runner.git && cd show-runner
-   cp .env.example .env
-   # edit .env: set ADMIN_PASSWORD (and DEVICE_SHARED_SECRET, see Configuration)
+   mkdir showrunner && cd showrunner
+   curl -fsSLO https://raw.githubusercontent.com/notglossy/show-runner/main/docker-compose.yml
+   curl -fsSL https://raw.githubusercontent.com/notglossy/show-runner/main/.env.example -o .env
+   # edit .env: set ADMIN_PASSWORD; SHOWRUNNER_VERSION picks the release (see Configuration)
    ```
 
 2. **Run it.**
 
    ```sh
-   docker compose up --build -d
+   docker compose up -d
    ```
 
    Open `http://<server-lan-ip>:3000`, log in with `ADMIN_PASSWORD`. Health check:
-   `/api/health`. The SQLite database lives on the `showrunner-data` volume.
+   `/api/health`. The SQLite database lives on the `showrunner-data` volume. To update, change
+   `SHOWRUNNER_VERSION` and run `docker compose pull && docker compose up -d`. Match the app
+   version on the display to the server version: a release carries both.
 
 3. **Prepare the display** once, following [docs/device-setup.md](docs/device-setup.md):
    enable adb, then install the app with the server address and secret. Use the APK from the
@@ -85,12 +91,14 @@ Everything is environment variables, read by `docker compose` from `.env`.
 | `AI_BASE_URL` | | OpenRouter | OpenAI-compatible Chat Completions endpoint |
 | `AI_API_KEY` | | | Enables AI screen generation |
 | `AI_MODEL` | | `google/gemini-3.8-flash` | Default model; the editor can pick another |
+| `SHOWRUNNER_VERSION` | | `latest` | Server image tag: a release tag (`v0.3.0-beta.2`), `beta` (newest pre-release) or `latest` (newest full release; none yet, so use `beta` for now) |
 | `SHOWRUNNER_PORT` | | `3000` | Host port |
 | `DATABASE_PATH` | | `/data/showrunner.db` | SQLite file (inside the container) |
 
 ## Development
 
-Server: Node 22 and pnpm 10 (`corepack enable`).
+Server: Node 22 and pnpm 10 (`corepack enable`). To run the container from your checkout instead
+of the released image: `docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d`.
 
 ```sh
 pnpm install

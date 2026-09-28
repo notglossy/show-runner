@@ -98,14 +98,17 @@ pnpm check               # format + lint + typecheck + tests (coverage) + build
 pnpm --filter @showrunner/server db:generate # after editing lib/db/schema.ts (commit the SQL)
 
 cp .env.example .env     # set ADMIN_PASSWORD (DEVICE_SHARED_SECRET optional, see README)
-docker compose up --build -d   # http://localhost:${SHOWRUNNER_PORT:-3000}, health: /api/health
+docker compose up -d     # pulls ghcr.io/notglossy/show-runner:${SHOWRUNNER_VERSION:-latest}; health: /api/health
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d   # build from this checkout
 ```
 
 Config is env vars only: `ADMIN_PASSWORD`, `DEVICE_SHARED_SECRET`, `WEATHER_LAT`, `WEATHER_LON`,
 `WEATHER_UNITS` (imperial|metric), `KIOSK_TIMEZONE`, `AI_BASE_URL` / `AI_API_KEY` / `AI_MODEL` (AI screen generation via
 any OpenAI-compatible API, OpenRouter by default), `DATABASE_PATH`
-(image default `/data/showrunner.db`). Prod host is amd64, built by Komodo from `apps/server/Dockerfile`
-with the repo root as the build context.
+(image default `/data/showrunner.db`), `SHOWRUNNER_VERSION` (compose only: image tag). The release workflow
+builds `apps/server/Dockerfile` (repo root as context) for amd64 and arm64 and pushes `ghcr.io/notglossy/show-runner`
+on every `v*` tag; the prod host (amd64, Komodo) pins one of those tags. Server-only fixes ship by tagging a new
+version, which also bumps the app's versionName.
 
 ### Android
 
