@@ -18,7 +18,8 @@ scripts/        delegate.sh (OMP delegation), install.sh (Phase 2)
 
 ## Architecture in brief
 
-- The device is dumb. It registers (`POST /api/devices/register`, shared secret header), sends a heartbeat
+- The device is dumb. It registers (`POST /api/devices/register`: device token, optional shared secret header,
+  or the dashboard's registration window), sends a heartbeat
   every 30s, and loads one URL: `GET /device/:deviceId`.
 - A **screen** is a DB row holding an HTML/CSS/JS template. The server renders it and injects a runtime
   exposing `window.kiosk` (`kiosk.data`, `kiosk.on('data', fn)`, `data-bind="weather.temp"`).
@@ -96,7 +97,7 @@ pnpm dev                 # http://localhost:3000
 pnpm check               # format + lint + typecheck + tests (coverage) + build
 pnpm --filter @showrunner/server db:generate # after editing lib/db/schema.ts (commit the SQL)
 
-cp .env.example .env     # set ADMIN_PASSWORD, DEVICE_SHARED_SECRET
+cp .env.example .env     # set ADMIN_PASSWORD (DEVICE_SHARED_SECRET optional, see README)
 docker compose up --build -d   # http://localhost:${SHOWRUNNER_PORT:-3000}, health: /api/health
 ```
 

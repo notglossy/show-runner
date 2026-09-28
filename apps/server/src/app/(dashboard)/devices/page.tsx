@@ -5,9 +5,11 @@ import { AutoRefresh } from '@/components/auto-refresh';
 import { ClaimDevice } from '@/components/claim-device';
 import { DeleteDevice } from '@/components/device-actions';
 import { DeviceStatus } from '@/components/device-status';
+import { RegistrationWindow } from '@/components/registration-window';
 import { TimeAgo } from '@/components/time-ago';
 import { Card, Empty, PageHeader } from '@/components/ui';
 import { requireAdminPage } from '@/lib/auth/session';
+import { registrationStatus } from '@/lib/devices/registration';
 import { listDevices, toDeviceView } from '@/lib/devices/service';
 import { listPlaylists } from '@/lib/playlists/service';
 import { listScreens } from '@/lib/screens/service';
@@ -28,6 +30,10 @@ export default async function DevicesPage() {
     <>
       <AutoRefresh seconds={10} />
       <PageHeader title="Devices" />
+
+      <div className="mb-6">
+        <RegistrationWindow status={registrationStatus()} />
+      </div>
 
       {unclaimed.length > 0 && (
         <Card title="Waiting to be claimed" className="mb-6">

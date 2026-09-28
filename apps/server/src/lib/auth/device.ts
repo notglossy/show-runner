@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { ApiError, notFound, unauthorized } from '@/lib/api/http';
 import { getDb } from '@/lib/db/client';
 import { type Device, devices } from '@/lib/db/schema';
+import { registrationWindowOpen } from '@/lib/devices/registration';
 import { env } from '@/lib/env';
 
 import { bearerToken, isAdminRequest, readCookie } from './admin';
@@ -11,11 +12,38 @@ import { safeEqual, sha256 } from './crypto';
 export const DEVICE_COOKIE = 'showrunner_device';
 export const SHARED_SECRET_HEADER = 'x-kiosk-secret';
 
-/** Throws 401 unless the `x-kiosk-secret` header matches the shared secret. */
+/** Throws 401 unless the `x-kiosk-secret` header matches the configured shared secret. */
 export function requireSharedSecret(req: Request): void {
+  const secret = env().DEVICE_SHARED_SECRET;
   const provided = req.headers.get(SHARED_SECRET_HEADER);
-  if (!provided || !safeEqual(provided, env().DEVICE_SHARED_SECRET)) {
+  if (!secret || !provided || !safeEqual(provided, secret)) {
     throw unauthorized(`Missing or invalid ${SHARED_SECRET_HEADER} header`);
+  }
+}
+
+/**
+ * Gate for `POST /api/devices/register`, in order:
+ *  1. A device presenting its current (or grace-period previous) token may always re-register.
+ *  2. With DEVICE_SHARED_SECRET set, the header is required and sufficient (managed fleets).
+ *  3. Otherwise a claimed device id needs its token (nobody else may take over a claimed display),
+ *     and a new or still-unclaimed device needs the dashboard's registration window to be open.
+ */
+export function authorizeRegistration(req: Request, deviceId: string): void {
+  const device = getDb().select().from(devices).where(eq(devices.id, deviceId)).get();
+  if (device && presentsDeviceToken(req, device)) return;
+  if (env().DEVICE_SHARED_SECRET) {
+    requireSharedSecret(req);
+    return;
+  }
+  if (device?.claimedAt) {
+    throw unauthorized('This display is already claimed; re-register with its device token');
+  }
+  if (!registrationWindowOpen()) {
+    throw new ApiError(
+      403,
+      'registration_closed',
+      'Registration is closed. In the dashboard, open Devices and choose "Add a display".',
+    );
   }
 }
 
@@ -34,6 +62,18 @@ function presentedTokens(req: Request, deviceId: string): string[] {
   return tokens;
 }
 
+/** Whether the request carries the device's current token, or its previous one within the grace period. */
+function presentsDeviceToken(req: Request, device: Device): boolean {
+  const previousValid =
+    device.previousTokenHash && (device.previousTokenExpiresAt?.getTime() ?? 0) > Date.now();
+  for (const token of presentedTokens(req, device.id)) {
+    const hash = sha256(token);
+    if (safeEqual(hash, device.tokenHash)) return true;
+    if (previousValid && safeEqual(hash, device.previousTokenHash!)) return true;
+  }
+  return false;
+}
+
 export type Viewer = { kind: 'device'; device: Device } | { kind: 'admin'; device: Device };
 
 /**
@@ -42,16 +82,7 @@ export type Viewer = { kind: 'device'; device: Device } | { kind: 'admin'; devic
  */
 export function requireDeviceOrAdmin(req: Request, deviceId: string): Viewer {
   const device = getDb().select().from(devices).where(eq(devices.id, deviceId)).get();
-  if (device) {
-    const previousValid =
-      device.previousTokenHash && (device.previousTokenExpiresAt?.getTime() ?? 0) > Date.now();
-    for (const token of presentedTokens(req, deviceId)) {
-      const hash = sha256(token);
-      if (safeEqual(hash, device.tokenHash)) return { kind: 'device', device };
-      if (previousValid && safeEqual(hash, device.previousTokenHash!))
-        return { kind: 'device', device };
-    }
-  }
+  if (device && presentsDeviceToken(req, device)) return { kind: 'device', device };
   if (isAdminRequest(req)) {
     if (!device) throw notFound('Device');
     return { kind: 'admin', device };

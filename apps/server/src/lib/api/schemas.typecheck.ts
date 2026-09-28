@@ -18,6 +18,7 @@ ok<InSync<typeof S.LoginRequestSchema, T.LoginRequest>>();
 ok<InSync<typeof S.RegisterDeviceRequestSchema, T.RegisterDeviceRequest>>();
 ok<InSync<typeof S.HeartbeatRequestSchema, T.HeartbeatRequest>>();
 ok<InSync<typeof S.DeviceLogRequestSchema, T.DeviceLogRequest>>();
+ok<InSync<typeof S.SetRegistrationRequestSchema, T.SetRegistrationRequest>>();
 ok<InSync<typeof S.ClaimDeviceRequestSchema, T.ClaimDeviceRequest>>();
 ok<InSync<typeof S.DeviceAssignmentSchema, T.DeviceAssignment>>();
 ok<InSync<typeof S.UpdateDeviceRequestSchema, T.UpdateDeviceRequest>>();

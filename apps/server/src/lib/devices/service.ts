@@ -27,6 +27,8 @@ import { playlistItemsFor } from '@/lib/playlists/queries';
 import { syncDevice } from '@/lib/playlists/scheduler';
 import { findScreen } from '@/lib/screens/service';
 
+import { closeRegistrationWindow } from './registration';
+
 /** How often devices heartbeat; tripled, it defines the online window. */
 export const HEARTBEAT_INTERVAL_SECONDS = 30;
 /** A device counts as online if its last heartbeat is newer than this. */
@@ -195,7 +197,7 @@ export function recordHeartbeat(
     .get();
 }
 
-/** Claims an unclaimed device by pairing code and assigns the default screen. */
+/** Claims an unclaimed device by pairing code, closes the registration window, and assigns the default screen. */
 export function claimDevice(input: ClaimDeviceRequest): Device {
   const db = getDb();
   const device = db
@@ -208,6 +210,7 @@ export function claimDevice(input: ClaimDeviceRequest): Device {
     .set({ name: input.name, claimedAt: new Date(), pairingCode: null })
     .where(eq(devices.id, device.id))
     .run();
+  closeRegistrationWindow();
   if (device.assignmentType === 'none' && findScreen(DEFAULT_SCREEN_ID)) {
     return applyAssignment(device.id, { type: 'screen', screenId: DEFAULT_SCREEN_ID });
   }

@@ -9,14 +9,15 @@ All request bodies are JSON and validated with Zod (`apps/server/src/lib/api/sch
 ```
 
 Codes: `bad_request` 400, `validation_failed` 400, `unauthorized` 401, `forbidden` 403,
-`not_found` 404, `conflict` 409, `payload_too_large` 413, `internal_error` 500.
+`registration_closed` 403, `not_found` 404, `conflict` 409, `payload_too_large` 413,
+`internal_error` 500.
 
 ## Authentication
 
 | Caller | How |
 |---|---|
 | **Admin** | `showrunner_admin` session cookie from `POST /api/auth/login`, **or** `Authorization: Bearer <ADMIN_PASSWORD>`. |
-| **Device, registration** | `X-Kiosk-Secret: <DEVICE_SHARED_SECRET>` header. |
+| **Device, registration** | Any one of: the device's current token (Bearer or cookie, see below); `X-Kiosk-Secret: <DEVICE_SHARED_SECRET>` when the server has that variable set; or, without a secret, the dashboard's **registration window** being open (Devices → "Add a display", 10 minutes, closes on claim). A claimed device id can only be re-registered with its token. `GET /api/health` reports the mode. |
 | **Device, everything else** | The per-device token returned by registration, as `Authorization: Bearer <token>` (native calls) **or** the cookie `showrunner_device=<deviceId>.<token>` set for the server origin (WebView page, data, SSE, log). Registering again rotates the token; the previous token keeps working for 10 minutes (covers HTTP stacks that silently retry the registration POST), and older ones stop working. |
 
 Per-device read endpoints (`/device/:id`, `data`, `events`) also accept an admin so the owner can
@@ -25,12 +26,18 @@ preview a device in a browser. For non-admins an unknown device and a bad token 
 ## Unauthenticated
 
 ### `GET /api/health`
-`{ "ok": true, "service": "showrunner", "time": "…" }`. Used by the Docker health check.
+```json
+{ "ok": true, "service": "showrunner", "time": "…",
+  "registration": { "mode": "window", "open": true, "closesAt": "…" } }
+```
+Used by the Docker health check and by a display's setup flow: `mode` is `secret` (send
+`X-Kiosk-Secret`; `open` is always true) or `window` (register only while `open`; `closesAt` is
+null when closed).
 
 ## Device-facing
 
 ### `POST /api/devices/register`
-Header `X-Kiosk-Secret`. Body:
+Gated as described under Authentication (token, shared secret, or open window). Body:
 ```json
 { "deviceId": "3f2b7c1e-8a4d-4e6f-9b0a-1c2d3e4f5a6b", "model": "Echo_Show_8", "androidVersion": "11",
   "appVersion": "0.1.0", "screenWidth": 1280, "screenHeight": 800 }
@@ -89,6 +96,8 @@ The last 1000 lines per device are kept.
 | `POST /api/auth/login` | `{ "password" }` | `{ ok, expiresAt }` + session cookie (30 days) |
 | `POST /api/auth/logout` | | clears cookie |
 | `GET /api/devices` | | `{ devices: DeviceView[] }` |
+| `GET /api/devices/registration` | | `{ registration: { mode, open, closesAt } }` |
+| `PUT /api/devices/registration` | `{ "open": true \| false }` | opens the registration window for 10 minutes (extends it if open) or closes it; no-op in secret mode |
 | `POST /api/devices/claim` | `{ "pairingCode": "3382fp", "name": "Kitchen" }` | `{ device }`; assigns `builtin-clock` if unassigned |
 | `GET /api/devices/:id` | | `{ device }` |
 | `PATCH /api/devices/:id` | `{ "name"?, "assignment"?: {"type":"none"} \| {"type":"screen","screenId"} \| {"type":"playlist","playlistId"} }` | `{ device }`; device navigates immediately |

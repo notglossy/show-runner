@@ -71,6 +71,21 @@ export interface DeviceLogRequest {
 
 // ---- Admin: devices --------------------------------------------------------
 
+/** How new devices may register, reported by `GET /api/health` and the registration endpoint. */
+export interface RegistrationStatus {
+  /** `secret`: the X-Kiosk-Secret header is required and sufficient. `window`: only while open. */
+  mode: 'secret' | 'window';
+  /** Always true in secret mode; in window mode, whether the window is open right now. */
+  open: boolean;
+  /** ISO time the window closes, or null. */
+  closesAt: string | null;
+}
+
+export interface SetRegistrationRequest {
+  /** true opens the registration window for 10 minutes (or extends it), false closes it. */
+  open: boolean;
+}
+
 export interface ClaimDeviceRequest {
   /** 6 chars from the pairing alphabet A-H J K M N P-Z 2-9 (no I, L, O, 0, 1); case-insensitive, trimmed. */
   pairingCode: string;

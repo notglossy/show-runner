@@ -2,7 +2,9 @@
 
 ShowRunner is a single-user, self-hosted LAN dashboard. There is no hosted
 service and no multi-user threat model: the whole admin surface is one
-`ADMIN_PASSWORD`, and the device channel is one `DEVICE_SHARED_SECRET`.
+`ADMIN_PASSWORD`. A display registers either with `DEVICE_SHARED_SECRET` (when set) or
+while the dashboard's registration window is open; after that it holds a per-device
+token, and a claimed display can only be re-registered with that token.
 
 ## Supported versions
 

@@ -2,11 +2,18 @@ import { randomUUID } from 'node:crypto';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { PREVIOUS_TOKEN_GRACE_MS, registerDevice } from '@/lib/devices/service';
+import { closeRegistrationWindow, openRegistrationWindow } from '@/lib/devices/registration';
+import { claimDevice, PREVIOUS_TOKEN_GRACE_MS, registerDevice } from '@/lib/devices/service';
+import { resetEnv } from '@/lib/env';
 
 import { ADMIN_SESSION_MS, createAdminSession, isAdminRequest, verifyAdminSession } from './admin';
 import { randomPairingCode, safeEqual } from './crypto';
-import { requireDevice, requireDeviceOrAdmin, requireSharedSecret } from './device';
+import {
+  authorizeRegistration,
+  requireDevice,
+  requireDeviceOrAdmin,
+  requireSharedSecret,
+} from './device';
 
 const req = (headers: Record<string, string> = {}) =>
   new Request('http://kiosk.local/x', { headers });
@@ -125,6 +132,64 @@ describe('device auth', () => {
     expect(() => requireDevice(admin, a.device.id)).toThrow(/Only the device/);
     expect(() => requireDeviceOrAdmin(admin, 'missing')).toThrow(/not found/);
     expect(() => requireDeviceOrAdmin(req(), 'missing')).toThrow(/token/);
+  });
+});
+
+describe('registration gate', () => {
+  const register = (deviceId = randomUUID()) =>
+    registerDevice(
+      {
+        deviceId,
+        model: 'm',
+        androidVersion: '11',
+        appVersion: '1',
+        screenWidth: 1,
+        screenHeight: 1,
+      },
+      null,
+    );
+  const secret = req({ 'x-kiosk-secret': 'test-device-secret' });
+  const bearer = (t: string) => req({ authorization: `Bearer ${t}` });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    resetEnv();
+    closeRegistrationWindow();
+  });
+
+  it('secret mode: the header is required and sufficient, and a device token also works', () => {
+    expect(() => authorizeRegistration(req(), randomUUID())).toThrow(/x-kiosk-secret/);
+    expect(() => authorizeRegistration(secret, randomUUID())).not.toThrow();
+    const a = register();
+    claimDevice({ pairingCode: a.device.pairingCode!, name: 'A' });
+    expect(() => authorizeRegistration(secret, a.device.id)).not.toThrow();
+    expect(() => authorizeRegistration(bearer(a.token), a.device.id)).not.toThrow();
+    expect(() => authorizeRegistration(req(), a.device.id)).toThrow(/x-kiosk-secret/);
+  });
+
+  it('window mode: new devices need the window, claimed devices need their token', () => {
+    vi.stubEnv('DEVICE_SHARED_SECRET', '');
+    resetEnv();
+    const fresh = randomUUID();
+    expect(() => authorizeRegistration(req(), fresh)).toThrow(/Registration is closed/);
+    expect(() => authorizeRegistration(secret, fresh)).toThrow(/Registration is closed/);
+    openRegistrationWindow();
+    expect(() => authorizeRegistration(req(), fresh)).not.toThrow();
+
+    // Registered while open, still unclaimed: the device can re-register with its token even
+    // after the window closes, and so can anyone while it is open (it is unclaimed).
+    const pending = register();
+    closeRegistrationWindow();
+    expect(() => authorizeRegistration(bearer(pending.token), pending.device.id)).not.toThrow();
+    expect(() => authorizeRegistration(req(), pending.device.id)).toThrow(/Registration is closed/);
+
+    // Claimed: only the token gets in, window or no window.
+    claimDevice({ pairingCode: pending.device.pairingCode!, name: 'P' });
+    expect(() => authorizeRegistration(bearer(pending.token), pending.device.id)).not.toThrow();
+    expect(() => authorizeRegistration(req(), pending.device.id)).toThrow(/already claimed/);
+    openRegistrationWindow();
+    expect(() => authorizeRegistration(req(), pending.device.id)).toThrow(/already claimed/);
+    expect(() => authorizeRegistration(secret, pending.device.id)).toThrow(/already claimed/);
   });
 });
 
