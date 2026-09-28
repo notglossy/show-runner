@@ -195,6 +195,7 @@ export function DeleteDevice({
       router.refresh();
     } catch (err) {
       setError(err instanceof ApiClientError ? err.detail : String(err));
+    } finally {
       setPending(false);
     }
   }
