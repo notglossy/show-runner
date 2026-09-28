@@ -133,7 +133,10 @@ machine that has the key.
    first, and re-send extras if you used them.
 
 5. **CI releases** (`.github/workflows/release.yaml`) build the same signed APK from the same key when a `v*` tag
-   is pushed and attach it to a GitHub release, together with the server image (`ghcr.io/notglossy/show-runner:<tag>`, see the README) (a pre-release when the tag has a suffix like `-beta.1`). Give the
+   is pushed and attach it to a GitHub release (a pre-release when the tag has a suffix like `-beta.1`), together
+   with the server image `ghcr.io/notglossy/show-runner:<tag>` (see the README). GHCR creates that package private
+   on the first push: make it public once (GitHub → Packages → show-runner → Package settings → Change visibility),
+   or every `docker pull` needs `docker login ghcr.io`. Give the
    repository the key once, as Actions secrets, never as files in the repo:
    ```sh
    gh secret set SHOWRUNNER_KEYSTORE_BASE64 --body "$(base64 < ~/keys/showrunner-release.jks)"

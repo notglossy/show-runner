@@ -52,8 +52,8 @@ jobs:
           file: apps/server/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=server-image
+          cache-to: type=gha,scope=server-image,mode=max
 
   android:
     runs-on: ubuntu-latest

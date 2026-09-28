@@ -142,9 +142,10 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.version=${{ github.ref_name }}
             org.opencontainers.image.licenses=MIT
-          # Shared with ci.yaml's image job, so a release mostly reuses layers CI already built.
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Same scope as ci.yaml's image job. Actions cache lets a tag build restore what a push
+          # to main saved, so a release mostly reuses layers CI already built.
+          cache-from: type=gha,scope=server-image
+          cache-to: type=gha,scope=server-image,mode=max
           # Attestations add an "unknown/unknown" entry to the GHCR tag listing; skip them.
           provenance: false
 

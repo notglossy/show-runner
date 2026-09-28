@@ -37,8 +37,8 @@ install.
 
 1. **Configure the server.** The server ships as a container image,
    `ghcr.io/notglossy/show-runner`, built for amd64 and arm64 by every
-   [release](https://github.com/notglossy/show-runner/releases). You only need the compose file
-   and an `.env`:
+   [release](https://github.com/notglossy/show-runner/releases). The image is public, so no
+   registry login is needed. You only need the compose file and an `.env`:
 
    ```sh
    mkdir showrunner && cd showrunner
