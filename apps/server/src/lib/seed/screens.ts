@@ -448,4 +448,75 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
   })();
 </script>`,
   },
+  {
+    id: 'builtin-morning-brief',
+    name: 'Morning Brief',
+    description:
+      'Split layout: big clock and greeting on black, today’s weather and a 3-day outlook on a violet block.',
+    dataRefreshSeconds: 60,
+    html: `<style>
+  .mb-root { position: fixed; inset: 0; display: grid; grid-template-columns: 3fr 2fr; background: #000; color: #f2f2f2; font-family: "Space Grotesk", system-ui, sans-serif; font-weight: 500; }
+  .mb-mono { font-family: "JetBrains Mono", monospace; font-weight: 400; text-transform: uppercase; letter-spacing: -0.01em; }
+  .mb-clock { padding: 64px; display: flex; flex-direction: column; justify-content: space-between; }
+  .mb-date { font-size: 30px; color: #9aa3b2; }
+  .mb-timerow { display: flex; align-items: flex-start; }
+  .mb-time { font-size: 260px; line-height: 0.9; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .mb-ampm { font-size: 48px; color: #9aa3b2; margin: 22px 0 0 20px; }
+  .mb-greeting { font-size: 44px; color: #c9ced8; }
+  .mb-weather { background: #6136f5; color: #fff; padding: 56px; display: flex; flex-direction: column; justify-content: space-between; }
+  .mb-place { font-size: 26px; color: #e6e0ff; }
+  .mb-tempwrap { display: flex; align-items: flex-start; }
+  .mb-temp { font-size: 160px; line-height: 0.9; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .mb-unit { font-size: 48px; margin: 12px 0 0 8px; }
+  .mb-cond { font-size: 40px; margin-top: 16px; }
+  .mb-hilo { font-size: 28px; margin-top: 12px; color: #e6e0ff; font-variant-numeric: tabular-nums; }
+  .mb-days { display: flex; flex-direction: column; }
+  .mb-day { display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-top: 1px solid rgba(255, 255, 255, 0.4); font-size: 26px; font-variant-numeric: tabular-nums; }
+  .mb-dayname { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mb-temps { white-space: nowrap; }
+  .mb-low { color: #e6e0ff; margin-left: 16px; }
+</style>
+<main class="mb-root">
+  <section class="mb-clock">
+    <div class="mb-date mb-mono" data-bind="time.date"></div>
+    <div class="mb-timerow"><span class="mb-time" data-bind="time.hhmm"></span><span class="mb-ampm mb-mono" data-bind="time.ampm"></span></div>
+    <div class="mb-greeting" data-bind="time.greeting"></div>
+  </section>
+  <section class="mb-weather">
+    <div class="mb-place mb-mono" data-bind="weather.location.name" data-fallback="Weather"></div>
+    <div>
+      <div class="mb-tempwrap"><span class="mb-temp" data-bind="weather.current.temperature" data-fallback="--"></span><span class="mb-unit" data-bind="weather.units.temperature"></span></div>
+      <div class="mb-cond" data-bind="weather.current.condition" data-fallback="Weather unavailable"></div>
+      <div class="mb-hilo mb-mono">H <span data-bind="weather.today.high" data-fallback="--"></span>° · L <span data-bind="weather.today.low" data-fallback="--"></span>°</div>
+    </div>
+    <div class="mb-days mb-mono" id="mb-days"></div>
+  </section>
+</main>
+<script>
+  var days = document.getElementById("mb-days");
+  kiosk.on("data", function (data) {
+    while (days.firstChild) { days.removeChild(days.firstChild); }
+    var daily = (data && data.weather && data.weather.daily) || [];
+    var next = daily.slice(1, 4);
+    for (var i = 0; i < next.length; i++) {
+      var d = next[i];
+      var row = document.createElement("div");
+      row.className = "mb-day";
+      var name = document.createElement("span");
+      name.className = "mb-dayname";
+      name.textContent = d.weekdayShort + " · " + d.condition;
+      var temps = document.createElement("span");
+      temps.className = "mb-temps";
+      temps.textContent = d.high + "°";
+      var low = document.createElement("span");
+      low.className = "mb-low";
+      low.textContent = d.low + "°";
+      temps.appendChild(low);
+      row.appendChild(name);
+      row.appendChild(temps);
+      days.appendChild(row);
+    }
+  });
+</script>`,
+  },
 ];

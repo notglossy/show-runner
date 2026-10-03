@@ -9,7 +9,7 @@ inbound exposure. Only the Echo Show 8 (2nd gen, LineageOS 18.1 / Android 11) is
 
 ![An Echo Show 8 running ShowRunner: an analog clock with a yellow second hand, the current temperature and conditions, a sunrise-to-sunset arc and an hourly temperature curve](docs/images/showcase.jpg)
 
-*A screen generated from a text description in the dashboard, running on the device.*
+_A screen generated from a text description in the dashboard, running on the device._
 
 ## How it works
 
@@ -25,8 +25,8 @@ request flow: [docs/architecture.md](docs/architecture.md).
 - Pairing by on-screen code; claim, name and assign devices from the dashboard.
 - Launcher kiosk mode by default; optional strict mode (device owner + lock task) that can always
   be left from the on-device exit menu or the dashboard, never by factory reset.
-- Screen editor with a live 1280×800 preview and three built-in screens (clock, clock + weather, and
-  the analog dial pictured above).
+- Screen editor with a live 1280×800 preview and four built-in screens (clock, clock + weather,
+  morning brief, and the analog dial pictured above).
 - AI screen generation from a description through any OpenAI-compatible API (optional).
 - Playlists, per-device commands, device logs and heartbeat status in the dashboard.
 
@@ -81,19 +81,19 @@ install.
 
 Everything is environment variables, read by `docker compose` from `.env`.
 
-| Variable | Required | Default | Purpose |
-|---|---|---|---|
-| `ADMIN_PASSWORD` | yes | | Dashboard login, also accepted as `Authorization: Bearer` for scripting |
-| `DEVICE_SHARED_SECRET` | | | Set: displays must send it to register (managed fleets). Unset: displays register only while the dashboard's "Add a display" window is open, which needs app 0.3 or later |
-| `WEATHER_LAT`, `WEATHER_LON` | | Los Angeles | Weather location (overridable in dashboard settings) |
-| `WEATHER_UNITS` | | `imperial` | `imperial` or `metric` |
-| `KIOSK_TIMEZONE` | | `America/Los_Angeles` | IANA timezone for time on screens |
-| `AI_BASE_URL` | | OpenRouter | OpenAI-compatible Chat Completions endpoint |
-| `AI_API_KEY` | | | Enables AI screen generation |
-| `AI_MODEL` | | `google/gemini-3.8-flash` | Default model; the editor can pick another |
-| `SHOWRUNNER_VERSION` | | `latest` | Server image tag: a release tag (`v0.3.0-beta.2`), `beta` (newest pre-release) or `latest` (newest full release; none yet, so use `beta` for now) |
-| `SHOWRUNNER_PORT` | | `3000` | Host port |
-| `DATABASE_PATH` | | `/data/showrunner.db` | SQLite file (inside the container) |
+| Variable                     | Required | Default                   | Purpose                                                                                                                                                                   |
+| ---------------------------- | -------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ADMIN_PASSWORD`             | yes      |                           | Dashboard login, also accepted as `Authorization: Bearer` for scripting                                                                                                   |
+| `DEVICE_SHARED_SECRET`       |          |                           | Set: displays must send it to register (managed fleets). Unset: displays register only while the dashboard's "Add a display" window is open, which needs app 0.3 or later |
+| `WEATHER_LAT`, `WEATHER_LON` |          | Los Angeles               | Weather location (overridable in dashboard settings)                                                                                                                      |
+| `WEATHER_UNITS`              |          | `imperial`                | `imperial` or `metric`                                                                                                                                                    |
+| `KIOSK_TIMEZONE`             |          | `America/Los_Angeles`     | IANA timezone for time on screens                                                                                                                                         |
+| `AI_BASE_URL`                |          | OpenRouter                | OpenAI-compatible Chat Completions endpoint                                                                                                                               |
+| `AI_API_KEY`                 |          |                           | Enables AI screen generation                                                                                                                                              |
+| `AI_MODEL`                   |          | `google/gemini-3.8-flash` | Default model; the editor can pick another                                                                                                                                |
+| `SHOWRUNNER_VERSION`         |          | `latest`                  | Server image tag: a release tag (`v0.3.0-beta.2`), `beta` (newest pre-release) or `latest` (newest full release; none yet, so use `beta` for now)                         |
+| `SHOWRUNNER_PORT`            |          | `3000`                    | Host port                                                                                                                                                                 |
+| `DATABASE_PATH`              |          | `/data/showrunner.db`     | SQLite file (inside the container)                                                                                                                                        |
 
 ## Development
 
