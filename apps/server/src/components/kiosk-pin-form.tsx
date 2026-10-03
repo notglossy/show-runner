@@ -34,7 +34,7 @@ export function KioskPinForm({ pinSet }: { pinSet: boolean }) {
       title="Kiosk exit menu"
       actions={<Badge tone={pinSet ? 'green' : 'amber'}>{pinSet ? 'PIN set' : 'No PIN'}</Badge>}
     >
-      <p className="mb-3 text-sm text-neutral-600">
+      <p className="text-subtle mb-3 text-sm">
         On a display, press and hold the top-left corner for 3 seconds to open the exit menu (choose
         another Home app, open Android settings, leave strict mode, reload).{' '}
         {pinSet ? 'It asks for this PIN.' : 'Without a PIN, anyone at the display can open it.'}
@@ -67,10 +67,10 @@ export function KioskPinForm({ pinSet }: { pinSet: boolean }) {
             Remove PIN
           </Button>
         )}
-        {notice && <span className="text-sm text-neutral-600">{notice}</span>}
+        {notice && <span className="text-subtle text-sm">{notice}</span>}
       </form>
       <ErrorText>{error}</ErrorText>
-      <p className="mt-3 text-xs text-neutral-500">
+      <p className="text-subtle mt-3 text-xs">
         A convenience lock against passers-by: displays store a salted hash so the menu works
         offline, but a short PIN is not strong security.
       </p>

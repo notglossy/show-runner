@@ -1,1 +1,72 @@
 @import 'tailwindcss';
+
+/* Dashboard fonts reuse the kiosk's self-hosted files (public/kiosk/fonts), so no network is needed. */
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('/kiosk/fonts/space-grotesk.woff2') format('woff2');
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/kiosk/fonts/jetbrains-mono.woff2') format('woff2');
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
+ * Dashboard palette: flat, hairline borders, one accent.
+ * ground/card #f8f8f8, ink type and lines, a dark ink sidebar, signal violet for the main action.
+ * Text on signal is white (6.3:1); on ink use signal-tint (6.5:1), never signal itself (2.6:1).
+ */
+@theme {
+  --color-ground: #f8f8f8;
+  --color-well: #eeeeee;
+  --color-ink: #202020;
+  --color-gunmetal: #161a1c;
+  --color-graphite: #4d4d4d;
+  --color-subtle: #3d3d3d;
+  --color-concrete: #8b8b8b;
+  --color-steel: #b9b9b9;
+  --color-signal: #6136f5;
+  --color-signal-tint: #a995ff;
+  --color-danger: #8f1a10;
+
+  --font-sans: 'Space Grotesk', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+@layer base {
+  body {
+    background: var(--color-ground);
+    color: var(--color-ink);
+    font-weight: 500;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+}
+
+/* Uppercase mono voice for labels, buttons, badges, nav and table headers. */
+@utility label-mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.33;
+  letter-spacing: -0.24px;
+  text-transform: uppercase;
+  font-weight: 400;
+}
+
+@utility caption-mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.45;
+  text-transform: uppercase;
+  font-weight: 400;
+}

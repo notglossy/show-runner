@@ -128,7 +128,7 @@ export function PlaylistEditor({
             <ol className="flex flex-col gap-2">
               {items.map((item, index) => (
                 <li key={item.key} className="flex flex-wrap items-center gap-2">
-                  <span className="w-6 text-right text-sm text-neutral-500">{index + 1}.</span>
+                  <span className="text-subtle w-6 text-right text-sm">{index + 1}.</span>
                   <select
                     className={`${inputBase} min-w-48 flex-1`}
                     value={item.screenId}
@@ -140,7 +140,7 @@ export function PlaylistEditor({
                       </option>
                     ))}
                   </select>
-                  <label className="flex items-center gap-1 text-sm text-neutral-600">
+                  <label className="text-subtle flex items-center gap-1 text-sm">
                     <input
                       className={`${inputBase} w-20`}
                       type="number"
@@ -202,7 +202,7 @@ export function PlaylistEditor({
         <div className="flex flex-col gap-4">
           <Card title="Assigned to">
             {devices.length === 0 ? (
-              <p className="text-sm text-neutral-500">
+              <p className="text-subtle text-sm">
                 No devices. Assign it from a device&apos;s page.
               </p>
             ) : (
@@ -216,7 +216,7 @@ export function PlaylistEditor({
                 ))}
               </ul>
             )}
-            <p className="mt-3 text-xs text-neutral-500">
+            <p className="text-subtle mt-3 text-xs">
               Saving changes restarts rotation on these devices from the current position.
             </p>
           </Card>

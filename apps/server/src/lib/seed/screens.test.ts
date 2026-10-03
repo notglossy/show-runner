@@ -5,11 +5,12 @@ import { validateTemplate } from '@/lib/ai/validate';
 import { BUILTIN_SCREENS } from './screens';
 
 describe('built-in screens', () => {
-  it('includes the clock, clock+weather and dial screens', () => {
+  it('includes the clock, clock+weather, dial and morning brief screens', () => {
     expect(BUILTIN_SCREENS.map((s) => s.id).sort()).toEqual([
       'builtin-clock',
       'builtin-clock-weather',
       'builtin-dial',
+      'builtin-morning-brief',
     ]);
   });
 

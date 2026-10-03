@@ -37,21 +37,21 @@ export default async function DevicesPage() {
 
       {unclaimed.length > 0 && (
         <Card title="Waiting to be claimed" className="mb-6">
-          <p className="mb-3 text-sm text-neutral-600">
+          <p className="text-subtle mb-3 text-sm">
             These displays have registered. Check the pairing code shown on the screen matches
             before claiming.
           </p>
-          <ul className="divide-y divide-neutral-100">
+          <ul className="divide-graphite/30 divide-y">
             {unclaimed.map((d) => (
               <li key={d.id} className="flex flex-wrap items-center gap-4 py-3">
                 <div className="w-36">
                   <Link
                     href={`/devices/${d.id}`}
-                    className="font-mono text-2xl font-semibold tracking-widest text-neutral-900 underline-offset-4 hover:underline"
+                    className="text-ink font-mono text-2xl font-semibold tracking-widest underline-offset-4 hover:underline"
                   >
                     {d.pairingCode}
                   </Link>
-                  <div className="text-xs text-neutral-500">
+                  <div className="text-subtle text-xs">
                     {d.model} · registered <TimeAgo iso={d.registeredAt} />
                   </div>
                 </div>
@@ -76,36 +76,36 @@ export default async function DevicesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-neutral-500">
-                  <th className="pb-2 font-medium">Name</th>
-                  <th className="pb-2 font-medium">Status</th>
-                  <th className="pb-2 font-medium">Last seen</th>
-                  <th className="pb-2 font-medium">Showing</th>
-                  <th className="w-64 pb-2 font-medium">Assigned</th>
+                <tr className="caption-mono border-ink text-subtle border-b text-left">
+                  <th className="pr-3 pb-2 font-normal">Name</th>
+                  <th className="pr-3 pb-2 font-normal">Status</th>
+                  <th className="pr-3 pb-2 font-normal">Last seen</th>
+                  <th className="pr-3 pb-2 font-normal">Showing</th>
+                  <th className="w-64 pr-3 pb-2 font-normal">Assigned</th>
                   <th className="pb-2">
                     <span className="sr-only">Actions</span>
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+              <tbody className="divide-graphite/30 divide-y">
                 {claimed.map((d) => (
                   <tr key={d.id}>
                     <td className="py-2.5 pr-3">
                       <Link
                         href={`/devices/${d.id}`}
-                        className="font-medium text-neutral-900 underline-offset-2 hover:underline"
+                        className="text-ink font-medium underline-offset-2 hover:underline"
                       >
                         {d.name}
                       </Link>
-                      <div className="text-xs text-neutral-500">{d.model}</div>
+                      <div className="text-subtle text-xs">{d.model}</div>
                     </td>
                     <td className="py-2.5 pr-3">
                       <DeviceStatus device={d} />
                     </td>
-                    <td className="py-2.5 pr-3 text-neutral-600">
+                    <td className="text-subtle py-2.5 pr-3">
                       <TimeAgo iso={d.lastSeenAt} />
                     </td>
-                    <td className="py-2.5 pr-3 text-neutral-700">
+                    <td className="text-ink py-2.5 pr-3">
                       {d.currentScreenId ? (screenName.get(d.currentScreenId) ?? '—') : '—'}
                     </td>
                     <td className="py-2.5 pr-3">
@@ -128,9 +128,7 @@ export default async function DevicesPage() {
       </Card>
 
       <Card title="Claim by code" className="mt-6">
-        <p className="mb-3 text-sm text-neutral-600">
-          Type the 6-character code shown on a display.
-        </p>
+        <p className="text-subtle mb-3 text-sm">Type the 6-character code shown on a display.</p>
         <ClaimDevice />
       </Card>
     </>

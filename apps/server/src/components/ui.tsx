@@ -4,8 +4,10 @@ const cx = (...classes: (string | false | null | undefined)[]) => classes.filter
 
 export function PageHeader({ title, children }: { title: ReactNode; children?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <h1 className="text-xl font-semibold text-neutral-900">{title}</h1>
+    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <h1 className="text-ink text-4xl leading-none font-medium tracking-tight sm:text-5xl">
+        {title}
+      </h1>
       {children && <div className="flex flex-wrap items-center gap-2">{children}</div>}
     </div>
   );
@@ -23,14 +25,14 @@ export function Card({
   actions?: ReactNode;
 }) {
   return (
-    <section className={cx('rounded-lg border border-neutral-200 bg-white', className)}>
+    <section className={cx('border-graphite bg-ground rounded border', className)}>
       {(title || actions) && (
-        <div className="flex items-center justify-between gap-3 border-b border-neutral-200 px-4 py-2.5">
-          <h2 className="text-sm font-semibold text-neutral-700">{title}</h2>
+        <div className="flex items-center justify-between gap-3 px-5 pt-5">
+          <h2 className="text-ink text-xl leading-none font-medium">{title}</h2>
           {actions}
         </div>
       )}
-      <div className="p-4">{children}</div>
+      <div className="p-5">{children}</div>
     </section>
   );
 }
@@ -46,13 +48,15 @@ export function Button({ variant = 'secondary', size = 'md', className, ...props
       type="button"
       {...props}
       className={cx(
-        'inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50',
-        size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm',
-        variant === 'primary' && 'bg-neutral-900 text-white hover:bg-neutral-700',
+        'label-mono inline-flex items-center justify-center gap-2 rounded border whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+        size === 'sm' ? 'h-8 px-3' : 'h-10 px-5',
+        variant === 'primary' &&
+          'border-signal bg-signal hover:border-ink hover:bg-ink hover:text-signal-tint text-white',
         variant === 'secondary' &&
-          'border border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-50',
-        variant === 'danger' && 'border border-red-300 bg-white text-red-700 hover:bg-red-50',
-        variant === 'ghost' && 'text-neutral-600 hover:bg-neutral-100',
+          'border-ink text-ink hover:bg-ink hover:text-ground bg-transparent',
+        variant === 'danger' &&
+          'border-danger text-danger hover:bg-danger bg-transparent hover:text-white',
+        variant === 'ghost' && 'text-ink hover:bg-well border-transparent',
         className,
       )}
     />
@@ -61,7 +65,7 @@ export function Button({ variant = 'secondary', size = 'md', className, ...props
 
 /** Input styling without a width, for inputs that size themselves. */
 export const inputBase =
-  'rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none disabled:bg-neutral-100';
+  'h-10 rounded border border-ink bg-white px-3 text-sm text-ink placeholder:text-subtle disabled:cursor-not-allowed disabled:opacity-50';
 export const inputClass = `${inputBase} w-full`;
 
 export function Field({
@@ -76,10 +80,10 @@ export function Field({
   className?: string;
 }) {
   return (
-    <label className={cx('flex flex-col gap-1', className)}>
-      <span className="text-xs font-medium text-neutral-600">{label}</span>
+    <label className={cx('flex flex-col gap-2', className)}>
+      <span className="label-mono text-ink">{label}</span>
       {children}
-      {hint && <span className="text-xs text-neutral-500">{hint}</span>}
+      {hint && <span className="text-subtle text-xs">{hint}</span>}
     </label>
   );
 }
@@ -92,14 +96,15 @@ export function StatusDot({
   label: string;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-sm text-neutral-700">
+    <span className="caption-mono text-ink inline-flex items-center gap-2">
+      {/* Tones differ in fill and outline, not hue alone; the label always carries the meaning. */}
       <span
         className={cx(
-          'size-2 rounded-full',
-          tone === 'green' && 'bg-emerald-500',
-          tone === 'amber' && 'bg-amber-500',
-          tone === 'gray' && 'bg-neutral-300',
-          tone === 'red' && 'bg-red-500',
+          'size-2.5 rounded-full border',
+          tone === 'green' && 'border-signal bg-signal',
+          tone === 'amber' && 'border-signal bg-transparent',
+          tone === 'gray' && 'border-concrete bg-transparent',
+          tone === 'red' && 'border-danger bg-danger',
         )}
       />
       {label}
@@ -117,12 +122,12 @@ export function Badge({
   return (
     <span
       className={cx(
-        'inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium',
-        tone === 'gray' && 'bg-neutral-100 text-neutral-700',
-        tone === 'blue' && 'bg-blue-50 text-blue-700',
-        tone === 'amber' && 'bg-amber-50 text-amber-800',
-        tone === 'red' && 'bg-red-50 text-red-700',
-        tone === 'green' && 'bg-emerald-50 text-emerald-700',
+        'caption-mono inline-flex h-6 items-center rounded-full border px-2.5 whitespace-nowrap',
+        tone === 'gray' && 'border-well bg-well text-ink',
+        tone === 'blue' && 'border-signal bg-signal text-white',
+        tone === 'amber' && 'border-signal-tint bg-signal-tint text-ink',
+        tone === 'red' && 'border-danger bg-danger text-white',
+        tone === 'green' && 'border-ink text-ink bg-transparent',
       )}
     >
       {children}
@@ -132,9 +137,9 @@ export function Badge({
 
 export function ErrorText({ children }: { children: ReactNode }) {
   if (!children) return null;
-  return <p className="text-sm text-red-700">{children}</p>;
+  return <p className="text-danger text-sm">{children}</p>;
 }
 
 export function Empty({ children }: { children: ReactNode }) {
-  return <p className="py-6 text-center text-sm text-neutral-500">{children}</p>;
+  return <p className="text-subtle py-6 text-center text-sm">{children}</p>;
 }

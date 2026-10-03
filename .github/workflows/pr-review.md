@@ -85,15 +85,15 @@ safe-outputs:
 
 timeout-minutes: 30
 # Cost ceilings. Small PRs take 5 to 40 turns; a 350-line template took more than 40 with a
-# model that reads in ten-line slices. The credit cap is the money guard: 200 credits is $2
+# model that reads in ten-line slices. The credit cap is the money guard: 300 credits is $3
 # at the fallback rate above. A model that loops on a denied command burned 76 turns in one
 # run before it was cancelled, so the turn cap stays.
-max-turns: 60
-max-ai-credits: 200
+max-turns: 120
+max-ai-credits: 300
 # The proxy blocks inference (HTTP 403) after N consecutive requests that report no
 # prompt-cache hits. OpenRouter does not surface cache reads for every model, so treat every
 # turn as a miss and let the limit equal max-turns.
-max-turn-cache-misses: 60
+max-turn-cache-misses: 120
 # The daily guardrail (default 5000 credits) fails closed when any run in the last 24 h
 # has a cancelled agent job with no usage accounting, which a new push causes every time
 # via cancel-in-progress. The fixed per-run max-ai-credits cap above still applies.

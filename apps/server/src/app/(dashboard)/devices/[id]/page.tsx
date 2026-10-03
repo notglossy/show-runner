@@ -22,8 +22,8 @@ export const dynamic = 'force-dynamic';
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex justify-between gap-4 py-1.5 text-sm">
-      <dt className="text-neutral-500">{label}</dt>
-      <dd className="text-right text-neutral-900">{children}</dd>
+      <dt className="text-subtle">{label}</dt>
+      <dd className="text-ink text-right">{children}</dd>
     </div>
   );
 }
@@ -48,7 +48,7 @@ export default async function DevicePage({ params }: PageProps<'/devices/[id]'>)
         <Link
           href={`/device/${device.id}`}
           target="_blank"
-          className="text-sm text-neutral-600 underline underline-offset-2"
+          className="text-subtle text-sm underline underline-offset-2"
         >
           Open live page ↗
         </Link>
@@ -57,7 +57,7 @@ export default async function DevicePage({ params }: PageProps<'/devices/[id]'>)
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="flex flex-col gap-6 lg:col-span-1">
           <Card title="Status">
-            <dl className="divide-y divide-neutral-100">
+            <dl className="divide-graphite/30 divide-y">
               <Row label="State">
                 <DeviceStatus device={device} />
               </Row>
@@ -148,7 +148,7 @@ export default async function DevicePage({ params }: PageProps<'/devices/[id]'>)
             </>
           ) : (
             <Card title="Claim this display">
-              <p className="mb-3 text-sm text-neutral-600">
+              <p className="text-subtle mb-3 text-sm">
                 Pairing code <span className="font-mono font-semibold">{device.pairingCode}</span>
               </p>
               <ClaimDevice pairingCode={device.pairingCode ?? ''} />

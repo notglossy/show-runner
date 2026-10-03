@@ -91,7 +91,7 @@ export function AssignmentSelect({
           </optgroup>
         )}
       </select>
-      {error && <span className="text-xs text-red-700">{error}</span>}
+      {error && <span className="text-danger text-xs">{error}</span>}
     </div>
   );
 }

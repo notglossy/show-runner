@@ -48,7 +48,7 @@ export function RegistrationWindow({ status }: { status: RegistrationStatus }) {
   if (status.mode === 'secret') {
     return (
       <Card title="Add a display" actions={<Badge tone="gray">Shared secret</Badge>}>
-        <p className="text-sm text-neutral-600">
+        <p className="text-subtle text-sm">
           This server has <code>DEVICE_SHARED_SECRET</code> set, so displays register at any time by
           sending it. Install the app with this server&apos;s address and the secret; the
           display&apos;s pairing code appears here within a minute.
@@ -69,7 +69,7 @@ export function RegistrationWindow({ status }: { status: RegistrationStatus }) {
       }
     >
       <div className="flex flex-wrap items-center gap-3">
-        <p className="flex-1 text-sm text-neutral-600">
+        <p className="text-subtle flex-1 text-sm">
           {open
             ? 'Waiting for a display to register. Point the app at this server; its pairing code appears below. The window closes when you claim a display.'
             : 'New displays can register for 10 minutes after you open registration. Displays you have already claimed reconnect on their own.'}

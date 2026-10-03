@@ -179,7 +179,7 @@ export function ScreenEditor({
             onResult={applyAi}
           />
           {aiHistory.length > 0 && (
-            <div className="flex items-center gap-2 text-xs text-neutral-600">
+            <div className="text-subtle flex items-center gap-2 text-xs">
               <Button size="sm" onClick={undoAi}>
                 Undo AI change
               </Button>
@@ -189,7 +189,7 @@ export function ScreenEditor({
             </div>
           )}
           <CodeEditor value={draft.html} onChange={setHtml} />
-          <p className="mt-1 text-xs text-neutral-500">
+          <p className="text-subtle mt-1 text-xs">
             Body fragment: one &lt;style&gt;, markup with data-bind attributes, optional
             &lt;script&gt;. See docs/screen-authoring.md.
           </p>
@@ -205,7 +205,7 @@ export function ScreenEditor({
             <Card title={`Preview errors (${previewLogs.length})`}>
               <ul className="flex flex-col gap-1 text-xs">
                 {previewLogs.map((log, i) => (
-                  <li key={i} className="font-mono text-red-700">
+                  <li key={i} className="text-danger font-mono">
                     {log.message}
                     {log.line ? ` (line ${log.line})` : ''}
                   </li>
@@ -216,7 +216,7 @@ export function ScreenEditor({
           {draft.id && (
             <Card title="Used by">
               {usage.devices.length === 0 && usage.playlists.length === 0 ? (
-                <p className="text-sm text-neutral-500">Not assigned to any device or playlist.</p>
+                <p className="text-subtle text-sm">Not assigned to any device or playlist.</p>
               ) : (
                 <ul className="flex flex-col gap-1 text-sm">
                   {usage.devices.map((d) => (

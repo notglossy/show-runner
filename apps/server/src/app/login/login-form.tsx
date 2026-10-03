@@ -27,7 +27,7 @@ export function LoginForm({ next }: { next: string }) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
-      <label className="text-sm text-neutral-600" htmlFor="password">
+      <label className="label-mono text-ink" htmlFor="password">
         Admin password
       </label>
       <input
@@ -36,13 +36,13 @@ export function LoginForm({ next }: { next: string }) {
         type="password"
         autoFocus
         required
-        className="rounded border border-neutral-300 px-3 py-2"
+        className="border-ink h-10 rounded border bg-white px-3 text-sm"
       />
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-danger text-sm">{error}</p>}
       <button
         type="submit"
         disabled={pending}
-        className="rounded bg-neutral-900 px-3 py-2 text-white disabled:opacity-50"
+        className="label-mono bg-signal hover:bg-ink hover:text-signal-tint h-10 rounded px-5 text-white disabled:opacity-50"
       >
         {pending ? 'Signing in…' : 'Sign in'}
       </button>

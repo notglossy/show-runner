@@ -5,9 +5,11 @@ export default async function DashboardLayout({ children }: LayoutProps<'/'>) {
   // Pages also check (layouts aren't re-run on every client navigation); this guards the shell itself.
   await requireAdminPage('/devices');
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="bg-ground flex min-h-screen flex-col md:flex-row">
       <Nav />
-      <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+      <main className="min-w-0 flex-1 px-4 py-8 sm:px-8 lg:px-12 lg:py-10">
+        <div className="mx-auto max-w-6xl">{children}</div>
+      </main>
     </div>
   );
 }
