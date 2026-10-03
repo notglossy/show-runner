@@ -21,7 +21,7 @@ export default async function PlaylistsPage() {
       <PageHeader title="Playlists">
         <Link
           href="/playlists/new"
-          className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-700"
+          className="label-mono bg-signal hover:bg-ink hover:text-signal-tint inline-flex h-10 items-center rounded px-5 text-white"
         >
           New playlist
         </Link>
@@ -32,29 +32,29 @@ export default async function PlaylistsPage() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-neutral-500">
-                <th className="pb-2 font-medium">Name</th>
-                <th className="pb-2 font-medium">Screens</th>
-                <th className="pb-2 font-medium">Loop</th>
-                <th className="pb-2 font-medium">Devices</th>
+              <tr className="caption-mono border-ink text-subtle border-b text-left">
+                <th className="pr-3 pb-2 font-normal">Name</th>
+                <th className="pr-3 pb-2 font-normal">Screens</th>
+                <th className="pr-3 pb-2 font-normal">Loop</th>
+                <th className="pr-3 pb-2 font-normal">Devices</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-graphite/30 divide-y">
               {playlists.map((p) => (
                 <tr key={p.id}>
                   <td className="py-2.5 pr-3">
                     <Link
                       href={`/playlists/${p.id}`}
-                      className="font-medium text-neutral-900 underline-offset-2 hover:underline"
+                      className="text-ink font-medium underline-offset-2 hover:underline"
                     >
                       {p.name}
                     </Link>
                   </td>
-                  <td className="py-2.5 pr-3 text-neutral-600">{p.itemCount}</td>
-                  <td className="py-2.5 pr-3 text-neutral-600">
+                  <td className="text-subtle py-2.5 pr-3">{p.itemCount}</td>
+                  <td className="text-subtle py-2.5 pr-3">
                     {p.totalSeconds ? duration(p.totalSeconds) : '—'}
                   </td>
-                  <td className="py-2.5 text-neutral-600">{p.deviceCount || '—'}</td>
+                  <td className="text-subtle py-2.5">{p.deviceCount || '—'}</td>
                 </tr>
               ))}
             </tbody>

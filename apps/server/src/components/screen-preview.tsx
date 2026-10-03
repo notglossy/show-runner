@@ -130,7 +130,7 @@ export function ScreenPreview({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-600">
+      <div className="text-subtle flex flex-wrap items-center gap-2 text-xs">
         <span>Data:</span>
         <Button
           size="sm"
@@ -151,10 +151,10 @@ export function ScreenPreview({
         </Button>
         <span className="ml-auto">1280×800 at {Math.round(scale * 100)}%</span>
       </div>
-      {liveError && <p className="text-xs text-red-700">Live data failed: {liveError}</p>}
+      {liveError && <p className="text-danger text-xs">Live data failed: {liveError}</p>}
       <div
         ref={box}
-        className="relative w-full overflow-hidden rounded-md border border-neutral-300 bg-black"
+        className="border-ink relative w-full overflow-hidden rounded border bg-black"
         style={{ aspectRatio: `${CANVAS_W} / ${CANVAS_H}` }}
       >
         <iframe

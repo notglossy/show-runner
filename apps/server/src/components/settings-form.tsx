@@ -134,23 +134,23 @@ export function SettingsForm({
     overridden(key) ? (
       <button
         type="button"
-        className="text-xs text-neutral-500 underline underline-offset-2"
+        className="text-subtle text-xs underline underline-offset-2"
         onClick={() => patch({ [key]: null }, `${label} reset to the default.`)}
       >
         Reset to default ({String(defaults[key] ?? 'none')})
       </button>
     ) : (
-      <span className="text-xs text-neutral-400">Default from environment</span>
+      <span className="text-subtle text-xs">Default from environment</span>
     );
 
   // Open-Meteo data is CC BY 4.0: credit it wherever its weather or place data is shown.
   const openMeteoAttribution = (
-    <p className="text-xs text-neutral-500">
+    <p className="text-subtle text-xs">
       <a
         href="https://open-meteo.com/"
         target="_blank"
         rel="noopener noreferrer"
-        className="underline underline-offset-2 hover:text-neutral-900"
+        className="hover:text-ink underline underline-offset-2"
       >
         Weather data by Open-Meteo.com
       </a>
@@ -175,17 +175,17 @@ export function SettingsForm({
                 </Button>
               </div>
               {results && (
-                <ul className="divide-y divide-neutral-100 rounded-md border border-neutral-200 text-sm">
-                  {results.length === 0 && <li className="p-2 text-neutral-500">No matches.</li>}
+                <ul className="divide-graphite/30 border-graphite/40 divide-y rounded border text-sm">
+                  {results.length === 0 && <li className="text-subtle p-2">No matches.</li>}
                   {results.map((r) => (
                     <li key={`${r.latitude},${r.longitude}`}>
                       <button
                         type="button"
                         onClick={() => pick(r)}
-                        className="flex w-full justify-between gap-3 p-2 text-left hover:bg-neutral-50"
+                        className="hover:bg-well flex w-full justify-between gap-3 p-2 text-left"
                       >
                         <span>{r.label}</span>
-                        <span className="text-xs text-neutral-500">
+                        <span className="text-subtle text-xs">
                           {r.latitude}, {r.longitude}
                         </span>
                       </button>
@@ -269,22 +269,22 @@ export function SettingsForm({
           <Button type="submit" variant="primary" disabled={pending}>
             {pending ? 'Saving…' : 'Save settings'}
           </Button>
-          {notice && <span className="text-sm text-neutral-600">{notice}</span>}
+          {notice && <span className="text-subtle text-sm">{notice}</span>}
         </div>
         <ErrorText>{error}</ErrorText>
       </form>
 
       <div className="flex flex-col gap-4">
         <Card title="Check">
-          <p className="mb-3 text-sm text-neutral-600">
+          <p className="text-subtle mb-3 text-sm">
             Fetch current weather and time with the saved settings.
           </p>
           <Button onClick={checkWeather}>Check weather now</Button>
-          {check && <p className="mt-3 text-sm text-neutral-800">{check}</p>}
+          {check && <p className="text-ink mt-3 text-sm">{check}</p>}
           <div className="mt-3">{openMeteoAttribution}</div>
         </Card>
         <Card title="About these settings">
-          <p className="text-sm text-neutral-600">
+          <p className="text-subtle text-sm">
             Values here override the server&apos;s environment variables (WEATHER_LAT, WEATHER_LON,
             WEATHER_UNITS, KIOSK_TIMEZONE). Weather is cached for 10 minutes; saving clears the
             cache and tells every connected display to refresh.

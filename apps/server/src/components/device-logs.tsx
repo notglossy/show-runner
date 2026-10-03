@@ -88,7 +88,7 @@ export function DeviceLogs({
             {l}
           </Button>
         ))}
-        <label className="ml-auto flex items-center gap-1.5 text-xs text-neutral-600">
+        <label className="text-subtle ml-auto flex items-center gap-1.5 text-xs">
           <input type="checkbox" checked={live} onChange={(e) => setLive(e.target.checked)} />{' '}
           Auto-refresh
         </label>
@@ -99,7 +99,7 @@ export function DeviceLogs({
           No log entries. JavaScript errors from screens on this display will appear here.
         </Empty>
       ) : (
-        <ul className="divide-y divide-neutral-100 text-sm">
+        <ul className="divide-graphite/30 divide-y text-sm">
           {visible.map((log) => {
             const ctx = log.context;
             const where = [
@@ -115,7 +115,7 @@ export function DeviceLogs({
                   className="flex w-full items-start gap-3 text-left"
                   onClick={() => setExpanded(expanded === log.id ? null : log.id)}
                 >
-                  <span className="w-36 shrink-0 font-mono text-xs text-neutral-500">
+                  <span className="text-subtle w-36 shrink-0 font-mono text-xs">
                     {new Date(log.createdAt).toLocaleString()}
                   </span>
                   <Badge
@@ -123,11 +123,11 @@ export function DeviceLogs({
                   >
                     {log.level}
                   </Badge>
-                  <span className="min-w-0 flex-1 break-words text-neutral-800">{log.message}</span>
-                  {where && <span className="shrink-0 text-xs text-neutral-500">{where}</span>}
+                  <span className="text-ink min-w-0 flex-1 break-words">{log.message}</span>
+                  {where && <span className="text-subtle shrink-0 text-xs">{where}</span>}
                 </button>
                 {expanded === log.id && (
-                  <pre className="mt-2 overflow-x-auto rounded bg-neutral-50 p-2 text-xs text-neutral-700">
+                  <pre className="bg-well text-ink mt-2 overflow-x-auto rounded p-2 text-xs">
                     {JSON.stringify(ctx, null, 2)}
                   </pre>
                 )}

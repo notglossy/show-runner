@@ -177,7 +177,7 @@ export function AiPanel({
   if (config && !config.configured) {
     return (
       <Card title="Generate with AI">
-        <p className="text-sm text-neutral-600">
+        <p className="text-subtle text-sm">
           AI generation is off. Set <code>AI_API_KEY</code> (and optionally <code>AI_BASE_URL</code>
           , <code>AI_MODEL</code>) on the server to enable it.
         </p>
@@ -188,7 +188,7 @@ export function AiPanel({
   return (
     <Card
       title="Generate with AI"
-      actions={config && <span className="text-xs text-neutral-500">{config.provider}</span>}
+      actions={config && <span className="text-subtle text-xs">{config.provider}</span>}
     >
       <form onSubmit={generate} className="flex flex-col gap-3">
         <textarea
@@ -207,7 +207,7 @@ export function AiPanel({
           disabled={running}
           required
         />
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-neutral-700">
+        <div className="text-ink flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
           <label className="flex items-center gap-1.5">
             <input
               type="checkbox"
@@ -229,7 +229,7 @@ export function AiPanel({
             </label>
           )}
           <label className="flex min-w-64 flex-1 items-center gap-1.5">
-            <span className="text-xs text-neutral-500">Model</span>
+            <span className="text-subtle text-xs">Model</span>
             <input
               className={`${inputBase} flex-1 font-mono text-xs`}
               list="ai-models"
@@ -257,7 +257,7 @@ export function AiPanel({
               Stop
             </Button>
           )}
-          <span className="text-xs text-neutral-600">
+          <span className="text-subtle text-xs">
             {running && phase
               ? `${phase} · ${Math.max(0, Math.round((now - (startedAt ?? now)) / 1000))}s`
               : status}
@@ -265,7 +265,7 @@ export function AiPanel({
         </div>
         <ErrorText>{error}</ErrorText>
         {problems.length > 0 && (
-          <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900">
+          <div className="border-signal-tint bg-signal-tint/25 text-ink rounded border p-3 text-xs">
             <Badge tone="amber">Check before saving</Badge>
             <ul className="mt-1 list-disc pl-4">
               {problems.map((p) => (

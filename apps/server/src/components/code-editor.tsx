@@ -61,7 +61,5 @@ export function CodeEditor({
     }
   }, [value]);
 
-  return (
-    <div ref={host} className="overflow-hidden rounded-md border border-neutral-300 bg-white" />
-  );
+  return <div ref={host} className="border-ink overflow-hidden rounded border bg-white" />;
 }

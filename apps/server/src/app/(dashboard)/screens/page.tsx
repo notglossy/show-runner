@@ -20,7 +20,7 @@ export default async function ScreensPage() {
       <PageHeader title="Screens">
         <Link
           href="/screens/new"
-          className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-700"
+          className="label-mono bg-signal hover:bg-ink hover:text-signal-tint inline-flex h-10 items-center rounded px-5 text-white"
         >
           New screen
         </Link>
@@ -31,27 +31,25 @@ export default async function ScreensPage() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-neutral-500">
-                <th className="pb-2 font-medium">Name</th>
-                <th className="pb-2 font-medium">Source</th>
-                <th className="pb-2 font-medium">Size</th>
-                <th className="pb-2 font-medium">Used by</th>
-                <th className="pb-2 font-medium">Updated</th>
+              <tr className="caption-mono border-ink text-subtle border-b text-left">
+                <th className="pr-3 pb-2 font-normal">Name</th>
+                <th className="pr-3 pb-2 font-normal">Source</th>
+                <th className="pr-3 pb-2 font-normal">Size</th>
+                <th className="pr-3 pb-2 font-normal">Used by</th>
+                <th className="pr-3 pb-2 font-normal">Updated</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100">
+            <tbody className="divide-graphite/30 divide-y">
               {screens.map((s) => (
                 <tr key={s.id}>
                   <td className="py-2.5 pr-3">
                     <Link
                       href={`/screens/${s.id}`}
-                      className="font-medium text-neutral-900 underline-offset-2 hover:underline"
+                      className="text-ink font-medium underline-offset-2 hover:underline"
                     >
                       {s.name}
                     </Link>
-                    {s.description && (
-                      <div className="text-xs text-neutral-500">{s.description}</div>
-                    )}
+                    {s.description && <div className="text-subtle text-xs">{s.description}</div>}
                   </td>
                   <td className="py-2.5 pr-3">
                     <Badge
@@ -60,9 +58,9 @@ export default async function ScreensPage() {
                       {s.source}
                     </Badge>
                   </td>
-                  <td className="py-2.5 pr-3 text-neutral-600">{bytes(s.htmlBytes)}</td>
-                  <td className="py-2.5 pr-3 text-neutral-600">{s.used || '—'}</td>
-                  <td className="py-2.5 text-neutral-600">
+                  <td className="text-subtle py-2.5 pr-3">{bytes(s.htmlBytes)}</td>
+                  <td className="text-subtle py-2.5 pr-3">{s.used || '—'}</td>
+                  <td className="text-subtle py-2.5">
                     <TimeAgo iso={s.updatedAt.toISOString()} />
                   </td>
                 </tr>

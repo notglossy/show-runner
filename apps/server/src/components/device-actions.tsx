@@ -70,11 +70,11 @@ export function DeviceCommands({
           </Button>
         </div>
       )}
-      <p className="text-xs text-neutral-500">
+      <p className="text-subtle text-xs">
         &ldquo;Show now&rdquo; switches the display without changing its assignment; a playlist
         resumes after one dwell.
       </p>
-      <div className="mt-1 flex flex-wrap gap-2 border-t border-neutral-100 pt-3">
+      <div className="border-graphite/40 mt-1 flex flex-wrap gap-2 border-t pt-3">
         <Button onClick={() => send({ type: 'openExitMenu' })}>Open exit menu</Button>
         <Button onClick={() => send({ type: 'openSettings' })}>Open Android settings</Button>
         {strict && (
@@ -90,11 +90,11 @@ export function DeviceCommands({
           </Button>
         )}
       </div>
-      <p className="text-xs text-neutral-500">
+      <p className="text-subtle text-xs">
         Kiosk commands run on the display itself. The exit menu opens without asking for the PIN
         when sent from here.
       </p>
-      {message && <p className="text-sm text-neutral-700">{message}</p>}
+      {message && <p className="text-ink text-sm">{message}</p>}
       <ErrorText>{error}</ErrorText>
     </div>
   );
@@ -205,7 +205,7 @@ export function DeleteDevice({
         <Button
           size="sm"
           variant="ghost"
-          className="text-neutral-500 hover:text-red-700"
+          className="text-subtle hover:text-danger"
           onClick={remove}
           disabled={pending}
           aria-label={`Delete ${name}`}
