@@ -143,20 +143,6 @@ export function SettingsForm({
       <span className="text-subtle text-xs">Default from environment</span>
     );
 
-  // Open-Meteo data is CC BY 4.0: credit it wherever its weather or place data is shown.
-  const openMeteoAttribution = (
-    <p className="text-subtle text-xs">
-      <a
-        href="https://open-meteo.com/"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="hover:text-ink underline underline-offset-2"
-      >
-        Weather data by Open-Meteo.com
-      </a>
-    </p>
-  );
-
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <form onSubmit={save} className="flex flex-col gap-6 lg:col-span-2">
@@ -232,7 +218,6 @@ export function SettingsForm({
                 />
               </Field>
             </div>
-            {openMeteoAttribution}
           </div>
         </Card>
 
@@ -281,7 +266,17 @@ export function SettingsForm({
           </p>
           <Button onClick={checkWeather}>Check weather now</Button>
           {check && <p className="text-ink mt-3 text-sm">{check}</p>}
-          <div className="mt-3">{openMeteoAttribution}</div>
+          {/* Open-Meteo data is CC BY 4.0, so the settings page credits it here. */}
+          <p className="text-subtle mt-3 text-xs">
+            <a
+              href="https://open-meteo.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-ink underline underline-offset-2"
+            >
+              Weather data by Open-Meteo.com
+            </a>
+          </p>
         </Card>
         <Card title="About these settings">
           <p className="text-subtle text-sm">
