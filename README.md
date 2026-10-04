@@ -1,15 +1,12 @@
-# ShowRunner
+<h1><img src="assets/img/showrunner_logo.svg" alt="ShowRunner" width="360"></h1>
 
-Self-hosted dashboard kiosk for a rooted Amazon Echo Show 8 running LineageOS. A thin Android
+Self-hosted dashboard kiosk for rooted Amazon Echo Show 8 devices running Android. A thin Android
 app shows one full-screen WebView; a Next.js server on your LAN decides what every screen shows,
-so you design screens in a browser and never touch the device again.
+so you can design screens in a browser and never touch the device again.
 
-Built for one household: a single admin user, a single shared device secret, and a LAN with no
-inbound exposure. Only the Echo Show 8 (2nd gen, LineageOS 18.1 / Android 11) is tested.
+Currently built for one household: a single admin user, a single shared device secret. Only the Echo Show 8 (2nd gen, LineageOS 18.1 / Android 11) is tested.
 
-![An Echo Show 8 running ShowRunner: an analog clock with a yellow second hand, the current temperature and conditions, a sunrise-to-sunset arc and an hourly temperature curve](docs/images/showcase.jpg)
-
-_A screen generated from a text description in the dashboard, running on the device._
+<p align="center"><img src="docs/images/showcase.png" width="75%" alt="An Echo Show 8 running ShowRunner: a large clock, date and greeting on black beside a violet panel with the current temperature, conditions and a three-day forecast."></p>
 
 ## How it works
 
