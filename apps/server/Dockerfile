@@ -34,6 +34,10 @@ COPY --from=build --chown=node:node /repo/apps/server/public ./apps/server/publi
 COPY --from=build --chown=node:node /repo/apps/server/drizzle ./apps/server/drizzle
 COPY --chown=node:node docs/screen-authoring.md ./docs/screen-authoring.md
 RUN mkdir -p /data && chown node:node /data
+# Release tag (e.g. v0.3.0-beta.5), set by the release workflow; shown on the login page. Late so it only
+# invalidates this layer. Unset (local and CI builds) hides it.
+ARG APP_VERSION
+ENV APP_VERSION=${APP_VERSION}
 USER node
 VOLUME ["/data"]
 EXPOSE 3000

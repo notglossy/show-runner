@@ -135,6 +135,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.tags.outputs.tags }}
+          build-args: |
+            APP_VERSION=${{ github.ref_name }}
           labels: |
             org.opencontainers.image.title=ShowRunner server
             org.opencontainers.image.description=Dashboard kiosk server for the ShowRunner Android shell

@@ -29,6 +29,8 @@ const EnvSchema = z.object({
   AI_MODEL: z.string().min(1).default('google/gemini-3.8-flash'),
   /** docs/screen-authoring.md, sent as the system prompt. Defaults to the repo copy relative to apps/server. */
   AUTHORING_DOC_PATH: z.string().optional(),
+  /** Release tag baked into the image by the release workflow (Dockerfile ARG); unset in dev and CI builds. */
+  APP_VERSION: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

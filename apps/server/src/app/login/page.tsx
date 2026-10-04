@@ -1,4 +1,5 @@
 import { Logo } from '@/components/logo';
+import { env } from '@/lib/env';
 
 import { LoginForm } from './login-form';
 
@@ -6,6 +7,7 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
   const { next } = await searchParams;
   const target =
     typeof next === 'string' && next.startsWith('/') && !next.startsWith('//') ? next : '/';
+  const version = env().APP_VERSION;
   return (
     <div className="bg-ground grid min-h-screen grid-rows-[auto_1fr] md:grid-cols-[5fr_4fr] md:grid-rows-none">
       <section className="bg-ink relative flex flex-col justify-between gap-7 overflow-hidden px-4 py-6 md:p-12">
@@ -20,7 +22,9 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
         >
           <div className="border-signal absolute -bottom-9 left-1/2 w-30 -translate-x-1/2 border-t-[3px]" />
         </div>
-        <p className="label-mono text-concrete hidden md:block">Self-hosted</p>
+        <p className="label-mono text-concrete hidden md:block">
+          Self-hosted{version && ` · ${version}`}
+        </p>
       </section>
       <main className="flex items-start justify-center px-4 py-8 md:items-center md:p-12">
         <div className="w-full max-w-sm">
