@@ -1,9 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.ShowRunner" parent="@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen">
-        <item name="android:windowBackground">@android:color/black</item>
-        <item name="android:colorBackground">@android:color/black</item>
+        <item name="android:windowBackground">@color/ground</item>
+        <item name="android:colorBackground">@color/ground</item>
+        <item name="android:colorAccent">@color/signal</item>
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
         <item name="android:windowDisablePreview">true</item>
+    </style>
+
+    <!-- Brand type and widgets, matching the server's system screens: Space Grotesk for headings and prose,
+         uppercase JetBrains Mono for labels and buttons, signal violet for the main action. -->
+    <style name="Logo">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">48dp</item>
+        <item name="android:layout_marginTop">42dp</item>
+        <item name="android:src">@drawable/logo</item>
+    </style>
+
+    <style name="Text" />
+
+    <style name="Text.Step">
+        <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/signal_tint</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="Text.Title">
+        <item name="android:fontFamily">@font/space_grotesk_medium</item>
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:textSize">44sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <style name="Text.Body">
+        <item name="android:fontFamily">@font/space_grotesk_medium</item>
+        <item name="android:textColor">@color/steel</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:lineSpacingExtra">4dp</item>
+    </style>
+
+    <style name="Text.Mono">
+        <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
+        <item name="android:textColor">@color/concrete</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="Button.Primary" parent="@android:style/Widget.DeviceDefault.Button">
+        <item name="android:layout_width">330dp</item>
+        <item name="android:layout_height">54dp</item>
+        <item name="android:background">@drawable/btn_primary</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:fontFamily">@font/jetbrains_mono_medium</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="Button.Outline" parent="@android:style/Widget.DeviceDefault.Button">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:background">@drawable/btn_outline</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <style name="Button.Text" parent="@android:style/Widget.DeviceDefault.Button.Borderless">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/concrete</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <style name="Field">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">52dp</item>
+        <item name="android:background">@drawable/field</item>
+        <item name="android:paddingHorizontal">18dp</item>
+        <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textColorHint">@color/graphite</item>
+        <item name="android:textCursorDrawable">@drawable/cursor</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:maxLines">1</item>
     </style>
 </resources>

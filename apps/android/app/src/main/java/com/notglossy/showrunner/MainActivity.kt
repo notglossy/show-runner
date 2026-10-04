@@ -68,6 +68,7 @@ class MainActivity : android.app.Activity() {
     /** True while the wizard owns the screen: registration errors show there instead of the overlay. */
     private var wizardActive = false
     private lateinit var overlay: View
+    private lateinit var overlayError: TextView
     private lateinit var overlayBody: TextView
     private lateinit var exitMenu: View
     private lateinit var exitStatus: TextView
@@ -116,6 +117,7 @@ class MainActivity : android.app.Activity() {
         webContainer = findViewById(R.id.web_container)
         setupWizard()
         overlay = findViewById(R.id.overlay)
+        overlayError = findViewById(R.id.overlay_error)
         overlayBody = findViewById(R.id.overlay_body)
         setupExitMenu()
         deviceInfo = DeviceIdentity.info(this)
@@ -621,9 +623,8 @@ class MainActivity : android.app.Activity() {
     private fun renderOverlay() {
         if (state != State.RECONNECTING) return
         val seconds = ((nextRetryAt - SystemClock.elapsedRealtime()) / 1000).coerceAtLeast(0)
+        overlayError.text = lastError ?: ""
         overlayBody.text = buildString {
-            lastError?.let { appendLine(it) }
-            appendLine()
             appendLine("Server  ${config?.serverUrl ?: "—"}")
             appendLine("Device  ${deviceInfo.deviceId}")
             append(if (seconds > 0) "Retrying in ${seconds}s" else "Retrying…")

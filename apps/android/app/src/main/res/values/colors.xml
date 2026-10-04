@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Brand palette, shared with the dashboard theme (apps/server/src/app/globals.css) and the server's system screens. -->
+<resources>
+    <color name="ground">#FF000000</color>
+    <color name="panel">#FF161A1C</color>
+    <color name="ink">#FFF2F2F2</color>
+    <color name="steel">#FFB9B9B9</color>
+    <color name="concrete">#FF8B8B8B</color>
+    <color name="graphite">#FF4D4D4D</color>
+    <color name="subtle">#FF3D3D3D</color>
+    <color name="signal">#FF6136F5</color>
+    <color name="signal_pressed">#FF4F25D9</color>
+    <color name="signal_disabled">#FF2E2366</color>
+    <color name="signal_tint">#FFA995FF</color>
+    <color name="danger">#FFFF7A6E</color>
+    <color name="warning">#FFFFCF7A</color>
+    <color name="scrim">#F0000000</color>
+    <color name="scrim_menu">#E6000000</color>
+</resources>
