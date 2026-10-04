@@ -3,7 +3,7 @@ services:
     # Published by the release workflow for every version tag, for linux/amd64 and linux/arm64.
     # SHOWRUNNER_VERSION (.env): a tag such as v0.3.0, "latest" (newest full release) or "beta"
     # (newest pre-release). To build from source: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
-    image: ghcr.io/notglossy/show-runner:${SHOWRUNNER_VERSION:-latest}
+    image: ghcr.io/notglossy/showrunner:${SHOWRUNNER_VERSION:-latest}
     container_name: showrunner
     restart: unless-stopped
     ports:

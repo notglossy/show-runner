@@ -134,8 +134,8 @@ machine that has the key.
 
 5. **CI releases** (`.github/workflows/release.yaml`) build the same signed APK from the same key when a `v*` tag
    is pushed and attach it to a GitHub release (a pre-release when the tag has a suffix like `-beta.1`), together
-   with the server image `ghcr.io/notglossy/show-runner:<tag>` (see the README). GHCR creates that package private
-   on the first push: make it public once (GitHub → Packages → show-runner → Package settings → Change visibility),
+   with the server image `ghcr.io/notglossy/showrunner:<tag>` (see the README). GHCR creates that package private
+   on the first push: make it public once (GitHub → Packages → showrunner → Package settings → Change visibility),
    or every `docker pull` needs `docker login ghcr.io`. Give the
    repository the key once, as Actions secrets, never as files in the repo:
    ```sh
