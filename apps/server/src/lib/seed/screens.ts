@@ -10,21 +10,39 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
   {
     id: 'builtin-clock',
     name: 'Clock',
-    description: 'Large clock with date and greeting.',
+    description: 'Large clock with the date, a greeting and a bar that fills each minute.',
     dataRefreshSeconds: 300,
     html: `<style>
-  .ck-root { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; color: #fff; font-family: system-ui, sans-serif; text-align: center; }
-  .ck-greeting { font-size: 40px; font-weight: 400; color: #7d8595; margin-bottom: 24px; }
-  .ck-row { display: flex; align-items: flex-start; }
-  .ck-time { font-size: 290px; font-weight: 200; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: #fff; }
-  .ck-ampm { font-size: 72px; font-weight: 400; color: #9aa3b2; margin-left: 20px; margin-top: 28px; }
-  .ck-date { margin-top: 32px; font-size: 60px; font-weight: 400; color: #c9ced8; }
+  /* Colors. Change them here to restyle the screen. */
+  :root {
+    --ck-accent: #6136f5; /* seconds bar */
+    --ck-accent-text: #a995ff; /* date; a lighter tint so it stays readable on black */
+  }
+  .ck-root { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; color: #f2f2f2; font-family: "Space Grotesk", system-ui, sans-serif; font-weight: 500; text-align: center; }
+  .ck-mono { font-family: "JetBrains Mono", monospace; font-weight: 400; text-transform: uppercase; letter-spacing: -0.01em; }
+  .ck-date { font-size: 30px; color: var(--ck-accent-text); }
+  .ck-row { display: flex; align-items: flex-start; margin: 20px 0 12px; }
+  .ck-time { font-size: 300px; line-height: 0.9; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+  .ck-ampm { font-size: 48px; color: #8b8b8b; margin: 24px 0 0 20px; }
+  .ck-greeting { font-size: 40px; color: #c9ced8; }
+  .ck-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 8px; background: #1b1b1b; }
+  .ck-fill { height: 100%; background: var(--ck-accent); transform: scaleX(0); transform-origin: left; transition: transform 1s linear; }
 </style>
 <main class="ck-root">
+  <div class="ck-date ck-mono" data-bind="time.date"></div>
+  <div class="ck-row"><span class="ck-time" data-bind="time.hhmm"></span><span class="ck-ampm ck-mono" data-bind="time.ampm"></span></div>
   <div class="ck-greeting" data-bind="time.greeting"></div>
-  <div class="ck-row"><span class="ck-time" data-bind="time.hhmm"></span><span class="ck-ampm" data-bind="time.ampm"></span></div>
-  <div class="ck-date" data-bind="time.date"></div>
-</main>`,
+  <div class="ck-bar"><div class="ck-fill" id="ck-fill"></div></div>
+</main>
+<script>
+  var fill = document.getElementById("ck-fill");
+  kiosk.on("tick", function (t) {
+    var s = Number(t.second);
+    // Snap back at :00 instead of animating the bar backwards.
+    fill.style.transition = s === 0 ? "none" : "";
+    fill.style.transform = "scaleX(" + s / 59 + ")";
+  });
+</script>`,
   },
   {
     id: 'builtin-clock-weather',
