@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Exit menu panel: a violet strip on top of the dark panel. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/signal" />
+    <item
+        android:drawable="@color/panel"
+        android:top="3dp" />
+</layer-list>
