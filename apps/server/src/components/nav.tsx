@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
+import { Logo } from '@/components/logo';
 import { api } from '@/lib/client/api';
 
 const LINKS = [
@@ -22,23 +23,8 @@ export function Nav() {
   }
   return (
     <header className="bg-ink text-steel flex shrink-0 flex-col gap-6 px-4 py-5 md:sticky md:top-0 md:h-screen md:w-64 md:gap-10 md:px-6 md:py-8">
-      <Link
-        href="/devices"
-        className="text-steel focus-visible:outline-signal-tint flex items-center gap-3 text-2xl leading-none"
-      >
-        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
-          <rect
-            x="2"
-            y="4"
-            width="24"
-            height="16"
-            fill="none"
-            className="stroke-signal-tint"
-            strokeWidth="2"
-          />
-          <path d="M9 24h10" className="stroke-signal-tint" strokeWidth="2" />
-        </svg>
-        ShowRunner
+      <Link href="/devices" className="focus-visible:outline-signal-tint flex self-start">
+        <Logo tone="dark" className="h-6 w-auto" />
       </Link>
       <nav aria-label="Main" className="flex flex-row flex-wrap gap-0.5 md:flex-col">
         {LINKS.map((link, i) => {
