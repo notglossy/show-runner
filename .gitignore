@@ -38,6 +38,11 @@ apps/android/.kotlin/
 # tool output
 .playwright-mcp/
 
+# design sources (keep exported PNG/SVG only)
+*.psd
+*.ai
+*.sketch
+
 # signing keys (never commit)
 *.jks
 *.keystore
