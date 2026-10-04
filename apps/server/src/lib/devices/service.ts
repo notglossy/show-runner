@@ -33,8 +33,10 @@ import { closeRegistrationWindow } from './registration';
 export const HEARTBEAT_INTERVAL_SECONDS = 30;
 /** A device counts as online if its last heartbeat is newer than this. */
 export const ONLINE_WINDOW_MS = 3 * HEARTBEAT_INTERVAL_SECONDS * 1000;
-/** Screen assigned automatically when a device is claimed. */
-export const DEFAULT_SCREEN_ID = 'builtin-clock';
+/** Screen assigned automatically when a device is claimed: the built-in "Default" (id kept from Morning Brief). */
+export const DEFAULT_SCREEN_ID = 'builtin-morning-brief';
+/** Assigned instead when the default is missing (databases seeded before it existed, or the owner deleted it). */
+export const FALLBACK_SCREEN_ID = 'builtin-clock';
 /** Caps stored log lines per device; older lines are pruned on insert. */
 export const MAX_LOGS_PER_DEVICE = 1000;
 /** How long the previous token keeps working after a re-registration. */
@@ -197,6 +199,11 @@ export function recordHeartbeat(
     .get();
 }
 
+/** The screen a newly claimed device gets: the default if it exists, else the Clock, else none. */
+export function claimScreenId(exists: (id: string) => boolean): string | undefined {
+  return [DEFAULT_SCREEN_ID, FALLBACK_SCREEN_ID].find(exists);
+}
+
 /** Claims an unclaimed device by pairing code, closes the registration window, and assigns the default screen. */
 export function claimDevice(input: ClaimDeviceRequest): Device {
   const db = getDb();
@@ -211,8 +218,9 @@ export function claimDevice(input: ClaimDeviceRequest): Device {
     .where(eq(devices.id, device.id))
     .run();
   closeRegistrationWindow();
-  if (device.assignmentType === 'none' && findScreen(DEFAULT_SCREEN_ID)) {
-    return applyAssignment(device.id, { type: 'screen', screenId: DEFAULT_SCREEN_ID });
+  const screenId = claimScreenId((id) => Boolean(findScreen(id)));
+  if (device.assignmentType === 'none' && screenId) {
+    return applyAssignment(device.id, { type: 'screen', screenId });
   }
   publish(device.id, { type: 'reload' });
   return getDeviceOr404(device.id);

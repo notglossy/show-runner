@@ -12,8 +12,10 @@ import {
   appendLog,
   applyAssignment,
   claimDevice,
+  claimScreenId,
   DEFAULT_SCREEN_ID,
   deleteDevice,
+  FALLBACK_SCREEN_ID,
   findDevice,
   getDeviceOr404,
   listLogs,
@@ -46,7 +48,12 @@ const screen = (name: string) => createScreen({ name, html: `<p>${name}</p>` });
 
 beforeEach(() => {
   if (!findScreen(DEFAULT_SCREEN_ID))
-    createScreen({ id: DEFAULT_SCREEN_ID, name: 'Clock', html: '<p>clock</p>', source: 'builtin' });
+    createScreen({
+      id: DEFAULT_SCREEN_ID,
+      name: 'Default',
+      html: '<p>default</p>',
+      source: 'builtin',
+    });
 });
 afterEach(() => {
   stopScheduler();
@@ -86,6 +93,12 @@ describe('claim + assignment', () => {
     // pairing code no longer works, and re-registering a claimed device doesn't issue a new one
     expect(() => claimDevice({ pairingCode: device.pairingCode!, name: 'x' })).toThrow(/not found/);
     expect(reg(device.id).device.pairingCode).toBeNull();
+  });
+
+  it('picks the default screen, then the Clock, then nothing', () => {
+    expect(claimScreenId(() => true)).toBe(DEFAULT_SCREEN_ID);
+    expect(claimScreenId((id) => id === FALLBACK_SCREEN_ID)).toBe(FALLBACK_SCREEN_ID);
+    expect(claimScreenId(() => false)).toBeUndefined();
   });
 
   it('switching screens publishes navigate; editing the shown screen publishes reload', () => {

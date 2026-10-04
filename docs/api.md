@@ -99,7 +99,7 @@ The last 1000 lines per device are kept.
 | `GET /api/devices` | | `{ devices: DeviceView[] }` |
 | `GET /api/devices/registration` | | `{ registration: { mode, open, closesAt } }` |
 | `PUT /api/devices/registration` | `{ "open": true \| false }` | opens the registration window for 10 minutes (extends it if open) or closes it; no-op in secret mode |
-| `POST /api/devices/claim` | `{ "pairingCode": "3382fp", "name": "Kitchen" }` | `{ device }`; assigns `builtin-clock` if unassigned |
+| `POST /api/devices/claim` | `{ "pairingCode": "3382fp", "name": "Kitchen" }` | `{ device }`; assigns `builtin-morning-brief` ("Default"), else `builtin-clock`, if unassigned |
 | `GET /api/devices/:id` | | `{ device }` |
 | `PATCH /api/devices/:id` | `{ "name"?, "assignment"?: {"type":"none"} \| {"type":"screen","screenId"} \| {"type":"playlist","playlistId"} }` | `{ device }`; device navigates immediately |
 | `DELETE /api/devices/:id` | | 204 |

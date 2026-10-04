@@ -450,20 +450,23 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
   },
   {
     id: 'builtin-morning-brief',
-    name: 'Morning Brief',
+    // The screen new displays get on claim (DEFAULT_SCREEN_ID). The id predates the rename; existing rows keep it.
+    name: 'Default',
     description:
-      'Split layout: big clock and greeting on black, today’s weather and a 3-day outlook on a violet block.',
+      'Big clock and greeting on black, today’s weather and a 3-day outlook on a violet block. Assigned to new displays.',
     dataRefreshSeconds: 60,
     html: `<style>
-  .mb-root { position: fixed; inset: 0; display: grid; grid-template-columns: 3fr 2fr; background: #000; color: #f2f2f2; font-family: "Space Grotesk", system-ui, sans-serif; font-weight: 500; }
+  /* Weather panel color. Change it here to restyle the screen. */
+  :root { --mb-accent: #6136f5; }
+  .mb-root { position: fixed; inset: 0; display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); background: #000; color: #f2f2f2; font-family: "Space Grotesk", system-ui, sans-serif; font-weight: 500; }
   .mb-mono { font-family: "JetBrains Mono", monospace; font-weight: 400; text-transform: uppercase; letter-spacing: -0.01em; }
   .mb-clock { padding: 64px; display: flex; flex-direction: column; justify-content: space-between; }
   .mb-date { font-size: 30px; color: #9aa3b2; }
   .mb-timerow { display: flex; align-items: flex-start; }
-  .mb-time { font-size: 260px; line-height: 0.9; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-  .mb-ampm { font-size: 48px; color: #9aa3b2; margin: 22px 0 0 20px; }
+  .mb-time { font-size: 216px; line-height: 0.9; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .mb-ampm { font-size: 44px; color: #9aa3b2; margin: 18px 0 0 16px; }
   .mb-greeting { font-size: 44px; color: #c9ced8; }
-  .mb-weather { background: #6136f5; color: #fff; padding: 56px; display: flex; flex-direction: column; justify-content: space-between; }
+  .mb-weather { background: var(--mb-accent); color: #fff; padding: 56px; display: flex; flex-direction: column; justify-content: space-between; }
   .mb-place { font-size: 26px; color: #e6e0ff; }
   .mb-tempwrap { display: flex; align-items: flex-start; }
   .mb-temp { font-size: 160px; line-height: 0.9; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }

@@ -22,8 +22,8 @@ request flow: [docs/architecture.md](docs/architecture.md).
 - Pairing by on-screen code; claim, name and assign devices from the dashboard.
 - Launcher kiosk mode by default; optional strict mode (device owner + lock task) that can always
   be left from the on-device exit menu or the dashboard, never by factory reset.
-- Screen editor with a live 1280×800 preview and four built-in screens (clock, clock + weather,
-  morning brief, and the analog dial pictured above).
+- Screen editor with a live 1280×800 preview and four built-in screens (Default, pictured above;
+  clock; clock + weather; and an analog dial).
 - AI screen generation from a description through any OpenAI-compatible API (optional).
 - Playlists, per-device commands, device logs and heartbeat status in the dashboard.
 
@@ -68,7 +68,7 @@ install.
    dashboard so the display can register.
 
    The display shows a pairing code. In the dashboard, open **Devices**, claim the code and give
-   the device a name. It starts on the built-in clock screen.
+   the device a name. It starts on the built-in Default screen.
 
 4. **Make screens.** Edit the built-in screens or write new ones in the editor. The template
    contract is [docs/screen-authoring.md](docs/screen-authoring.md). Set `AI_API_KEY` to
