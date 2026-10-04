@@ -30,7 +30,7 @@ android {
         targetSdk = 37
         versionCode = gitCommitCount
         // Release tags are "v" + this value; a pre-release suffix publishes a GitHub pre-release.
-        versionName = "0.3.0-beta.5"
+        versionName = "0.3.0-beta.6"
 
     }
 
