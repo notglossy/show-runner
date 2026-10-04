@@ -33,9 +33,9 @@ The fireworks don't use any data.
 
 ## Notes
 
-- **It animates continuously** on a `requestAnimationFrame` loop and fades the whole canvas every frame for
-  the spark trails. That's heavier than the authoring guide's advice for always-on screens, so it's best as a
-  screensaver-style screen in a playlist rather than a display's only screen around the clock.
+- **Runs smoothly on the Echo Show 8.** It animates on a `requestAnimationFrame` loop and fades the whole
+  canvas every frame for the spark trails, livelier than the authoring guide's suggested slow, subtle
+  motion.
 - The trails fade the canvas toward transparent rather than painting it dark, so the sky gradient and the
   skyline behind it stay visible.
 - The screenshot shows the scene 140 frames in (just over 2 seconds at 60 Hz).

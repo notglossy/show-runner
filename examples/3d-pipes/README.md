@@ -32,10 +32,9 @@ The pipes don't use any data.
 
 ## Notes
 
-- **It animates continuously.** The pipes advance about 30 times a second on a `requestAnimationFrame`
-  loop, which goes beyond the authoring guide's advice for always-on screens (slow, subtle motion). It
-  only draws the new segments each frame, so the load is modest, but it's best as a screensaver-style
-  screen in a playlist rather than a display's only screen around the clock.
+- **Runs smoothly on the Echo Show 8.** The pipes advance about 30 times a second on a
+  `requestAnimationFrame` loop, livelier than the authoring guide's suggested slow, subtle motion, but it
+  only draws the new segments each frame, so the load stays modest.
 - **Needs WebGL.** Without it the canvas stays empty and only the card shows.
 - The screenshot shows the scene 240 frames in (about 4 seconds at 60 Hz), rendered with software WebGL;
   on the Echo the pipes are drawn by the GPU.

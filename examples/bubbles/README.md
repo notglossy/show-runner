@@ -51,10 +51,10 @@ copying one of those lines. Add `blob--far` to make one blurred and pushed back.
 - **Pure CSS.** Each blob layers three animations: it travels through its waypoints (60–110 s a lap), rotates
   slowly, and morphs its outline (an animated `border-radius`) while wobbling gently. A fixed highlight on
   top keeps them looking glossy as they turn.
-- **The outline morph repaints the blobs every frame,** which goes beyond the authoring guide's
-  transform-only advice for always-on screens. If it stutters or runs warm on a display, drop the `morph`
-  animation from the three `blob--far` blobs first (they're the largest and their blur hides the shape),
-  then use fewer or smaller blobs.
+- **Runs smoothly on the Echo Show 8.** The outline morph repaints the blobs every frame (the authoring
+  guide prefers transform-only animation). On a slower display, drop the `morph` animation from the three
+  `blob--far` blobs first (they're the largest and their blur hides the shape), then use fewer or smaller
+  blobs.
 - The card's frosted look is a translucent white fill, not `backdrop-filter`, which would re-blur the moving
   blobs every frame.
 - A bright light screen stands out in a dark room at night; pair it with a darker screen in a playlist if
