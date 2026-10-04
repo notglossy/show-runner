@@ -70,9 +70,12 @@
         <item name="android:textSize">15sp</item>
     </style>
 
+    <!-- No side padding or min width, so the label lines up with the edge of the content around it. -->
     <style name="Button.Text" parent="@android:style/Widget.DeviceDefault.Button.Borderless">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingHorizontal">0dp</item>
         <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
         <item name="android:textAllCaps">true</item>
         <item name="android:textColor">@color/concrete</item>

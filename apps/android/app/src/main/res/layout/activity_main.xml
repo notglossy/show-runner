@@ -160,7 +160,7 @@
                     <Button
                         android:id="@+id/setup_cancel"
                         style="@style/Button.Text"
-                        android:layout_marginStart="20dp"
+                        android:layout_marginStart="32dp"
                         android:text="@string/setup_cancel"
                         android:visibility="gone" />
                 </LinearLayout>
