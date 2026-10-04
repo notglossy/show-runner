@@ -38,4 +38,4 @@ The fireworks don't use any data.
   screensaver-style screen in a playlist rather than a display's only screen around the clock.
 - The trails fade the canvas toward transparent rather than painting it dark, so the sky gradient and the
   skyline behind it stay visible.
-- The screenshot shows the scene 160 frames in (under 3 seconds at 60 Hz).
+- The screenshot shows the scene 140 frames in (just over 2 seconds at 60 Hz).
