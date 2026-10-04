@@ -37,23 +37,33 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
 
-  # Proves apps/server/Dockerfile builds for both release platforms; nothing is pushed. The gha
-  # cache is shared with release.yaml, so a release reuses these layers.
+  # Proves apps/server/Dockerfile builds for both release platforms; nothing is pushed. Each platform
+  # builds on a native runner (arm64 under QEMU took ~3 min of a ~5 min job). Only pushes to main
+  # write the per-platform gha cache, so PRs skip the export and can't evict main's layers;
+  # release.yaml reads both scopes.
   image:
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
+    name: image (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm # free native arm64 runner for public repos
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: apps/server/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/${{ matrix.arch }}
           push: false
-          cache-from: type=gha,scope=server-image
-          cache-to: type=gha,scope=server-image,mode=max
+          cache-from: type=gha,scope=server-image-${{ matrix.arch }}
+          cache-to: ${{ github.event_name == 'push' && format('type=gha,scope=server-image-{0},mode=max', matrix.arch) || '' }}
 
   android:
     runs-on: ubuntu-latest
