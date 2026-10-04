@@ -450,9 +450,10 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
   },
   {
     id: 'builtin-morning-brief',
-    name: 'Morning Brief',
+    // The screen new displays get on claim (DEFAULT_SCREEN_ID). The id predates the rename; existing rows keep it.
+    name: 'Default',
     description:
-      'Split layout: big clock and greeting on black, today’s weather and a 3-day outlook on a violet block.',
+      'Big clock and greeting on black, today’s weather and a 3-day outlook on a violet block. Assigned to new displays.',
     dataRefreshSeconds: 60,
     html: `<style>
   .mb-root { position: fixed; inset: 0; display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); background: #000; color: #f2f2f2; font-family: "Space Grotesk", system-ui, sans-serif; font-weight: 500; }
