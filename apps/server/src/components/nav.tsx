@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Logo } from '@/components/logo';
 import { api } from '@/lib/client/api';
 
+const REPO_URL = 'https://github.com/notglossy/showrunner';
+
 const LINKS = [
   { href: '/devices', label: 'Devices' },
   { href: '/screens', label: 'Screens' },
@@ -14,7 +16,8 @@ const LINKS = [
   { href: '/settings', label: 'Settings' },
 ];
 
-export function Nav() {
+/** Dashboard navigation: sidebar from md up, a menu bar with a dropdown on phones. */
+export function Nav({ version }: { version?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   // Phones only: the links sit behind a menu button. From md up the sidebar always shows them.
@@ -90,13 +93,46 @@ export function Nav() {
             );
           })}
         </nav>
-        <button
-          type="button"
-          onClick={logout}
-          className="label-mono text-concrete focus-visible:outline-signal-tint self-start hover:text-white md:mt-auto"
-        >
-          Log out
-        </button>
+        <div className="flex items-center justify-between gap-4 md:mt-auto">
+          <button
+            type="button"
+            onClick={logout}
+            className="label-mono text-concrete focus-visible:outline-signal-tint hover:text-white"
+          >
+            Log out
+          </button>
+          <div className="flex items-center gap-3">
+            {version && (
+              <a
+                href={`${REPO_URL}/releases/tag/${encodeURIComponent(version)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="caption-mono text-concrete focus-visible:outline-signal-tint normal-case hover:text-white"
+              >
+                {version}
+              </a>
+            )}
+            <a
+              href={REPO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="ShowRunner on GitHub"
+              title="ShowRunner on GitHub"
+              className="text-concrete focus-visible:outline-signal-tint -m-2 rounded p-2 hover:text-white"
+            >
+              {/* GitHub mark (Octicons, MIT). */}
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+              </svg>
+            </a>
+          </div>
+        </div>
       </div>
     </header>
   );
