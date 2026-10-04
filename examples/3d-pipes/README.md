@@ -37,4 +37,5 @@ The pipes don't use any data.
   only draws the new segments each frame, so the load is modest, but it's best as a screensaver-style
   screen in a playlist rather than a display's only screen around the clock.
 - **Needs WebGL.** Without it the canvas stays empty and only the card shows.
-- The screenshot was rendered with software WebGL; on the Echo the pipes are drawn by the GPU.
+- The screenshot shows the scene 240 frames in (about 4 seconds at 60 Hz), rendered with software WebGL;
+  on the Echo the pipes are drawn by the GPU.
