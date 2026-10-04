@@ -69,6 +69,16 @@ describe('system screens + helpers', () => {
     expect(escapeHtml(`'"&<>`)).toBe('&#39;&quot;&amp;&lt;&gt;');
   });
 
+  it('boxes each pairing code character and brands both screens', () => {
+    const pairing = pairingScreen('K7QM4R', 'dev-1');
+    expect(pairing.match(/<span>[A-Z0-9]<\/span>/g)).toHaveLength(6);
+    expect(pairing).toContain('aria-label="K7QM4R"');
+    for (const html of [pairing, unassignedScreen('Kitchen', 'dev-1')]) {
+      expect(html).toContain('aria-label="ShowRunner"');
+      expect(html).toContain('<div class="sys-id">dev-1</div>');
+    }
+  });
+
   it('builds URL-encoded device URLs', () => {
     expect(deviceUrls('a b').page).toBe('/device/a%20b');
     expect(deviceUrls('x').events).toBe('/api/devices/x/events');
