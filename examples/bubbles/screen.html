@@ -1,0 +1,172 @@
+<style>
+  /* Colors. Change them here to restyle the screen. */
+  :root {
+    --bb-bg: #f3f0ea;          /* warm paper background */
+    --bb-ink: #2e2925;         /* clock and headings */
+    --bb-muted: #7a716a;       /* date, labels */
+    --bb-mint: #a8e2c4;
+    --bb-sky: #a9d2f5;
+    --bb-blush: #f3b8c8;
+    --bb-sand: #f0d9a4;
+    --bb-lilac: #cdbdf3;
+    --bb-peach: #f7c3a1;
+  }
+
+  .bb {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--bb-bg);
+    color: var(--bb-ink);
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    font-weight: 500;
+  }
+  .bb-mono {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  /* ---------- blobs ---------- */
+  /* Per blob: .blob wanders across the screen, .blob-turn rotates, and .blob-body morphs its outline
+     (animated border-radius) while gently stretching. Position, size, color and timings come from custom
+     properties on each blob. The outline morph repaints the blob each frame; the rest is transform-only. */
+  .blob {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: var(--size);
+    height: var(--size);
+    opacity: var(--o, 0.92);
+    animation: wander var(--dur) ease-in-out var(--delay) infinite;
+    will-change: transform;
+  }
+  .blob-turn {
+    position: absolute;
+    inset: 0;
+    animation: turn var(--spin) linear infinite;
+  }
+  .blob-body {
+    position: absolute;
+    inset: 0;
+    border-radius: 43% 57% 62% 38% / 46% 38% 62% 54%;
+    background: radial-gradient(circle at 50% 45%, color-mix(in oklch, var(--c), white 35%) 0%, var(--c) 55%,
+      color-mix(in oklch, var(--c), #6b5f78 20%) 100%);
+    box-shadow: 0 40px 70px -40px color-mix(in oklch, var(--c), #3a2f2a 50%);
+    animation:
+      morph var(--morph) ease-in-out infinite alternate,
+      squish calc(var(--morph) * 1.7) ease-in-out infinite alternate;
+  }
+  /* Highlight on top that doesn't rotate, so the blob keeps a fixed light source. */
+  .blob-shine {
+    position: absolute;
+    left: 18%;
+    top: 14%;
+    width: 38%;
+    height: 26%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 70%);
+  }
+  /* Out-of-focus blobs in the back for depth. The blur is static; only transforms animate. */
+  .blob--far { filter: blur(18px); --o: 0.5; }
+  .blob--far .blob-shine { display: none; }
+
+  @keyframes wander {
+    0%, 100% { transform: translate(0, 0); }
+    33%      { transform: translate(var(--ax), var(--ay)); }
+    66%      { transform: translate(var(--bx), var(--by)); }
+  }
+  @keyframes turn {
+    to { transform: rotate(360deg); }
+  }
+  /* Four lopsided outlines; the blob flows between them. */
+  @keyframes morph {
+    0%   { border-radius: 43% 57% 62% 38% / 46% 38% 62% 54%; }
+    33%  { border-radius: 62% 38% 34% 66% / 58% 64% 36% 42%; }
+    66%  { border-radius: 36% 64% 55% 45% / 35% 55% 45% 65%; }
+    100% { border-radius: 58% 42% 70% 30% / 52% 30% 70% 48%; }
+  }
+  @keyframes squish {
+    0%   { transform: scale(1.06, 0.95); }
+    100% { transform: scale(0.96, 1.05); }
+  }
+
+  /* ---------- card ---------- */
+  .card {
+    position: absolute;
+    left: 72px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 600px;
+    padding: 44px 48px 40px;
+    border-radius: 36px;
+    /* Frosted look without backdrop-filter, which would re-blur the moving bubbles every frame. */
+    background: linear-gradient(140deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.62));
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 30px 80px -40px rgba(60, 45, 35, 0.35);
+    z-index: 2;
+  }
+  .card-greeting { font-size: 22px; color: var(--bb-muted); }
+  .card-clock { display: flex; align-items: flex-start; margin: 14px 0 6px; }
+  .card-time {
+    font-size: 150px;
+    line-height: 0.9;
+    letter-spacing: -0.045em;
+    font-variant-numeric: tabular-nums;
+  }
+  .card-ampm { font-size: 36px; color: var(--bb-muted); margin: 14px 0 0 14px; }
+  .card-date { font-size: 32px; color: var(--bb-ink); }
+  .card-weather {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    margin-top: 30px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(46, 41, 37, 0.1);
+    white-space: nowrap;
+  }
+  .card-temp { font-size: 52px; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .card-cond { font-size: 26px; color: var(--bb-ink); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .card-hilo { font-size: 20px; color: var(--bb-muted); font-variant-numeric: tabular-nums; }
+  .card-place {
+    margin-top: 10px;
+    font-size: 18px;
+    color: var(--bb-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
+
+<main class="bb">
+  <!-- Far, blurred layer -->
+  <div class="blob blob--far" style="--x: 700px; --y: -140px; --size: 460px; --c: var(--bb-sky); --ax: -420px; --ay: 260px; --bx: 180px; --by: 380px; --dur: 110s; --delay: -30s; --spin: 70s; --morph: 13s"><div class="blob-turn"><div class="blob-body"></div></div></div>
+  <div class="blob blob--far" style="--x: 1000px; --y: 420px; --size: 420px; --c: var(--bb-lilac); --ax: -560px; --ay: -220px; --bx: -200px; --by: 120px; --dur: 96s; --delay: -10s; --spin: 80s; --morph: 15s"><div class="blob-turn"><div class="blob-body"></div></div></div>
+  <div class="blob blob--far" style="--x: -160px; --y: 480px; --size: 400px; --c: var(--bb-sand); --ax: 520px; --ay: -320px; --bx: 820px; --by: -40px; --dur: 104s; --delay: -55s; --spin: 90s; --morph: 17s"><div class="blob-turn"><div class="blob-body"></div></div></div>
+
+  <!-- Near layer -->
+  <div class="blob" style="--x: 760px; --y: 110px; --size: 260px; --c: var(--bb-blush); --ax: -480px; --ay: 300px; --bx: 220px; --by: 420px; --dur: 78s; --delay: -12s; --spin: 48s; --morph: 9s"><div class="blob-turn"><div class="blob-body"></div></div><div class="blob-shine"></div></div>
+  <div class="blob" style="--x: 1020px; --y: 40px; --size: 170px; --c: var(--bb-mint); --ax: -620px; --ay: 240px; --bx: -300px; --by: 520px; --dur: 66s; --delay: -40s; --spin: 40s; --morph: 8s"><div class="blob-turn"><div class="blob-body"></div></div><div class="blob-shine"></div></div>
+  <div class="blob" style="--x: 960px; --y: 340px; --size: 220px; --c: var(--bb-sky); --ax: -380px; --ay: -260px; --bx: -760px; --by: 120px; --dur: 84s; --delay: -22s; --spin: 56s; --morph: 11s"><div class="blob-turn"><div class="blob-body"></div></div><div class="blob-shine"></div></div>
+  <div class="blob" style="--x: 690px; --y: 470px; --size: 190px; --c: var(--bb-peach); --ax: 380px; --ay: -380px; --bx: -420px; --by: -180px; --dur: 72s; --delay: -5s; --spin: 44s; --morph: 10s"><div class="blob-turn"><div class="blob-body"></div></div><div class="blob-shine"></div></div>
+  <div class="blob" style="--x: 1120px; --y: 590px; --size: 130px; --c: var(--bb-blush); --ax: -700px; --ay: -60px; --bx: -340px; --by: -440px; --dur: 62s; --delay: -33s; --spin: 36s; --morph: 7s"><div class="blob-turn"><div class="blob-body"></div></div><div class="blob-shine"></div></div>
+  <div class="blob" style="--x: 600px; --y: 40px; --size: 110px; --c: var(--bb-mint); --ax: 420px; --ay: 520px; --bx: -460px; --by: 600px; --dur: 70s; --delay: -18s; --spin: 38s; --morph: 8s"><div class="blob-turn"><div class="blob-body"></div></div><div class="blob-shine"></div></div>
+  <div class="blob" style="--x: 60px; --y: 40px; --size: 150px; --c: var(--bb-lilac); --ax: 620px; --ay: 160px; --bx: 980px; --by: 500px; --dur: 80s; --delay: -48s; --spin: 50s; --morph: 9s"><div class="blob-turn"><div class="blob-body"></div></div><div class="blob-shine"></div></div>
+  <div class="blob" style="--x: 1150px; --y: 230px; --size: 90px; --c: var(--bb-sand); --ax: -820px; --ay: 300px; --bx: -480px; --by: -150px; --dur: 58s; --delay: -9s; --spin: 30s; --morph: 6s"><div class="blob-turn"><div class="blob-body"></div></div><div class="blob-shine"></div></div>
+
+  <section class="card">
+    <div class="card-greeting bb-mono" data-bind="time.greeting"></div>
+    <div class="card-clock">
+      <span class="card-time" data-bind="time.hhmm"></span>
+      <span class="card-ampm bb-mono" data-bind="time.ampm"></span>
+    </div>
+    <div class="card-date" data-bind="time.date"></div>
+    <div class="card-weather">
+      <span class="card-temp"><span data-bind="weather.current.temperature" data-fallback="--"></span>°</span>
+      <span class="card-cond" data-bind="weather.current.condition" data-fallback="Weather unavailable"></span>
+      <span class="card-hilo bb-mono">H <span data-bind="weather.today.high" data-fallback="--"></span>° · L <span data-bind="weather.today.low" data-fallback="--"></span>°</span>
+    </div>
+    <div class="card-place bb-mono" data-bind="weather.location.name" data-fallback=""></div>
+  </section>
+</main>
