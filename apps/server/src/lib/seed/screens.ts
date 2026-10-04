@@ -145,6 +145,12 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
       'Analog dial with a sweeping second hand, current conditions, a sunrise-to-sunset arc and the next 12 hours of temperature.',
     dataRefreshSeconds: 60,
     html: `<style>
+  /* Colors. Change them here to restyle the screen. */
+  :root {
+    --dl-accent: #a995ff; /* second hand, centre cap, sun */
+    --dl-accent-dim: #3b3166; /* sun before sunrise and after sunset */
+  }
+
   @property --fg {
     syntax: "<color>";
     inherits: true;
@@ -153,27 +159,34 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
   @property --bg {
     syntax: "<color>";
     inherits: true;
-    initial-value: #0b0b0c;
+    initial-value: #000000;
   }
 
   .screen {
     position: fixed;
     inset: 0;
     --fg: #f2f0ea;
-    --bg: #0b0b0c;
+    --bg: #000000;
     background-color: var(--bg);
     color: var(--fg);
     transition: --fg 2s linear, --bg 2s linear, background-color 2s linear, color 2s linear;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 40px;
+    gap: 64px;
     padding: 0 80px;
-    font-family: "Inter", system-ui, sans-serif;
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    font-weight: 500;
+  }
+  .mono {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
   }
   .screen[data-day="false"] {
     --fg: #e8e6df;
-    --bg: #0a0a0f;
+    --bg: #000000;
   }
 
   [data-bind-missing] { opacity: 0.5; }
@@ -188,7 +201,7 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
   }
   .dial { display: block; width: 620px; height: 620px; }
 
-  .tick-min { stroke: #3a3a3a; stroke-width: 2; }
+  .tick-min { stroke: #2a2a2a; stroke-width: 2; }
   .tick-hour { stroke: var(--fg); stroke-width: 5; }
 
   .hand {
@@ -198,19 +211,18 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
     transform-origin: 310px 310px;
   }
   .hand--sec {
-    stroke: #f5a623;
+    stroke: var(--dl-accent);
     transition: transform 1s linear;
   }
-  .cap { fill: #f5a623; }
+  .cap { fill: var(--dl-accent); }
 
   .readout {
-    margin-top: 14px;
-    font-size: 30px;
-    font-weight: 500;
+    margin-top: 18px;
+    font-size: 26px;
     line-height: 1.2;
     letter-spacing: 0.3em;
     text-indent: 0.3em;
-    color: #8a8a8a;
+    color: #8b8b8b;
     font-variant-numeric: tabular-nums lining-nums;
   }
 
@@ -222,47 +234,48 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
+    padding-left: 64px;
+    border-left: 1px solid #2a2a2a;
   }
   .screen[data-weather="off"] .wx { display: none; }
 
   .temp {
     display: flex;
     align-items: flex-start;
-    font-size: 200px;
-    font-weight: 200;
-    line-height: 0.78;
-    letter-spacing: -0.02em;
+    font-size: 180px;
+    line-height: 0.82;
+    letter-spacing: -0.04em;
     white-space: nowrap;
     color: var(--fg);
     font-variant-numeric: tabular-nums lining-nums;
   }
   .temp__unit {
-    font-size: 72px;
-    font-weight: 200;
+    font-size: 40px;
     line-height: 1.1;
     letter-spacing: 0;
-    margin-left: 8px;
+    margin: 10px 0 0 8px;
+    color: #8b8b8b;
   }
 
   .cond {
-    margin-top: 12px;
-    font-size: 36px;
-    font-weight: 400;
+    margin-top: 16px;
+    font-size: 34px;
     line-height: 1.1;
-    color: #8a8a8a;
+    color: #c9ced8;
   }
 
   .sun { display: block; margin-top: 28px; }
-  .sun__arc { fill: none; stroke: #333333; stroke-width: 1; }
-  .sun__dot { fill: #f5a623; }
+  .sun__arc { fill: none; stroke: #2a2a2a; stroke-width: 2; stroke-dasharray: 2 6; }
+  .sun__dot { fill: var(--dl-accent); }
+  .sun__dot.is-down { fill: var(--dl-accent-dim); }
   .sun__labels {
     width: 376px;
     display: flex;
     justify-content: space-between;
-    margin-top: 2px;
-    font-size: 26px;
+    margin-top: 6px;
+    font-size: 20px;
     line-height: 1.2;
-    color: #8a8a8a;
+    color: #8b8b8b;
     font-variant-numeric: tabular-nums lining-nums;
   }
 
@@ -278,17 +291,17 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
     width: 360px;
     display: flex;
     justify-content: space-between;
-    margin-top: 6px;
-    font-size: 24px;
+    margin-top: 8px;
+    font-size: 18px;
     line-height: 1.25;
-    color: #8a8a8a;
+    color: #8b8b8b;
   }
 
   .hl {
     margin-top: 22px;
-    font-size: 32px;
+    font-size: 22px;
     line-height: 1.25;
-    color: #8a8a8a;
+    color: #8b8b8b;
     font-variant-numeric: tabular-nums lining-nums;
   }
   .hl .sep { padding: 0 20px; }
@@ -306,7 +319,7 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
       </g>
       <circle class="cap" cx="310" cy="310" r="5"></circle>
     </svg>
-    <div class="readout" data-bind="time.hhmm24"></div>
+    <div class="readout mono" data-bind="time.hhmm24"></div>
   </section>
 
   <aside class="wx">
@@ -320,7 +333,7 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
       <path class="sun__arc" d="M 0 180 A 180 180 0 0 1 360 180"></path>
       <circle class="sun__dot" id="sunDot" cx="0" cy="180" r="7"></circle>
     </svg>
-    <div class="sun__labels">
+    <div class="sun__labels mono">
       <span data-bind="weather.today.sunrise"></span>
       <span data-bind="weather.today.sunset"></span>
     </div>
@@ -328,12 +341,12 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
     <svg class="spark" width="360" height="90" viewBox="0 0 360 90" aria-hidden="true">
       <path class="spark__line" id="sparkLine" d=""></path>
     </svg>
-    <div class="spark__labels">
+    <div class="spark__labels mono">
       <span id="sparkStart"></span>
       <span id="sparkEnd"></span>
     </div>
 
-    <div class="hl">
+    <div class="hl mono">
       H <span data-bind="weather.today.high"></span>°<span class="sep"></span>L
       <span data-bind="weather.today.low"></span>°
     </div>
@@ -401,7 +414,7 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
       const y = SUN_CY - SUN_R * Math.sin(angle);
       sunDot.setAttribute("cx", x.toFixed(1));
       sunDot.setAttribute("cy", y.toFixed(1));
-      sunDot.setAttribute("fill", raw >= 0 && raw <= 1 ? "#f5a623" : "#5a4a2a");
+      sunDot.classList.toggle("is-down", raw < 0 || raw > 1);
     }
 
     /* hourly temperature curve */
