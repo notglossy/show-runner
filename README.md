@@ -23,7 +23,8 @@ request flow: [docs/architecture.md](docs/architecture.md).
 - Launcher kiosk mode by default; optional strict mode (device owner + lock task) that can always
   be left from the on-device exit menu or the dashboard, never by factory reset.
 - Screen editor with a live 1280×800 preview and four built-in screens (Default, pictured above;
-  clock; clock + weather; and an analog dial).
+  clock; clock + weather; and an analog dial). Their templates, screenshots and notes are in
+  [examples/](examples/).
 - AI screen generation from a description through any OpenAI-compatible API (optional).
 - Playlists, per-device commands, device logs and heartbeat status in the dashboard.
 

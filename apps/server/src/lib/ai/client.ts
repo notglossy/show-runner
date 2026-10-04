@@ -45,7 +45,7 @@ export async function streamChat(options: ChatOptions): Promise<ChatResult> {
       accept: 'text/event-stream',
       // OpenRouter attribution headers; ignored elsewhere.
       'x-title': 'ShowRunner',
-      'http-referer': 'https://github.com/notglossy/show-runner',
+      'http-referer': 'https://showrunner.notglossy.com',
     },
     body: JSON.stringify({
       model: options.model,

@@ -10,107 +10,131 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
   {
     id: 'builtin-clock',
     name: 'Clock',
-    description: 'Large clock with date and greeting.',
+    description: 'Large clock with the date, a greeting and a bar that fills each minute.',
     dataRefreshSeconds: 300,
     html: `<style>
-  .ck-root { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; color: #fff; font-family: system-ui, sans-serif; text-align: center; }
-  .ck-greeting { font-size: 40px; font-weight: 400; color: #7d8595; margin-bottom: 24px; }
-  .ck-row { display: flex; align-items: flex-start; }
-  .ck-time { font-size: 290px; font-weight: 200; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: #fff; }
-  .ck-ampm { font-size: 72px; font-weight: 400; color: #9aa3b2; margin-left: 20px; margin-top: 28px; }
-  .ck-date { margin-top: 32px; font-size: 60px; font-weight: 400; color: #c9ced8; }
+  /* Colors. Change them here to restyle the screen. */
+  :root {
+    --ck-accent: #6136f5; /* seconds bar */
+    --ck-accent-text: #a995ff; /* date; a lighter tint so it stays readable on black */
+  }
+  .ck-root { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; color: #f2f2f2; font-family: "Space Grotesk", system-ui, sans-serif; font-weight: 500; text-align: center; }
+  .ck-mono { font-family: "JetBrains Mono", monospace; font-weight: 400; text-transform: uppercase; letter-spacing: -0.01em; }
+  .ck-date { font-size: 30px; color: var(--ck-accent-text); }
+  .ck-row { display: flex; align-items: flex-start; margin: 20px 0 12px; }
+  .ck-time { font-size: 300px; line-height: 0.9; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+  .ck-ampm { font-size: 48px; color: #8b8b8b; margin: 24px 0 0 20px; }
+  .ck-greeting { font-size: 40px; color: #c9ced8; }
+  .ck-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 8px; background: #1b1b1b; }
+  .ck-fill { height: 100%; background: var(--ck-accent); transform: scaleX(0); transform-origin: left; transition: transform 1s linear; }
 </style>
 <main class="ck-root">
+  <div class="ck-date ck-mono" data-bind="time.date"></div>
+  <div class="ck-row"><span class="ck-time" data-bind="time.hhmm"></span><span class="ck-ampm ck-mono" data-bind="time.ampm"></span></div>
   <div class="ck-greeting" data-bind="time.greeting"></div>
-  <div class="ck-row"><span class="ck-time" data-bind="time.hhmm"></span><span class="ck-ampm" data-bind="time.ampm"></span></div>
-  <div class="ck-date" data-bind="time.date"></div>
-</main>`,
+  <div class="ck-bar"><div class="ck-fill" id="ck-fill"></div></div>
+</main>
+<script>
+  var fill = document.getElementById("ck-fill");
+  kiosk.on("tick", function (t) {
+    var s = Number(t.second);
+    // Snap back at :00 instead of animating the bar backwards.
+    fill.style.transition = s === 0 ? "none" : "";
+    fill.style.transform = "scaleX(" + s / 59 + ")";
+  });
+</script>`,
   },
   {
     id: 'builtin-clock-weather',
     name: 'Clock & Weather',
-    description: 'Clock with current conditions and a 5-day forecast.',
+    description: 'Clock and current conditions side by side, with a 5-day forecast in line icons.',
     dataRefreshSeconds: 60,
     html: `<style>
-  .cw-root { position: fixed; inset: 0; padding: 48px; background: #000; color: #fff; font-family: system-ui, sans-serif; display: flex; flex-direction: column; }
-  .cw-top { display: flex; justify-content: space-between; align-items: flex-start; flex: 1; }
-  .cw-clockrow { display: flex; align-items: flex-start; }
-  .cw-time { font-size: 200px; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; color: #fff; }
-  .cw-ampm { font-size: 56px; font-weight: 400; color: #9aa3b2; margin-left: 14px; margin-top: 18px; }
-  .cw-date { margin-top: 16px; font-size: 44px; color: #c9ced8; }
-  .cw-now { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
-  .cw-emoji { font-size: 120px; line-height: 1; }
-  .cw-temp { font-size: 150px; font-weight: 200; line-height: 1; font-variant-numeric: tabular-nums; color: #fff; }
-  .cw-cond { font-size: 40px; color: #c9ced8; margin-top: 8px; }
-  .cw-hilo { font-size: 34px; color: #9aa3b2; margin-top: 8px; font-variant-numeric: tabular-nums; }
-  .cw-now[data-icon="rain"] .cw-cond, .cw-now[data-icon="showers"] .cw-cond, .cw-now[data-icon="drizzle"] .cw-cond { color: #7fb4ff; }
-  .cw-now[data-icon="thunderstorm"] .cw-cond { color: #ffd166; }
-  .cw-now[data-icon="snow"] .cw-cond, .cw-now[data-icon="sleet"] .cw-cond { color: #d8ecff; }
-  .cw-now[data-icon="clear"] .cw-cond, .cw-now[data-icon="partly-cloudy"] .cw-cond { color: #ffcf7a; }
-  .cw-band { display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px; margin-top: 32px; }
-  .cw-day { text-align: center; padding: 20px 0; border-radius: 24px; background: #0f1319; }
-  .cw-name { font-size: 32px; color: #9aa3b2; }
-  .cw-dayemoji { font-size: 64px; margin: 8px 0; line-height: 1.2; }
-  .cw-temps { font-size: 40px; font-variant-numeric: tabular-nums; }
-  .cw-low { color: #9aa3b2; margin-left: 12px; }
-  .cw-empty { grid-column: 1 / -1; text-align: center; font-size: 36px; color: #9aa3b2; padding: 32px 0; }
+  /* Colors. Change them here to restyle the screen. */
+  :root {
+    --cw-accent: #a995ff; /* weather icons and the date */
+  }
+  .cw-root { position: fixed; inset: 0; padding: 56px 64px 48px; background: #000; color: #f2f2f2; font-family: "Space Grotesk", system-ui, sans-serif; font-weight: 500; display: flex; flex-direction: column; }
+  .cw-mono { font-family: "JetBrains Mono", monospace; font-weight: 400; text-transform: uppercase; letter-spacing: -0.01em; }
+  /* Two columns sharing rows, so the time and the temperature sit on one line. */
+  .cw-top { display: grid; grid-template-columns: auto auto; justify-content: space-between; column-gap: 48px; row-gap: 16px; }
+  .cw-right { text-align: right; justify-self: end; }
+  .cw-date { font-size: 26px; color: var(--cw-accent); align-self: end; }
+  .cw-place { font-size: 22px; color: #8b8b8b; align-self: end; max-width: 460px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cw-big { display: flex; align-items: flex-start; }
+  .cw-time, .cw-temp { font-size: 170px; line-height: 0.88; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+  .cw-ampm, .cw-unit { font-size: 40px; color: #8b8b8b; margin: 12px 0 0 12px; }
+  .cw-greeting { font-size: 32px; color: #c9ced8; }
+  .cw-now { display: flex; align-items: center; justify-content: flex-end; gap: 14px; font-size: 32px; }
+  .cw-nowicon { width: 40px; height: 40px; color: var(--cw-accent); display: block; }
+  .cw-hilo { font-size: 22px; margin-top: 8px; color: #8b8b8b; font-variant-numeric: tabular-nums; }
+  .cw-band { margin-top: auto; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid #2a2a2a; }
+  .cw-day { padding: 24px 20px 0; border-left: 1px solid #2a2a2a; min-width: 0; }
+  .cw-day:first-child { border-left: 0; padding-left: 0; }
+  .cw-name { font-size: 24px; color: #8b8b8b; }
+  .cw-icon { display: block; width: 72px; height: 72px; margin: 18px 0 16px; color: var(--cw-accent); }
+  .cw-temps { font-size: 34px; font-variant-numeric: tabular-nums; }
+  .cw-low { color: #8b8b8b; margin-left: 12px; }
+  .cw-rain { font-size: 18px; color: #8b8b8b; margin-top: 6px; min-height: 24px; }
+  .cw-empty { grid-column: 1 / -1; font-size: 28px; color: #8b8b8b; padding: 32px 0; }
 </style>
 <main class="cw-root">
   <div class="cw-top">
-    <div>
-      <div class="cw-clockrow"><span class="cw-time" data-bind="time.hhmm"></span><span class="cw-ampm" data-bind="time.ampm"></span></div>
-      <div class="cw-date" data-bind="time.date"></div>
-    </div>
-    <div class="cw-now" data-bind-attr="data-icon:weather.current.icon">
-      <div class="cw-emoji" data-bind="weather.current.emoji"></div>
-      <div class="cw-temp"><span data-bind="weather.current.temperature"></span><span data-bind="weather.units.temperature"></span></div>
-      <div class="cw-cond" data-bind="weather.current.condition" data-fallback="Weather unavailable"></div>
-      <div class="cw-hilo">H <span data-bind="weather.today.high"></span>° · L <span data-bind="weather.today.low"></span>°</div>
+    <div class="cw-date cw-mono" data-bind="time.date"></div>
+    <div class="cw-place cw-mono cw-right" data-bind="weather.location.name" data-fallback=""></div>
+    <div class="cw-big"><span class="cw-time" data-bind="time.hhmm"></span><span class="cw-ampm cw-mono" data-bind="time.ampm"></span></div>
+    <div class="cw-big cw-right"><span class="cw-temp" data-bind="weather.current.temperature" data-fallback="--"></span><span class="cw-unit" data-bind="weather.units.temperature"></span></div>
+    <div class="cw-greeting" data-bind="time.greeting"></div>
+    <div class="cw-right">
+      <div class="cw-now"><span id="cw-nowicon"></span><span data-bind="weather.current.condition" data-fallback="Weather unavailable"></span></div>
+      <div class="cw-hilo cw-mono">H <span data-bind="weather.today.high" data-fallback="--"></span>° · L <span data-bind="weather.today.low" data-fallback="--"></span>°</div>
     </div>
   </div>
   <section class="cw-band" id="cw-days"></section>
 </main>
 <script>
-  var band = document.getElementById("cw-days");
+  // Line icons per weather icon key, drawn in currentColor on a 24x24 grid.
+  var SUN = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  var CLOUD = '<path d="M7 18h10a4 4 0 0 0 .4-8 6 6 0 0 0-11.4 1.6A3.3 3.3 0 0 0 7 18z"/>';
+  var CLOUD_HI = '<path d="M7 15h10a4 4 0 0 0 .4-8 6 6 0 0 0-11.4 1.6A3.3 3.3 0 0 0 7 15z"/>';
+  var ICONS = {
+    "clear": SUN,
+    "partly-cloudy": '<path d="M8 3v1.5M3.5 8H5M4.8 4.8l1 1M11.2 4.8l-1 1"/><path d="M5.6 10.2A3 3 0 1 1 10.7 7"/><path d="M9 20h8a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.5 1.4A2.8 2.8 0 0 0 9 20z"/>',
+    "cloudy": CLOUD,
+    "fog": '<path d="M4 9h16M3 13h18M5 17h14"/>',
+    "drizzle": CLOUD_HI + '<path d="M9 18v1M13 18v1M17 18v1"/>',
+    "rain": CLOUD_HI + '<path d="M9 18l-1 3M13 18l-1 3M17 18l-1 3"/>',
+    "showers": CLOUD_HI + '<path d="M9 18l-1 3M13 18l-1 3"/>',
+    "sleet": CLOUD_HI + '<path d="M9 18l-1 3M15 19h.01M12 21h.01"/>',
+    "snow": CLOUD_HI + '<path d="M9 19h.01M13 19h.01M17 19h.01M11 21.5h.01M15 21.5h.01"/>',
+    "thunderstorm": CLOUD_HI + '<path d="M13 15l-2 3.5h3L12 22"/>',
+    "unknown": CLOUD
+  };
+  function icon(key, cls) {
+    // Markup comes only from the constant table above, never from data.
+    var wrap = document.createElement("span");
+    wrap.innerHTML = '<svg class="' + cls + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[key] || ICONS.unknown) + '</svg>';
+    return wrap.firstChild;
+  }
+  function el(tag, cls, text) { var n = document.createElement(tag); n.className = cls; if (text != null) n.textContent = text; return n; }
+  var band = document.getElementById("cw-days"), nowSlot = document.getElementById("cw-nowicon");
   kiosk.on("data", function (data) {
-    while (band.firstChild) { band.removeChild(band.firstChild); }
-    var daily = (data && data.weather && data.weather.daily) || [];
-    var forecast = daily.slice(1, 6);
-    if (forecast.length < 5) {
-      var empty = document.createElement("div");
-      empty.className = "cw-empty";
-      empty.textContent = "Forecast unavailable";
-      band.appendChild(empty);
-      return;
-    }
-    for (var i = 0; i < forecast.length; i++) {
-      var d = forecast[i];
-      var card = document.createElement("div");
-      card.className = "cw-day";
-      var name = document.createElement("div");
-      name.className = "cw-name";
-      name.textContent = d.weekdayShort;
-      var emoji = document.createElement("div");
-      emoji.className = "cw-dayemoji";
-      emoji.textContent = d.emoji;
-      var temps = document.createElement("div");
-      temps.className = "cw-temps";
-      var high = document.createElement("span");
-      high.textContent = d.high;
-      var low = document.createElement("span");
-      low.className = "cw-low";
-      low.textContent = d.low;
-      temps.appendChild(high);
-      temps.appendChild(document.createTextNode("°"));
-      temps.appendChild(low);
-      var lowSuffix = document.createTextNode("°");
-      temps.appendChild(lowSuffix);
-      card.appendChild(name);
-      card.appendChild(emoji);
-      card.appendChild(temps);
-      band.appendChild(card);
-    }
-    kiosk.applyBindings(band);
+    var w = (data && data.weather) || {};
+    while (nowSlot.firstChild) nowSlot.removeChild(nowSlot.firstChild);
+    if (w.current) nowSlot.appendChild(icon(w.current.icon, "cw-nowicon"));
+    while (band.firstChild) band.removeChild(band.firstChild);
+    var days = (w.daily || []).slice(1, 6);
+    if (days.length < 5) { band.appendChild(el("div", "cw-empty cw-mono", "Forecast unavailable")); return; }
+    days.forEach(function (d) {
+      var col = el("div", "cw-day");
+      col.appendChild(el("div", "cw-name cw-mono", d.weekdayShort));
+      col.appendChild(icon(d.icon, "cw-icon"));
+      var temps = el("div", "cw-temps", d.high + "°");
+      temps.appendChild(el("span", "cw-low", d.low + "°"));
+      col.appendChild(temps);
+      col.appendChild(el("div", "cw-rain cw-mono", d.precipitationChance >= 20 ? d.precipitationChance + "% rain" : ""));
+      band.appendChild(col);
+    });
   });
 </script>`,
   },
@@ -121,6 +145,12 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
       'Analog dial with a sweeping second hand, current conditions, a sunrise-to-sunset arc and the next 12 hours of temperature.',
     dataRefreshSeconds: 60,
     html: `<style>
+  /* Colors. Change them here to restyle the screen. */
+  :root {
+    --dl-accent: #a995ff; /* second hand, centre cap, sun */
+    --dl-accent-dim: #3b3166; /* sun before sunrise and after sunset */
+  }
+
   @property --fg {
     syntax: "<color>";
     inherits: true;
@@ -129,27 +159,34 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
   @property --bg {
     syntax: "<color>";
     inherits: true;
-    initial-value: #0b0b0c;
+    initial-value: #000000;
   }
 
   .screen {
     position: fixed;
     inset: 0;
     --fg: #f2f0ea;
-    --bg: #0b0b0c;
+    --bg: #000000;
     background-color: var(--bg);
     color: var(--fg);
     transition: --fg 2s linear, --bg 2s linear, background-color 2s linear, color 2s linear;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 40px;
+    gap: 64px;
     padding: 0 80px;
-    font-family: "Inter", system-ui, sans-serif;
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    font-weight: 500;
+  }
+  .mono {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
   }
   .screen[data-day="false"] {
     --fg: #e8e6df;
-    --bg: #0a0a0f;
+    --bg: #000000;
   }
 
   [data-bind-missing] { opacity: 0.5; }
@@ -164,7 +201,7 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
   }
   .dial { display: block; width: 620px; height: 620px; }
 
-  .tick-min { stroke: #3a3a3a; stroke-width: 2; }
+  .tick-min { stroke: #2a2a2a; stroke-width: 2; }
   .tick-hour { stroke: var(--fg); stroke-width: 5; }
 
   .hand {
@@ -174,19 +211,18 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
     transform-origin: 310px 310px;
   }
   .hand--sec {
-    stroke: #f5a623;
+    stroke: var(--dl-accent);
     transition: transform 1s linear;
   }
-  .cap { fill: #f5a623; }
+  .cap { fill: var(--dl-accent); }
 
   .readout {
-    margin-top: 14px;
-    font-size: 30px;
-    font-weight: 500;
+    margin-top: 18px;
+    font-size: 26px;
     line-height: 1.2;
     letter-spacing: 0.3em;
     text-indent: 0.3em;
-    color: #8a8a8a;
+    color: #8b8b8b;
     font-variant-numeric: tabular-nums lining-nums;
   }
 
@@ -198,47 +234,48 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
+    padding-left: 64px;
+    border-left: 1px solid #2a2a2a;
   }
   .screen[data-weather="off"] .wx { display: none; }
 
   .temp {
     display: flex;
     align-items: flex-start;
-    font-size: 200px;
-    font-weight: 200;
-    line-height: 0.78;
-    letter-spacing: -0.02em;
+    font-size: 180px;
+    line-height: 0.82;
+    letter-spacing: -0.04em;
     white-space: nowrap;
     color: var(--fg);
     font-variant-numeric: tabular-nums lining-nums;
   }
   .temp__unit {
-    font-size: 72px;
-    font-weight: 200;
+    font-size: 40px;
     line-height: 1.1;
     letter-spacing: 0;
-    margin-left: 8px;
+    margin: 10px 0 0 8px;
+    color: #8b8b8b;
   }
 
   .cond {
-    margin-top: 12px;
-    font-size: 36px;
-    font-weight: 400;
+    margin-top: 16px;
+    font-size: 34px;
     line-height: 1.1;
-    color: #8a8a8a;
+    color: #c9ced8;
   }
 
   .sun { display: block; margin-top: 28px; }
-  .sun__arc { fill: none; stroke: #333333; stroke-width: 1; }
-  .sun__dot { fill: #f5a623; }
+  .sun__arc { fill: none; stroke: #2a2a2a; stroke-width: 2; stroke-dasharray: 2 6; }
+  .sun__dot { fill: var(--dl-accent); }
+  .sun__dot.is-down { fill: var(--dl-accent-dim); }
   .sun__labels {
     width: 376px;
     display: flex;
     justify-content: space-between;
-    margin-top: 2px;
-    font-size: 26px;
+    margin-top: 6px;
+    font-size: 20px;
     line-height: 1.2;
-    color: #8a8a8a;
+    color: #8b8b8b;
     font-variant-numeric: tabular-nums lining-nums;
   }
 
@@ -254,17 +291,17 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
     width: 360px;
     display: flex;
     justify-content: space-between;
-    margin-top: 6px;
-    font-size: 24px;
+    margin-top: 8px;
+    font-size: 18px;
     line-height: 1.25;
-    color: #8a8a8a;
+    color: #8b8b8b;
   }
 
   .hl {
     margin-top: 22px;
-    font-size: 32px;
+    font-size: 22px;
     line-height: 1.25;
-    color: #8a8a8a;
+    color: #8b8b8b;
     font-variant-numeric: tabular-nums lining-nums;
   }
   .hl .sep { padding: 0 20px; }
@@ -282,7 +319,7 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
       </g>
       <circle class="cap" cx="310" cy="310" r="5"></circle>
     </svg>
-    <div class="readout" data-bind="time.hhmm24"></div>
+    <div class="readout mono" data-bind="time.hhmm24"></div>
   </section>
 
   <aside class="wx">
@@ -296,7 +333,7 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
       <path class="sun__arc" d="M 0 180 A 180 180 0 0 1 360 180"></path>
       <circle class="sun__dot" id="sunDot" cx="0" cy="180" r="7"></circle>
     </svg>
-    <div class="sun__labels">
+    <div class="sun__labels mono">
       <span data-bind="weather.today.sunrise"></span>
       <span data-bind="weather.today.sunset"></span>
     </div>
@@ -304,12 +341,12 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
     <svg class="spark" width="360" height="90" viewBox="0 0 360 90" aria-hidden="true">
       <path class="spark__line" id="sparkLine" d=""></path>
     </svg>
-    <div class="spark__labels">
+    <div class="spark__labels mono">
       <span id="sparkStart"></span>
       <span id="sparkEnd"></span>
     </div>
 
-    <div class="hl">
+    <div class="hl mono">
       H <span data-bind="weather.today.high"></span>°<span class="sep"></span>L
       <span data-bind="weather.today.low"></span>°
     </div>
@@ -377,7 +414,7 @@ export const BUILTIN_SCREENS: BuiltinScreen[] = [
       const y = SUN_CY - SUN_R * Math.sin(angle);
       sunDot.setAttribute("cx", x.toFixed(1));
       sunDot.setAttribute("cy", y.toFixed(1));
-      sunDot.setAttribute("fill", raw >= 0 && raw <= 1 ? "#f5a623" : "#5a4a2a");
+      sunDot.classList.toggle("is-down", raw < 0 || raw > 1);
     }
 
     /* hourly temperature curve */
