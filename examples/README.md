@@ -23,6 +23,7 @@ Not built in: add them from the dashboard to use them.
 |---|---|---|
 | <img src="3d-pipes/screenshot.png" width="240" alt="3D Pipes screen"> | [**3D Pipes**](3d-pipes/) | The classic 3D Pipes screensaver in WebGL, with the time and weather in a card. Animates continuously; best in a playlist. |
 | <img src="maze-solver/screenshot.png" width="240" alt="Maze Solver screen"> | [**Maze Solver**](maze-solver/) | A new maze every minute, solved live by a depth-first search, with the time, solver telemetry and weather alongside. |
+| <img src="fireworks/screenshot.png" width="240" alt="Fireworks screen"> | [**Fireworks**](fireworks/) | Fireworks over a city skyline around a large clock, with the date, weather and a greeting. Animates continuously; best in a playlist. |
 
 ## Using an example
 
