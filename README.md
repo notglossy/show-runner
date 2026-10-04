@@ -33,14 +33,14 @@ You need Docker on a machine on the same LAN as the display, and adb for the one
 install.
 
 1. **Configure the server.** The server ships as a container image,
-   `ghcr.io/notglossy/show-runner`, built for amd64 and arm64 by every
-   [release](https://github.com/notglossy/show-runner/releases). The image is public, so no
+   `ghcr.io/notglossy/showrunner`, built for amd64 and arm64 by every
+   [release](https://github.com/notglossy/showrunner/releases). The image is public, so no
    registry login is needed. You only need the compose file and an `.env`:
 
    ```sh
    mkdir showrunner && cd showrunner
-   curl -fsSLO https://raw.githubusercontent.com/notglossy/show-runner/main/docker-compose.yml
-   curl -fsSL https://raw.githubusercontent.com/notglossy/show-runner/main/.env.example -o .env
+   curl -fsSLO https://raw.githubusercontent.com/notglossy/showrunner/main/docker-compose.yml
+   curl -fsSL https://raw.githubusercontent.com/notglossy/showrunner/main/.env.example -o .env
    # edit .env: set ADMIN_PASSWORD; SHOWRUNNER_VERSION picks the release (see Configuration)
    ```
 
@@ -57,7 +57,7 @@ install.
 
 3. **Prepare the display** once, following [docs/device-setup.md](docs/device-setup.md):
    enable adb, then install the app with the server address and secret. Use the APK from the
-   [latest release](https://github.com/notglossy/show-runner/releases), or drop `--apk` to build it
+   [latest release](https://github.com/notglossy/showrunner/releases), or drop `--apk` to build it
    yourself with Android Studio's JDK:
 
    ```sh

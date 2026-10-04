@@ -9,8 +9,8 @@ secret, when one is set).
 
 ## Supported versions
 
-The latest [release](https://github.com/notglossy/show-runner/releases) only: the
-`ghcr.io/notglossy/show-runner` image and the APK it ships with. Fixes arrive as a new release;
+The latest [release](https://github.com/notglossy/showrunner/releases) only: the
+`ghcr.io/notglossy/showrunner` image and the APK it ships with. Fixes arrive as a new release;
 update by changing `SHOWRUNNER_VERSION` and pulling. There are no release branches.
 
 ## Reporting a vulnerability

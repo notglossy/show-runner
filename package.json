@@ -1,5 +1,5 @@
 {
-  "name": "show-runner",
+  "name": "showrunner",
   "license": "MIT",
   "packageManager": "pnpm@10.6.2",
   "engines": {
