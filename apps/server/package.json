@@ -12,6 +12,7 @@
     "knip": "knip",
     "typecheck": "next typegen && tsc --noEmit",
     "db:generate": "drizzle-kit generate",
+    "examples": "UPDATE_EXAMPLES=1 vitest run src/lib/seed/examples.test.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
