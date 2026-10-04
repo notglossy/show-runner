@@ -3,17 +3,18 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { builtinExamples, EXAMPLES_DIR } from './examples';
+import { validateTemplate } from '@/lib/ai/validate';
 
-// `pnpm --filter @showrunner/server examples` sets this to rewrite examples/*/screen.html from the seed
-// templates (like a snapshot update). Screenshots and READMEs are maintained by hand.
+import { allExampleFolders, builtinExamples, EXAMPLES_DIR } from './examples';
+
+// `pnpm --filter @showrunner/server examples` sets this to rewrite the built-in examples' screen.html from
+// the seed templates (like a snapshot update). Other examples, screenshots and READMEs are edited by hand.
 const UPDATE = process.env.UPDATE_EXAMPLES === '1';
 
-describe('examples/', () => {
+describe('built-in examples', () => {
   for (const { screen, folder } of builtinExamples()) {
-    const dir = path.join(EXAMPLES_DIR, folder);
-
     it(`${folder}/screen.html matches the ${screen.name} seed template`, () => {
+      const dir = path.join(EXAMPLES_DIR, folder);
       const file = path.join(dir, 'screen.html');
       if (UPDATE) {
         mkdirSync(dir, { recursive: true });
@@ -22,10 +23,21 @@ describe('examples/', () => {
       // Out of date? Run `pnpm --filter @showrunner/server examples`.
       expect(readFileSync(file, 'utf8')).toBe(`${screen.html}\n`);
     });
+  }
+});
 
-    it(`${folder} has a README and a screenshot`, () => {
-      expect(existsSync(path.join(dir, 'README.md'))).toBe(true);
-      expect(existsSync(path.join(dir, 'screenshot.png'))).toBe(true);
+describe('every example', () => {
+  for (const folder of allExampleFolders()) {
+    const dir = path.join(EXAMPLES_DIR, folder);
+
+    it(`${folder} has screen.html, README.md and screenshot.png`, () => {
+      for (const file of ['screen.html', 'README.md', 'screenshot.png']) {
+        expect(existsSync(path.join(dir, file)), `${folder}/${file}`).toBe(true);
+      }
+    });
+
+    it(`${folder}/screen.html follows the screen authoring rules`, () => {
+      expect(validateTemplate(readFileSync(path.join(dir, 'screen.html'), 'utf8'))).toEqual([]);
     });
   }
 });
