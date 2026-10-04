@@ -47,7 +47,7 @@ export function Nav() {
           onClick={() => setOpen(false)}
           className="focus-visible:outline-signal-tint flex"
         >
-          <Logo tone="dark" className="h-6 w-auto" />
+          <Logo tone="dark" className="h-4.75 w-auto md:h-6" />
         </Link>
         <button
           ref={toggleRef}

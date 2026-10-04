@@ -11,7 +11,7 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
   return (
     <div className="bg-ground grid min-h-screen grid-rows-[auto_1fr] md:grid-cols-[5fr_4fr] md:grid-rows-none">
       <section className="bg-ink relative flex flex-col justify-between gap-7 overflow-hidden px-4 py-6 md:p-12">
-        <Logo tone="dark" className="h-6 w-auto self-start md:h-7" />
+        <Logo tone="dark" className="h-4.75 w-auto self-start md:h-7" />
         <p className="max-w-xl text-3xl leading-[1.02] font-medium tracking-tight text-white md:text-5xl lg:text-6xl">
           Every screen in the house, from one dashboard.
         </p>
