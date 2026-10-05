@@ -1,0 +1,219 @@
+<style>
+  /* Colors. Change them here to restyle the screen. */
+  :root {
+    --lq-ink: #eef1f4;      /* clock */
+    --lq-muted: #8f99a6;    /* date, conditions */
+    --lq-base: #06070a;     /* the liquid in shadow */
+    --lq-sheen: #303b4a;    /* light across the folds */
+    --lq-shine: #a9bad0;    /* bright highlights on the ridges */
+  }
+  .lq {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: var(--lq-base);
+    color: var(--lq-ink);
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    font-weight: 500;
+  }
+  .lq-mono { font-family: "JetBrains Mono", monospace; font-weight: 400; text-transform: uppercase; letter-spacing: 0.04em; }
+  /* The shader renders small and the browser scales it up smoothly. */
+  #lq-canvas { position: absolute; inset: 0; width: 1280px; height: 800px; }
+  /* Darken toward the bottom and left so the text stays readable. */
+  .lq-shade {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, rgba(5, 6, 9, 0.75) 0%, rgba(5, 6, 9, 0.2) 55%, rgba(5, 6, 9, 0) 75%),
+      linear-gradient(0deg, rgba(5, 6, 9, 0.85) 0%, rgba(5, 6, 9, 0) 45%);
+  }
+  /* Faint vertical rules, like the reference. */
+  .lq-rules {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 160px 100%;
+    background-position: 32px 0;
+  }
+  .lq-text { position: absolute; left: 64px; bottom: 64px; }
+  .lq-label { font-size: 20px; color: var(--lq-muted); }
+  .lq-clock { display: flex; align-items: flex-start; margin-top: 10px; }
+  .lq-time { font-size: 190px; line-height: 0.88; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; }
+  .lq-ampm { font-size: 40px; color: var(--lq-muted); margin: 16px 0 0 14px; }
+  .lq-line { font-size: 26px; color: var(--lq-muted); margin-top: 18px; }
+  .lq-line b { color: var(--lq-ink); font-weight: 500; }
+  .lq-stats {
+    position: absolute;
+    right: 32px;
+    top: 28px;
+    font-size: 16px;
+    line-height: 1.6;
+    text-align: right;
+    color: var(--lq-muted);
+  }
+</style>
+
+<main class="lq">
+  <canvas id="lq-canvas"></canvas>
+  <div class="lq-shade"></div>
+  <div class="lq-rules"></div>
+
+  <section class="lq-text">
+    <div class="lq-label lq-mono" data-bind="time.date"></div>
+    <div class="lq-clock">
+      <span class="lq-time" data-bind="time.hhmm"></span>
+      <span class="lq-ampm lq-mono" data-bind="time.ampm"></span>
+    </div>
+    <div class="lq-line">
+      <b><span data-bind="weather.current.temperature" data-fallback="--"></span>°</b>
+      <span data-bind="weather.current.condition" data-fallback="Weather unavailable"></span>
+    </div>
+  </section>
+
+  <div class="lq-stats lq-mono" id="lq-stats"></div>
+</main>
+
+<script>
+  (function () {
+    // ---- Settings ----------------------------------------------------------------------
+    const RES = 0.35;       // shader resolution as a share of 1280x800 (0.35 = 448x280), scaled up by CSS
+    const FRAME_SKIP = 1;   // 1 = draw every frame (~56 fps on the Echo), 2 = every other frame
+    const SHOW_FPS = false; // frame rate readout, top right
+    const SPEED = 0.05;     // flow speed
+    const SCALE = 1.0;      // size of the folds (smaller = bigger folds)
+    const BUMP = 0.45;      // how strongly the folds catch the light
+    const TEX = 256;        // noise texture size (power of two, tiles seamlessly)
+
+    const canvas = document.getElementById("lq-canvas");
+    const stats = document.getElementById("lq-stats");
+    canvas.width = Math.round(1280 * RES);
+    canvas.height = Math.round(800 * RES);
+    const gl = canvas.getContext("webgl", { antialias: false, alpha: false, depth: false });
+    if (!gl) return;
+
+    // ---- Bake the noise once: 4 independent channels of tileable fractal value noise --------
+    // Doing this per pixel per frame was ~12x too slow on the Echo; texture lookups are cheap.
+    const bakeStart = performance.now();
+    function lattice(period, seed) {
+      const g = new Float32Array(period * period);
+      let s = seed;
+      for (let i = 0; i < g.length; i++) { s = (s * 16807) % 2147483647; g[i] = s / 2147483647; }
+      return g;
+    }
+    function fbmChannel(seed) {
+      const out = new Float32Array(TEX * TEX);
+      let amp = 0.5, total = 0;
+      for (let o = 0, period = 4; o < 4; o++, period *= 2) {
+        const g = lattice(period, seed + o * 7919);
+        const cell = TEX / period;
+        for (let y = 0; y < TEX; y++) {
+          const gy = y / cell, iy = Math.floor(gy), fy = gy - iy, uy = fy * fy * (3 - 2 * fy);
+          const y0 = (iy % period) * period, y1 = ((iy + 1) % period) * period;
+          for (let x = 0; x < TEX; x++) {
+            const gx = x / cell, ix = Math.floor(gx), fx = gx - ix, ux = fx * fx * (3 - 2 * fx);
+            const x0 = ix % period, x1 = (ix + 1) % period;
+            const a = g[y0 + x0], b = g[y0 + x1], c = g[y1 + x0], d = g[y1 + x1];
+            out[y * TEX + x] += amp * ((a + (b - a) * ux) + ((c + (d - c) * ux) - (a + (b - a) * ux)) * uy);
+          }
+        }
+        total += amp; amp *= 0.5;
+      }
+      for (let i = 0; i < out.length; i++) out[i] /= total;
+      return out;
+    }
+    const ch = [fbmChannel(11), fbmChannel(23), fbmChannel(37), fbmChannel(53)];
+    const pixels = new Uint8Array(TEX * TEX * 4);
+    for (let i = 0; i < TEX * TEX; i++) {
+      for (let c = 0; c < 4; c++) pixels[i * 4 + c] = Math.max(0, Math.min(255, Math.round(ch[c][i] * 255)));
+    }
+    const bakeMs = performance.now() - bakeStart;
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, TEX, TEX, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+
+    const vs = "attribute vec2 a; void main(){ gl_Position = vec4(a, 0.0, 1.0); }";
+    const fs = `
+      precision mediump float;
+      uniform vec2 uRes;
+      uniform float uTime;
+      uniform sampler2D uN;
+      uniform vec3 uBase, uSheen, uShine;
+      // Two warps of the baked noise give the folded, flowing shapes (domain warping).
+      float field(vec2 p) {
+        float t = uTime;
+        vec4 a = texture2D(uN, p * 0.5 + vec2(t, -t * 0.7));
+        vec2 q = a.xy - 0.5;
+        vec4 b = texture2D(uN, p * 0.5 + q * 0.9 + vec2(-t * 0.5, t * 0.4));
+        return b.z * 0.65 + b.w * 0.35;
+      }
+      void main() {
+        vec2 p = gl_FragCoord.xy / uRes.y * ${SCALE.toFixed(2)};
+        float h = field(p);
+        float e = 0.035;          // ~4 texels: wide enough to smooth out 8-bit steps
+        float hx = field(p + vec2(e, 0.0));
+        float hy = field(p + vec2(0.0, e));
+        vec3 n = normalize(vec3((h - hx) / e * ${BUMP.toFixed(3)}, (h - hy) / e * ${BUMP.toFixed(3)}, 1.0));
+        vec3 L = normalize(vec3(-0.45, 0.6, 0.65));
+        float diff = max(dot(n, L), 0.0);
+        float spec = pow(max(dot(reflect(-L, n), vec3(0.0, 0.0, 1.0)), 0.0), 9.0);
+        float rim = pow(1.0 - n.z, 2.0);
+        vec3 col = uBase + uSheen * (0.5 * diff + rim) + uShine * spec * 0.6;
+        col *= 0.55 + 0.6 * smoothstep(0.3, 0.7, h);
+        gl_FragColor = vec4(col, 1.0);
+      }`;
+    function shader(type, src) {
+      const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+      return s;
+    }
+    const prog = gl.createProgram();
+    gl.attachShader(prog, shader(gl.VERTEX_SHADER, vs));
+    gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const a = gl.getAttribLocation(prog, "a");
+    gl.enableVertexAttribArray(a);
+    gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
+    gl.uniform2f(gl.getUniformLocation(prog, "uRes"), canvas.width, canvas.height);
+    gl.uniform1i(gl.getUniformLocation(prog, "uN"), 0);
+    const uTime = gl.getUniformLocation(prog, "uTime");
+    // The liquid's colors come from the CSS variables at the top, so they're edited in one place.
+    function cssColor(name) {
+      const probe = document.createElement("span");
+      probe.style.color = getComputedStyle(document.documentElement).getPropertyValue(name);
+      document.body.appendChild(probe);
+      const m = (getComputedStyle(probe).color.match(/\d+/g) || ["0", "0", "0"]).map(Number);
+      probe.remove();
+      return [m[0] / 255, m[1] / 255, m[2] / 255];
+    }
+    gl.uniform3fv(gl.getUniformLocation(prog, "uBase"), cssColor("--lq-base"));
+    gl.uniform3fv(gl.getUniformLocation(prog, "uSheen"), cssColor("--lq-sheen"));
+    gl.uniform3fv(gl.getUniformLocation(prog, "uShine"), cssColor("--lq-shine"));
+    gl.viewport(0, 0, canvas.width, canvas.height);
+
+
+    const start = performance.now();
+    let tick = 0, drawn = 0, lastStat = start, worst = 0, prevDraw = start;
+    function frame(now) {
+      requestAnimationFrame(frame);
+      if (tick++ % FRAME_SKIP) return;
+      const dt = now - prevDraw; prevDraw = now; if (dt > worst) worst = dt;
+      gl.uniform1f(uTime, ((now - start) / 1000) * SPEED);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      drawn++;
+      if (SHOW_FPS && now - lastStat >= 1000) {
+        stats.textContent = (drawn * 1000 / (now - lastStat)).toFixed(1) + " fps · worst " + worst.toFixed(0) +
+          " ms · noise baked in " + bakeMs.toFixed(0) + " ms";
+        drawn = 0; worst = 0; lastStat = now;
+      }
+    }
+    requestAnimationFrame(frame);
+  })();
+</script>
