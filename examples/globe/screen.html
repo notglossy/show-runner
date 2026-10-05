@@ -265,7 +265,8 @@
     let frames = 0, lastStat = start;
     function frame(now) {
       gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.uniform1f(uRot, ((now - start) / 1000) * SPIN_DEG_PER_SEC * Math.PI / 180);
+      // Wrapped to one turn so the angle stays small and precise however long the screen runs.
+      gl.uniform1f(uRot, ((((now - start) / 1000) * SPIN_DEG_PER_SEC) % 360) * Math.PI / 180);
       gl.uniform1f(uScale, 1);
       gl.uniform3f(uColor, 0.92, 0.94, 0.93);
       if (gridBuf) {

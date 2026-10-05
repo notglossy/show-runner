@@ -139,15 +139,14 @@
     const fs = `
       precision mediump float;
       uniform vec2 uRes;
-      uniform float uTime;
+      uniform vec2 uOff1, uOff2;   // flow offsets, already wrapped to 0..1 in JS
       uniform sampler2D uN;
       uniform vec3 uBase, uSheen, uShine;
       // Two warps of the baked noise give the folded, flowing shapes (domain warping).
       float field(vec2 p) {
-        float t = uTime;
-        vec4 a = texture2D(uN, p * 0.5 + vec2(t, -t * 0.7));
+        vec4 a = texture2D(uN, p * 0.5 + uOff1);
         vec2 q = a.xy - 0.5;
-        vec4 b = texture2D(uN, p * 0.5 + q * 0.9 + vec2(-t * 0.5, t * 0.4));
+        vec4 b = texture2D(uN, p * 0.5 + q * 0.9 + uOff2);
         return b.z * 0.65 + b.w * 0.35;
       }
       void main() {
@@ -183,7 +182,12 @@
     gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
     gl.uniform2f(gl.getUniformLocation(prog, "uRes"), canvas.width, canvas.height);
     gl.uniform1i(gl.getUniformLocation(prog, "uN"), 0);
-    const uTime = gl.getUniformLocation(prog, "uTime");
+    const uOff1 = gl.getUniformLocation(prog, "uOff1");
+    const uOff2 = gl.getUniformLocation(prog, "uOff2");
+    // The texture repeats every 1.0, so the flow offsets are wrapped to 0..1 here in full precision.
+    // Passing raw time instead let it grow until the GPU's 16-bit (mediump) math could only move in
+    // coarse steps, so after a few minutes the flow stuttered and seemed to slow down.
+    function wrap(v) { return v - Math.floor(v); }
     // The liquid's colors come from the CSS variables at the top, so they're edited in one place.
     function cssColor(name) {
       const probe = document.createElement("span");
@@ -205,7 +209,9 @@
       requestAnimationFrame(frame);
       if (tick++ % FRAME_SKIP) return;
       const dt = now - prevDraw; prevDraw = now; if (dt > worst) worst = dt;
-      gl.uniform1f(uTime, ((now - start) / 1000) * SPEED);
+      const t = ((now - start) / 1000) * SPEED;
+      gl.uniform2f(uOff1, wrap(t), wrap(-t * 0.7));
+      gl.uniform2f(uOff2, wrap(-t * 0.5), wrap(t * 0.4));
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
       drawn++;
       if (SHOW_FPS && now - lastStat >= 1000) {

@@ -52,5 +52,8 @@ Settings at the top of the script:
   channels of seamlessly tiling fractal noise into a 256×256 texture once at load (about 0.2 s on the Echo),
   then each frame warps and lights it with about six texture lookups per pixel.
 - The flowing, folded shapes come from domain warping: one noise lookup shifts where the next one reads.
+- The flow offsets are wrapped to 0–1 in JavaScript before they reach the shader. Passing raw time made the
+  numbers grow until the Mali's 16-bit (`mediump`) math could only move in coarse steps, so after a few
+  minutes the flow stuttered and seemed to slow down. Worth copying for any shader that runs all day.
 - A gradient over the lower left keeps the text readable; faint vertical rules sit on top.
 - Needs WebGL. Without it the background stays the base color and the text still shows.
