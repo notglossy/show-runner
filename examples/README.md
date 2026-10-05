@@ -25,6 +25,7 @@ Not built in: add them from the dashboard to use them. All of them run smoothly 
 | <img src="maze-solver/screenshot.png" width="240" alt="Maze Solver screen"> | [**Maze Solver**](maze-solver/) | A new maze every minute, solved live by a depth-first search, with the time, solver telemetry and weather alongside. |
 | <img src="fireworks/screenshot.png" width="240" alt="Fireworks screen"> | [**Fireworks**](fireworks/) | Fireworks over a city skyline around a large clock, with the date, weather and a greeting. |
 | <img src="bubbles/screenshot.png" width="240" alt="Bubbles screen"> | [**Bubbles**](bubbles/) | Pastel blobs that drift, turn and change shape behind a frosted time and weather card. Light theme, pure CSS. |
+| <img src="globe/screenshot.png" width="240" alt="Globe screen"> | [**Globe**](globe/) | A turning dot-cloud Earth from a real 1° land map, with latitude and longitude lines, a pulsing marker at your location, the time and the weather. |
 
 ## Using an example
 
