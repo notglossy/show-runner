@@ -108,6 +108,8 @@
     const POINTS = 75000;        // candidate points on the sphere; land is kept, most ocean dropped (~27k drawn)
     const OCEAN_KEEP = 0.05;     // share of ocean points kept, dimmer
     const SPIN_DEG_PER_SEC = 5;  // rotation speed
+    const AXIS_TILT_DEG = 23.4;  // Earth's axial tilt: the spin axis leans sideways like a desk globe
+    const VIEW_TILT_DEG = 22;    // how far we look down onto the northern hemisphere
     const SHOW_FPS = false;      // frame rate readout, bottom right
     const GRID_DEG = 30;         // latitude / longitude line spacing (0 = no lines)
     const GRID_ALPHA = 0.35;     // line brightness
@@ -149,12 +151,14 @@
       attribute vec3 aPos;
       attribute float aBright;
       attribute float aSize;
-      uniform float uRot, uTilt, uScale;
+      uniform float uRot, uTilt, uAxis, uScale;
       varying float vA;
       void main() {
         float c = cos(uRot), s = sin(uRot);
         vec3 p = vec3(c * aPos.x + s * aPos.z, aPos.y, -s * aPos.x + c * aPos.z);
-        float ct = cos(uTilt), st = sin(uTilt);
+        float ca = cos(uAxis), sa = sin(uAxis);             // lean the spin axis sideways
+        p = vec3(ca * p.x - sa * p.y, sa * p.x + ca * p.y, p.z);
+        float ct = cos(uTilt), st = sin(uTilt);             // then look down onto it a little
         p = vec3(p.x, ct * p.y - st * p.z, st * p.y + ct * p.z);
         float front = p.z * 0.5 + 0.5;          // 0 = far side, 1 = facing us
         vA = aBright * mix(0.1, 1.0, front);
@@ -187,10 +191,12 @@
     const aSize = gl.getAttribLocation(prog, "aSize");
     const uRot = gl.getUniformLocation(prog, "uRot");
     const uTilt = gl.getUniformLocation(prog, "uTilt");
+    const uAxis = gl.getUniformLocation(prog, "uAxis");
     const uScale = gl.getUniformLocation(prog, "uScale");
     const uColor = gl.getUniformLocation(prog, "uColor");
     const uMode = gl.getUniformLocation(prog, "uMode");
-    gl.uniform1f(uTilt, 0.38);
+    gl.uniform1f(uTilt, VIEW_TILT_DEG * Math.PI / 180);
+    gl.uniform1f(uAxis, -AXIS_TILT_DEG * Math.PI / 180);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
     gl.clearColor(0, 0, 0, 0);

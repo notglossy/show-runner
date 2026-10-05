@@ -2,7 +2,7 @@
 
 ![Globe screen](screenshot.png)
 
-A slowly turning Earth drawn as about 27,000 glowing dots, dense over land and sparse over the oceans, with
+A slowly turning Earth, its axis tilted 23.4° like a desk globe, drawn as about 27,000 glowing dots, dense over land and sparse over the oceans, with
 faint latitude and longitude lines and a pulsing marker at your weather location. The time and date sit top left, the current weather bottom left.
 Inspired by the dot-cloud globes on product sites, drawn from a real 1° land map.
 
@@ -40,6 +40,8 @@ Settings at the top of the script:
 | `POINTS` | `75000` | Candidate dots; land ones are kept, most ocean ones dropped (about 27,000 drawn) |
 | `OCEAN_KEEP` | `0.05` | Share of ocean dots kept, drawn dimmer |
 | `SPIN_DEG_PER_SEC` | `5` | Rotation speed (a full turn every 72 seconds) |
+| `AXIS_TILT_DEG` | `23.4` | Sideways lean of the spin axis, Earth's real axial tilt; `0` spins upright |
+| `VIEW_TILT_DEG` | `22` | How far the view looks down onto the northern hemisphere |
 | `SHOW_FPS` | `false` | Frame rate and dot count, bottom right |
 | `GRID_DEG` | `30` | Spacing of the latitude and longitude lines; `0` turns them off |
 | `GRID_ALPHA` | `0.35` | Brightness of the lines (the equator is drawn a little brighter) |
