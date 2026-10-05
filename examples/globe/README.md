@@ -53,4 +53,6 @@ Settings at the top of the script:
   angle, so it's light on the CPU. The latitude and longitude lines are drawn the same way.
 - **The land map** is a 360 × 180 grid of 1° cells (1 bit each, base64 in the script, about 11 KB),
   rasterized from [Natural Earth](https://www.naturalearthdata.com/)'s 1:110m land polygons (public domain).
+- The background's "+" marks (every 80px, like the reseau crosses on NASA photos) are a static inline SVG
+  pattern; change their color in the `.gb-marks path` rule.
 - Needs WebGL. Without it the canvas stays empty and the dark sphere, time and weather still show.

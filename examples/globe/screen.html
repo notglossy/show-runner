@@ -22,15 +22,9 @@
     text-transform: uppercase;
     letter-spacing: 0.02em;
   }
-  /* Faint grid behind everything. */
-  .gb-grid {
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-    background-size: 80px 80px;
-  }
+  /* Small "+" marks every 80px behind everything, like the reseau crosses on NASA photos. */
+  .gb-marks { position: absolute; inset: 0; width: 1280px; height: 800px; }
+  .gb-marks path { stroke: rgba(255, 255, 255, 0.16); stroke-width: 1; }
   /* Dark sphere under the dots, with a soft rim of the accent color. */
   .gb-sphere {
     position: absolute;
@@ -80,7 +74,14 @@
 </style>
 
 <main class="gb">
-  <div class="gb-grid"></div>
+  <svg class="gb-marks" width="1280" height="800" aria-hidden="true">
+    <defs>
+      <pattern id="gb-cross" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+        <path d="M40 33.5v13M33.5 40h13"></path>
+      </pattern>
+    </defs>
+    <rect width="1280" height="800" fill="url(#gb-cross)"></rect>
+  </svg>
   <div class="gb-sphere"></div>
   <canvas id="gb-canvas" width="800" height="800"></canvas>
 
