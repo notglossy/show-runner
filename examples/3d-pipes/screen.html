@@ -328,9 +328,10 @@
           const col = PALETTES[Math.floor(Math.random() * PALETTES.length)];
           drawSphereJoint(gx, gy, gz, col);
           pipes.push({ gx, gy, gz, dir: DIRS[Math.floor(Math.random() * DIRS.length)], col, straights: 0, alive: true });
-          return;
+          return true;
         }
       }
+      return false;
     }
 
     function step(p) {
@@ -404,7 +405,10 @@
       if (!resetting && f % 2 === 0) {
         pipes.forEach(step);
         pipes = pipes.filter(p => p.alive);
-        while (pipes.length < 4 && totalSegments < MAX_SEGMENTS) spawn();
+        // Stop if no free cell turns up, or a crowded grid would spin here forever.
+        while (pipes.length < 4 && totalSegments < MAX_SEGMENTS) {
+          if (!spawn()) break;
+        }
         if (totalSegments >= MAX_SEGMENTS || (pipes.length === 0 && totalSegments > 60)) reset();
       }
       requestAnimationFrame(loop);
