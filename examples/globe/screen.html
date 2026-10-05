@@ -237,8 +237,15 @@
 
     // ---- Your-location marker: a bright dot with a soft halo, from the weather location ----
     let markerBuf = null;
+    let markerAt = "";
     function setMarker(lat, lon) {
-      if (typeof lat !== "number" || typeof lon !== "number") { markerBuf = null; return; }
+      // Data refreshes every minute; only rebuild when the location actually changes, and free the
+      // old buffer so an always-on screen doesn't leak GPU buffers.
+      const at = typeof lat === "number" && typeof lon === "number" ? lat + "," + lon : "";
+      if (at === markerAt) return;
+      markerAt = at;
+      if (markerBuf) { gl.deleteBuffer(markerBuf); markerBuf = null; }
+      if (!at) return;
       const la = lat * Math.PI / 180, lo = lon * Math.PI / 180;
       const x = Math.cos(la) * Math.cos(lo), y = Math.sin(la), z = -Math.cos(la) * Math.sin(lo);
       // halo, then core
