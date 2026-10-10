@@ -1,0 +1,648 @@
+<style>
+  :root {
+    --bg: #070a12;
+    --panel-bg: #0d1322;
+    --panel-border: #1a243b;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-dim: #475569;
+    --cyan: #06b6d4;
+    --cyan-glow: rgba(6, 182, 212, 0.25);
+    --emerald: #10b981;
+    --emerald-glow: rgba(16, 185, 129, 0.25);
+    --amber: #f59e0b;
+    --font-display: "Space Grotesk", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text-main);
+    font-family: var(--font-mono);
+    width: 1280px;
+    height: 800px;
+    overflow: hidden;
+  }
+
+  .screen {
+    position: fixed;
+    inset: 0;
+    padding: 48px;
+    display: grid;
+    grid-template-columns: 464px 688px;
+    gap: 32px;
+    align-items: center;
+  }
+
+  /* Left Column: Clock & Telemetry */
+  .dashboard {
+    display: flex;
+    flex-direction: column;
+    height: 688px;
+    justify-content: space-between;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .header__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--cyan);
+    text-transform: uppercase;
+  }
+
+  .header__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 10px var(--cyan);
+  }
+
+  .clock-section {
+    margin-top: 12px;
+  }
+
+  .clock {
+    display: flex;
+    align-items: baseline;
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 0.92;
+  }
+
+  .clock__time {
+    font-size: 148px;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+    color: #ffffff;
+  }
+
+  .clock__meta {
+    display: flex;
+    flex-direction: column;
+    margin-left: 16px;
+    gap: 4px;
+  }
+
+  .clock__ampm {
+    font-size: 40px;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .clock__sec {
+    font-family: var(--font-mono);
+    font-size: 32px;
+    font-weight: 500;
+    color: var(--cyan);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .date {
+    font-size: 32px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-top: 16px;
+    white-space: nowrap;
+  }
+
+  /* Solver Telemetry Box */
+  .telemetry {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .telemetry__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .telemetry__label {
+    font-size: 24px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  .telemetry__value {
+    font-size: 26px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: #ffffff;
+  }
+
+  .status-tag {
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    background: rgba(6, 182, 212, 0.15);
+    color: var(--cyan);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+  }
+
+  .status-tag--solved {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--emerald);
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+
+  /* Progress track */
+  .progress-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 12px;
+    background: #050811;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--panel-border);
+  }
+
+  .progress-bar__fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--cyan), #38bdf8);
+    border-radius: 999px;
+    transition: width 0.3s ease-out;
+  }
+
+  .progress-bar__fill--solved {
+    background: linear-gradient(90deg, var(--emerald), #34d399);
+  }
+
+  /* Weather Mini Bar */
+  .weather-bar {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    font-size: 24px;
+    color: var(--text-muted);
+    padding: 8px 4px;
+    white-space: nowrap;
+  }
+
+  .weather-bar__cond {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .weather-bar__temp {
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  /* Right Column: Maze Screen */
+  .maze-frame {
+    position: relative;
+    width: 688px;
+    height: 688px;
+    background: #050811;
+    border: 2px solid var(--panel-border);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.6), inset 0 0 40px rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .maze-canvas {
+    display: block;
+    width: 648px;
+    height: 648px;
+  }
+
+  /* Overlays on Maze corners */
+  .maze-tag {
+    position: absolute;
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Both sit on the outer wall row, beside the start (top left) and exit (bottom right) cells. */
+  .maze-tag--start {
+    top: 21px;
+    left: 104px;
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--emerald);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+  }
+
+  .maze-tag--exit {
+    bottom: 21px;
+    right: 104px;
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--amber);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+  }
+</style>
+
+<main class="screen">
+  <!-- Left Side: Time, Stats, and Mission Readout -->
+  <section class="dashboard">
+    <div>
+      <div class="header">
+        <div class="header__badge">
+          <span class="header__dot"></span>
+          <span>AUTONOMOUS SOLVER</span>
+        </div>
+      </div>
+
+      <div class="clock-section">
+        <div class="clock">
+          <span class="clock__time" data-bind="time.hhmm"></span>
+          <div class="clock__meta">
+            <span class="clock__ampm" data-bind="time.ampm"></span>
+            <span class="clock__sec" id="sec-readout"></span>
+          </div>
+        </div>
+        <div class="date" data-bind="time.date"></div>
+      </div>
+    </div>
+
+    <!-- Live Solver Telemetry -->
+    <div class="telemetry">
+      <div class="telemetry__row">
+        <span class="telemetry__label">SYSTEM STATUS</span>
+        <span class="status-tag" id="status-tag">SEARCHING</span>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="telemetry__row">
+          <span class="telemetry__label">CYCLE PROGRESS</span>
+          <span class="telemetry__value" id="cycle-sec">0s / 60s</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-bar__fill" id="progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="telemetry__row">
+        <span class="telemetry__label">PATH LENGTH</span>
+        <span class="telemetry__value" id="path-len">—</span>
+      </div>
+
+      <div class="telemetry__row">
+        <span class="telemetry__label">ALGORITHM</span>
+        <span class="telemetry__value" style="color: var(--cyan);">DFS EXPLORER</span>
+      </div>
+    </div>
+
+    <!-- Weather Footer -->
+    <div class="weather-bar">
+      <span>
+        <span class="weather-bar__temp" data-bind="weather.current.temperature" data-fallback="--"></span><span data-bind="weather.units.temperature"></span>
+      </span>
+      <span class="weather-bar__cond" data-bind="weather.current.condition" data-fallback="Weather unavailable"></span>
+      <span>H <span data-bind="weather.today.high" data-fallback="--"></span>° L <span data-bind="weather.today.low" data-fallback="--"></span>°</span>
+    </div>
+  </section>
+
+  <!-- Right Side: Maze Display -->
+  <section class="maze-frame">
+    <div class="maze-tag maze-tag--start">START</div>
+    <div class="maze-tag maze-tag--exit">EXIT</div>
+    <canvas class="maze-canvas" id="maze-canvas" width="648" height="648"></canvas>
+  </section>
+</main>
+
+<script>
+  // Maze dimensions: 21 x 21 (odd integers ensure regular wall barriers)
+  const COLS = 21;
+  const ROWS = 21;
+  const CANVAS_SIZE = 648;
+  const CELL_SIZE = CANVAS_SIZE / COLS; // ~30.85 px
+
+  const canvas = document.getElementById("maze-canvas");
+  const ctx = canvas.getContext("2d");
+
+  const secReadout = document.getElementById("sec-readout");
+  const statusTag = document.getElementById("status-tag");
+  const cycleSec = document.getElementById("cycle-sec");
+  const progressFill = document.getElementById("progress-fill");
+  const pathLen = document.getElementById("path-len");
+
+  let currentMinute = -1;
+  let maze = null; // 2D array: 1 = wall, 0 = path
+  let explorationHistory = []; // frames of exploration [{ r, c, trail }]
+  let solutionPath = []; // coordinates from (1,1) to (ROWS-2, COLS-2)
+
+  // Pseudo-random generator seeded by integer for repeatable layout per minute
+  function createSeededRandom(seed) {
+    let s = seed % 2147483647;
+    if (s <= 0) s += 2147483646;
+    return function () {
+      s = (s * 16807) % 2147483647;
+      return (s - 1) / 2147483646;
+    };
+  }
+
+  // Generate perfect maze using recursive backtracker
+  function generateMaze(seedVal) {
+    const rng = createSeededRandom(seedVal);
+    const grid = Array.from({ length: ROWS }, () => Array(COLS).fill(1));
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    const stack = [[1, 1]];
+    grid[1][1] = 0;
+
+    const dirs = [
+      [-2, 0],
+      [2, 0],
+      [0, -2],
+      [0, 2],
+    ];
+
+    while (stack.length > 0) {
+      const [r, c] = stack[stack.length - 1];
+      const neighbors = [];
+
+      for (const [dr, dc] of dirs) {
+        const nr = r + dr;
+        const nc = c + dc;
+        if (nr > 0 && nr < ROWS - 1 && nc > 0 && nc < COLS - 1 && grid[nr][nc] === 1) {
+          neighbors.push([nr, nc, dr, dc]);
+        }
+      }
+
+      if (neighbors.length > 0) {
+        const [nr, nc, dr, dc] = shuffle(neighbors)[0];
+        grid[r + dr / 2][c + dc / 2] = 0;
+        grid[nr][nc] = 0;
+        stack.push([nr, nc]);
+      } else {
+        stack.pop();
+      }
+    }
+
+    // Ensure entrance & exit are carved
+    grid[1][1] = 0;
+    grid[ROWS - 2][COLS - 2] = 0;
+
+    return grid;
+  }
+
+  // Pre-calculate Depth-First Search exploration steps and final path
+  function planSolving(grid) {
+    const history = [];
+    const visited = Array.from({ length: ROWS }, () => Array(COLS).fill(false));
+    const parent = new Map();
+    const trail = [[1, 1]];
+
+    visited[1][1] = true;
+    history.push({ r: 1, c: 1, trail: [[1, 1]] });
+
+    const targetR = ROWS - 2;
+    const targetC = COLS - 2;
+    let found = false;
+
+    function dfs(r, c) {
+      if (found) return;
+      if (r === targetR && c === targetC) {
+        found = true;
+        return;
+      }
+
+      const dirs = [
+        [0, 1],
+        [1, 0],
+        [0, -1],
+        [-1, 0],
+      ];
+
+      for (const [dr, dc] of dirs) {
+        const nr = r + dr;
+        const nc = c + dc;
+        if (
+          nr >= 0 &&
+          nr < ROWS &&
+          nc >= 0 &&
+          nc < COLS &&
+          grid[nr][nc] === 0 &&
+          !visited[nr][nc]
+        ) {
+          visited[nr][nc] = true;
+          parent.set(`${nr},${nc}`, `${r},${c}`);
+          trail.push([nr, nc]);
+          history.push({ r: nr, c: nc, trail: trail.slice() });
+
+          dfs(nr, nc);
+          if (found) return;
+
+          // Backtrack step
+          trail.pop();
+          history.push({ r, c, trail: trail.slice() });
+        }
+      }
+    }
+
+    dfs(1, 1);
+
+    // Reconstruct exact shortest solution path
+    const path = [];
+    let curr = `${targetR},${targetC}`;
+    while (curr) {
+      const [cr, cc] = curr.split(",").map(Number);
+      path.push([cr, cc]);
+      if (cr === 1 && cc === 1) break;
+      curr = parent.get(curr);
+    }
+    path.reverse();
+
+    return { history, path };
+  }
+
+  function initMinuteCycle(minuteEpoch) {
+    maze = generateMaze(minuteEpoch);
+    const solved = planSolving(maze);
+    explorationHistory = solved.history;
+    solutionPath = solved.path;
+    pathLen.textContent = `${solutionPath.length} STEPS`;
+  }
+
+  function drawMaze(second) {
+    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+    // 1. Draw Maze Walls and Corridors
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const x = c * CELL_SIZE;
+        const y = r * CELL_SIZE;
+
+        if (maze[r][c] === 1) {
+          ctx.fillStyle = "#162032";
+          ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+          ctx.strokeStyle = "#1e2c45";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x + 0.5, y + 0.5, CELL_SIZE - 1, CELL_SIZE - 1);
+        } else {
+          ctx.fillStyle = "#070b14";
+          ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+        }
+      }
+    }
+
+    // Solve phase: 0..50s exploring, 51..59s solved & glowing
+    const isSolved = second >= 51;
+    const exploreTime = Math.min(second, 50);
+    const stepIdx = Math.min(
+      explorationHistory.length - 1,
+      Math.floor((exploreTime / 50) * (explorationHistory.length - 1))
+    );
+    const currentFrame = explorationHistory[stepIdx] || explorationHistory[0];
+
+    // 2. Render Search Trail or Solved Solution
+    if (isSolved) {
+      // Glow effect for solved path
+      ctx.strokeStyle = "rgba(16, 185, 129, 0.2)";
+      ctx.lineWidth = CELL_SIZE * 0.7;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
+      for (let i = 0; i < solutionPath.length; i++) {
+        const [pr, pc] = solutionPath[i];
+        const px = pc * CELL_SIZE + CELL_SIZE / 2;
+        const py = pr * CELL_SIZE + CELL_SIZE / 2;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+
+      // Sharp core line
+      ctx.strokeStyle = "#34d399";
+      ctx.lineWidth = Math.max(4, CELL_SIZE * 0.35);
+      ctx.stroke();
+    } else {
+      // Active explorer path
+      if (currentFrame.trail.length > 1) {
+        ctx.strokeStyle = "rgba(6, 182, 212, 0.25)";
+        ctx.lineWidth = CELL_SIZE * 0.6;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.beginPath();
+        for (let i = 0; i < currentFrame.trail.length; i++) {
+          const [tr, tc] = currentFrame.trail[i];
+          const tx = tc * CELL_SIZE + CELL_SIZE / 2;
+          const ty = tr * CELL_SIZE + CELL_SIZE / 2;
+          if (i === 0) ctx.moveTo(tx, ty);
+          else ctx.lineTo(tx, ty);
+        }
+        ctx.stroke();
+
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = Math.max(3, CELL_SIZE * 0.3);
+        ctx.stroke();
+      }
+
+      // Explorer Head (Glowing point)
+      const headX = currentFrame.c * CELL_SIZE + CELL_SIZE / 2;
+      const headY = currentFrame.r * CELL_SIZE + CELL_SIZE / 2;
+
+      ctx.fillStyle = "rgba(56, 189, 248, 0.4)";
+      ctx.beginPath();
+      ctx.arc(headX, headY, CELL_SIZE * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(headX, headY, CELL_SIZE * 0.25, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 3. Mark Start (1,1) & Exit (ROWS-2, COLS-2)
+    const startX = 1 * CELL_SIZE + CELL_SIZE / 2;
+    const startY = 1 * CELL_SIZE + CELL_SIZE / 2;
+    ctx.fillStyle = "#10b981";
+    ctx.beginPath();
+    ctx.arc(startX, startY, CELL_SIZE * 0.28, 0, Math.PI * 2);
+    ctx.fill();
+
+    const exitX = (COLS - 2) * CELL_SIZE + CELL_SIZE / 2;
+    const exitY = (ROWS - 2) * CELL_SIZE + CELL_SIZE / 2;
+    ctx.fillStyle = isSolved ? "#10b981" : "#f59e0b";
+    ctx.beginPath();
+    ctx.arc(exitX, exitY, CELL_SIZE * 0.28, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Subscribe to per-second device clock updates
+  kiosk.on("tick", (time) => {
+    const sec = parseInt(time.second, 10) || 0;
+    const minVal = parseInt(time.minute, 10) || 0;
+    const hourVal = parseInt(time.hour24, 10) || 0;
+
+    // Minute unique ID for seed (resets every minute)
+    const minuteEpoch = hourVal * 60 + minVal;
+
+    if (minuteEpoch !== currentMinute) {
+      currentMinute = minuteEpoch;
+      initMinuteCycle(minuteEpoch);
+    }
+
+    // Update UI telemetry
+    secReadout.textContent = `:${time.second}`;
+    cycleSec.textContent = `${sec}s / 60s`;
+
+    const pct = Math.min(100, Math.round((sec / 59) * 100));
+    // Snap back at :00 instead of animating the bar backwards.
+    progressFill.style.transition = sec === 0 ? "none" : "";
+    progressFill.style.width = `${pct}%`;
+
+    if (sec >= 51) {
+      statusTag.textContent = "SOLVED";
+      statusTag.className = "status-tag status-tag--solved";
+      progressFill.className = "progress-bar__fill progress-bar__fill--solved";
+    } else {
+      statusTag.textContent = "SEARCHING";
+      statusTag.className = "status-tag";
+      progressFill.className = "progress-bar__fill";
+    }
+
+    drawMaze(sec);
+  });
+</script>

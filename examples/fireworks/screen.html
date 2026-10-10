@@ -1,0 +1,418 @@
+<style>
+  :root {
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.72);
+    --text-muted: rgba(255, 255, 255, 0.45);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  .screen {
+    position: fixed;
+    inset: 0;
+    width: 1280px;
+    height: 800px;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 100%, #1a2442 0%, #0a0f1d 45%, #04060c 75%, #020306 100%);
+    font-family: "Outfit", system-ui, sans-serif;
+    color: var(--text-primary);
+  }
+
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 1280px;
+    height: 800px;
+    display: block;
+    z-index: 1;
+  }
+
+  .skyline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 1280px;
+    height: 160px;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.95;
+  }
+
+  .content {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 56px 64px 40px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .date-block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .date {
+    font-size: 34px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.7);
+  }
+
+  .weather-summary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 26px;
+    color: var(--text-secondary);
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+  }
+
+  .weather-summary .temp {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: #ffd479;
+  }
+
+  .greeting-tag {
+    font-size: 24px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #8bb2ff;
+    padding: 8px 18px;
+    background: rgba(13, 22, 45, 0.55);
+    border: 1px solid rgba(139, 178, 255, 0.25);
+    border-radius: 999px;
+    backdrop-filter: blur(8px);
+    text-shadow: 0 0 12px rgba(139, 178, 255, 0.4);
+  }
+
+  .center-display {
+    text-align: center;
+    margin-top: -30px;
+  }
+
+  .clock {
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: center;
+    font-size: 190px;
+    font-weight: 200;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 40px rgba(0, 0, 0, 0.8), 0 0 80px rgba(80, 140, 255, 0.25);
+  }
+
+  .ampm {
+    font-size: 42px;
+    font-weight: 400;
+    margin-left: 14px;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+  }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .status-line {
+    font-size: 24px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+  }
+
+  .spectacle-tag {
+    font-size: 24px;
+    font-weight: 400;
+    color: rgba(255, 220, 140, 0.7);
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sparkle-icon {
+    font-size: 20px;
+  }
+
+  [data-bind-missing] {
+    opacity: 0.4;
+  }
+</style>
+
+<main class="screen">
+  <canvas id="fw-canvas" width="1280" height="800"></canvas>
+
+  <svg class="skyline" viewBox="0 0 1280 160" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="skylineGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#050811" stop-opacity="0.9" />
+        <stop offset="100%" stop-color="#010205" stop-opacity="1" />
+      </linearGradient>
+    </defs>
+    <!-- Background silhouette buildings & bridge -->
+    <path fill="url(#skylineGrad)" d="
+      M0,160 L0,120 L45,120 L45,85 L70,85 L70,120 L110,120 L110,65 L135,65 L135,50 L145,15 L150,50 L160,65 L180,65 L180,120
+      L220,120 L220,95 L255,95 L255,120 L310,120 L310,75 L335,75 L335,55 L355,55 L355,120 L395,120 L395,100 L440,100 L440,120
+      L500,120 L500,60 L515,60 L515,40 L525,10 L535,40 L545,60 L570,60 L570,120 L620,120 L620,85 L650,85 L650,120 L720,120
+      L720,70 L750,70 L750,50 L780,50 L780,120 L840,120 L840,90 L885,90 L885,120 L940,120 L940,75 L960,75 L965,30 L975,75
+      L1000,75 L1000,120 L1060,120 L1060,85 L1095,85 L1095,120 L1150,120 L1150,55 L1185,55 L1185,120 L1280,120 L1280,160 Z" />
+    <!-- City window lights -->
+    <g fill="#ffd77a" opacity="0.4">
+      <rect x="120" y="80" width="4" height="6" />
+      <rect x="130" y="90" width="4" height="6" />
+      <rect x="145" y="70" width="4" height="6" />
+      <rect x="325" y="85" width="4" height="6" />
+      <rect x="340" y="95" width="4" height="6" />
+      <rect x="520" y="75" width="5" height="7" />
+      <rect x="535" y="85" width="5" height="7" />
+      <rect x="735" y="80" width="4" height="6" />
+      <rect x="760" y="65" width="4" height="6" />
+      <rect x="955" y="85" width="4" height="6" />
+      <rect x="1075" y="95" width="4" height="6" />
+      <rect x="1165" y="70" width="4" height="6" />
+    </g>
+  </svg>
+
+  <div class="content">
+    <header class="header">
+      <div class="date-block">
+        <div class="date" data-bind="time.date"></div>
+        <div class="weather-summary">
+          <span class="temp"><span data-bind="weather.current.temperature"></span><span data-bind="weather.units.temperature"></span></span>
+          <span>·</span>
+          <span data-bind="weather.current.condition" data-fallback="Weather unavailable"></span>
+        </div>
+      </div>
+      <div class="greeting-tag" data-bind="time.greeting"></div>
+    </header>
+
+    <div class="center-display">
+      <div class="clock">
+        <span data-bind="time.hhmm"></span>
+        <span class="ampm" data-bind="time.ampm"></span>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="status-line">
+        <span data-bind="weather.location.name" data-fallback="ShowRunner Display"></span>
+      </div>
+      <div class="spectacle-tag">
+        <span class="sparkle-icon">✨</span>
+        <span>Night Sky Celebration</span>
+      </div>
+    </footer>
+  </div>
+</main>
+
+<script>
+  (function () {
+    const canvas = document.getElementById("fw-canvas");
+    const ctx = canvas.getContext("2d");
+
+    const WIDTH = 1280;
+    const HEIGHT = 800;
+
+    const COLOR_PALETTES = [
+      [35, 100, 60],   // Vibrant Gold / Amber
+      [0, 100, 65],    // Brilliant Ruby Red
+      [195, 100, 65],  // Electric Cyan
+      [280, 100, 70],  // Neon Violet
+      [145, 95, 60],   // Emerald Green
+      [330, 100, 65],  // Hot Magenta
+      [45, 100, 85]    // Champagne Sparkle
+    ];
+
+    let rockets = [];
+    let particles = [];
+
+    class Rocket {
+      constructor() {
+        this.x = 220 + Math.random() * (WIDTH - 440);
+        this.y = HEIGHT - 40;
+        this.targetY = 130 + Math.random() * 260;
+        const totalDist = HEIGHT - this.targetY;
+        const speed = 10 + Math.random() * 3.5;
+        this.vy = -speed;
+        this.vx = (Math.random() - 0.5) * 2;
+        this.color = COLOR_PALETTES[Math.floor(Math.random() * COLOR_PALETTES.length)];
+        this.trail = [];
+        this.trailLength = 6;
+        this.exploded = false;
+      }
+
+      update() {
+        this.trail.push({ x: this.x, y: this.y });
+        if (this.trail.length > this.trailLength) {
+          this.trail.shift();
+        }
+
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy *= 0.985;
+
+        if (this.y <= this.targetY || this.vy >= -1.5) {
+          this.explode();
+          this.exploded = true;
+        }
+      }
+
+      draw(c) {
+        c.save();
+        for (let i = 0; i < this.trail.length; i++) {
+          const pt = this.trail[i];
+          const alpha = (i + 1) / this.trail.length * 0.6;
+          c.beginPath();
+          c.arc(pt.x, pt.y, 2, 0, Math.PI * 2);
+          c.fillStyle = `hsla(${this.color[0]}, ${this.color[1]}%, ${this.color[2]}%, ${alpha})`;
+          c.fill();
+        }
+
+        c.beginPath();
+        c.arc(this.x, this.y, 3, 0, Math.PI * 2);
+        c.fillStyle = `hsl(${this.color[0]}, 100%, 85%)`;
+        c.shadowColor = `hsl(${this.color[0]}, 100%, 60%)`;
+        c.shadowBlur = 10;
+        c.fill();
+        c.restore();
+      }
+
+      explode() {
+        const count = 45 + Math.floor(Math.random() * 25);
+        const burstType = Math.random();
+        const baseSpeed = 3.5 + Math.random() * 3.0;
+
+        for (let i = 0; i < count; i++) {
+          let angle, spd;
+          if (burstType < 0.6) {
+            // Spherical shell burst
+            angle = Math.random() * Math.PI * 2;
+            spd = baseSpeed * (0.35 + 0.65 * Math.random());
+          } else if (burstType < 0.85) {
+            // Ring burst
+            angle = (i / count) * Math.PI * 2;
+            spd = baseSpeed * (0.85 + Math.random() * 0.2);
+          } else {
+            // Double burst (core + outer)
+            angle = Math.random() * Math.PI * 2;
+            spd = (i % 2 === 0 ? baseSpeed : baseSpeed * 0.5) * (0.8 + Math.random() * 0.3);
+          }
+
+          particles.push(new Particle(this.x, this.y, angle, spd, this.color));
+        }
+      }
+    }
+
+    class Particle {
+      constructor(x, y, angle, speed, color) {
+        this.x = x;
+        this.y = y;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.color = color;
+        this.alpha = 1;
+        this.decay = 0.012 + Math.random() * 0.012;
+        this.gravity = 0.07;
+        this.drag = 0.978;
+        this.flicker = Math.random() > 0.4;
+        this.size = 2 + Math.random() * 1.5;
+      }
+
+      update() {
+        this.vx *= this.drag;
+        this.vy *= this.drag;
+        this.vy += this.gravity;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= this.decay;
+      }
+
+      draw(c) {
+        if (this.alpha <= 0) return;
+        let displayAlpha = this.alpha;
+        if (this.flicker && Math.random() < 0.3) {
+          displayAlpha *= 0.3;
+        }
+
+        c.save();
+        c.beginPath();
+        c.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        c.fillStyle = `hsla(${this.color[0]}, ${this.color[1]}%, ${this.color[2]}%, ${displayAlpha})`;
+        c.fill();
+        c.restore();
+      }
+    }
+
+    let nextLaunch = 60;
+    let frameCount = 0;
+
+    function loop() {
+      // Gentle fade trailing effect. Fade toward transparent (not toward a dark color) so the sky gradient
+      // behind the canvas, and the skyline against it, stay visible.
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      ctx.globalCompositeOperation = "source-over";
+
+      frameCount++;
+      if (frameCount >= nextLaunch) {
+        rockets.push(new Rocket());
+        // Occasional double firework launch
+        if (Math.random() < 0.35 && rockets.length < 3) {
+          setTimeout(() => {
+            rockets.push(new Rocket());
+          }, 180 + Math.random() * 240);
+        }
+        frameCount = 0;
+        nextLaunch = 80 + Math.floor(Math.random() * 70); // launch roughly every 1.5 - 2.5s
+      }
+
+      // Update & render rockets
+      for (let i = rockets.length - 1; i >= 0; i--) {
+        const r = rockets[i];
+        r.update();
+        r.draw(ctx);
+        if (r.exploded) {
+          rockets.splice(i, 1);
+        }
+      }
+
+      // Update & render burst sparks
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.update();
+        p.draw(ctx);
+        if (p.alpha <= 0) {
+          particles.splice(i, 1);
+        }
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    // Initial warm-up blast
+    rockets.push(new Rocket());
+
+    requestAnimationFrame(loop);
+  })();
+</script>

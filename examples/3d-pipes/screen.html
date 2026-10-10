@@ -1,0 +1,422 @@
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  .screen {
+    position: fixed; inset: 0; width: 1280px; height: 800px;
+    background: #04060a; overflow: hidden;
+    font-family: "Outfit", system-ui, sans-serif; color: #f1f5f9;
+  }
+  #pipes-canvas { position: absolute; inset: 0; width: 1280px; height: 800px; display: block; }
+  .scanlines {
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%);
+    background-size: 100% 4px; opacity: 0.5; z-index: 5;
+  }
+  .vignette {
+    position: absolute; inset: 0; pointer-events: none;
+    box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.9); z-index: 6;
+  }
+  .fade-overlay {
+    position: absolute; inset: 0; background: #04060a; opacity: 0;
+    pointer-events: none; transition: opacity 0.6s ease; z-index: 7;
+  }
+  .fade-overlay.active { opacity: 1; }
+
+  .hud {
+    position: absolute; top: 48px; left: 48px; width: 510px;
+    background: rgba(6, 10, 18, 0.88); border: 2px solid #1e293b;
+    border-radius: 28px; padding: 32px 36px;
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.85);
+    display: flex; flex-direction: column; gap: 16px; z-index: 10;
+  }
+  .hud__top { display: flex; align-items: center; justify-content: space-between; }
+  .hud__badge {
+    font-family: "JetBrains Mono", monospace; font-size: 24px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase; color: #00d2d3;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .hud__badge::before {
+    content: ""; display: inline-block; width: 10px; height: 10px;
+    background: #00d2d3; border-radius: 50%; box-shadow: 0 0 8px #00d2d3;
+  }
+  .hud__location {
+    font-size: 24px; color: #64748b; max-width: 230px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .hud__time-wrap { display: flex; align-items: baseline; line-height: 0.88; }
+  .hud__time {
+    font-size: 140px; font-weight: 700; letter-spacing: -0.04em;
+    color: #ffffff; font-variant-numeric: tabular-nums;
+  }
+  .hud__ampm {
+    font-size: 36px; font-weight: 600; color: #00d2d3;
+    margin-left: 12px; text-transform: uppercase;
+  }
+  .hud__date { font-size: 32px; font-weight: 500; color: #94a3b8; line-height: 1.1; }
+  .hud__weather {
+    display: flex; align-items: center; gap: 20px;
+    padding-top: 14px; border-top: 1px solid rgba(148, 163, 184, 0.16);
+  }
+  .hud__emoji { font-size: 64px; line-height: 1; }
+  .hud__weather-main { display: flex; flex-direction: column; gap: 4px; }
+  .hud__temp-row {
+    display: flex; align-items: baseline; gap: 4px;
+    font-size: 56px; font-weight: 600; color: #f8fafc; line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .hud__condition { font-size: 26px; font-weight: 500; color: #94a3b8; }
+  .hud__range {
+    margin-left: auto; text-align: right; font-family: "JetBrains Mono", monospace;
+    font-size: 24px; color: #64748b; line-height: 1.35;
+  }
+  .hud__range-val { color: #cbd5e1; font-weight: 600; }
+</style>
+
+<main class="screen">
+  <canvas id="pipes-canvas" width="1280" height="800"></canvas>
+  <div class="scanlines"></div>
+  <div class="vignette"></div>
+  <div class="fade-overlay" id="fade-overlay"></div>
+
+  <section class="hud">
+    <div class="hud__top">
+      <div class="hud__badge">3D PIPES</div>
+      <div class="hud__location" data-bind="weather.location.name" data-fallback="Echo Show"></div>
+    </div>
+    <div class="hud__time-wrap">
+      <span class="hud__time" data-bind="time.hhmm"></span>
+      <span class="hud__ampm" data-bind="time.ampm"></span>
+    </div>
+    <div class="hud__date" data-bind="time.date"></div>
+    <div class="hud__weather">
+      <div class="hud__emoji" data-bind="weather.current.emoji" data-fallback=""></div>
+      <div class="hud__weather-main">
+        <div class="hud__temp-row">
+          <span data-bind="weather.current.temperature" data-fallback="--"></span>
+          <span data-bind="weather.units.temperature"></span>
+        </div>
+        <div class="hud__condition" data-bind="weather.current.condition" data-fallback="Weather unavailable"></div>
+      </div>
+      <div class="hud__range">
+        <div>H <span class="hud__range-val" data-bind="weather.today.high" data-fallback="--"></span>°</div>
+        <div>L <span class="hud__range-val" data-bind="weather.today.low" data-fallback="--"></span>°</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  (function () {
+    const canvas = document.getElementById("pipes-canvas");
+    const fadeOverlay = document.getElementById("fade-overlay");
+    const gl = canvas.getContext("webgl", { antialias: true, alpha: false, depth: true, preserveDrawingBuffer: true });
+    if (!gl) return;
+
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+    gl.viewport(0, 0, 1280, 800);
+
+    const vsSource = `
+      attribute vec3 aPos; attribute vec3 aNorm;
+      uniform mat4 uModel, uViewProj; uniform mat3 uNormMat;
+      varying vec3 vNorm, vPos;
+      void main() {
+        vec4 wp = uModel * vec4(aPos, 1.0);
+        vPos = wp.xyz; vNorm = normalize(uNormMat * aNorm);
+        gl_Position = uViewProj * wp;
+      }`;
+
+    const fsSource = `
+      precision mediump float;
+      uniform vec3 uColor, uLight, uEye;
+      varying vec3 vNorm, vPos;
+      void main() {
+        vec3 N = normalize(vNorm); vec3 L = normalize(uLight);
+        vec3 V = normalize(uEye - vPos); vec3 H = normalize(L + V);
+        float diff = max(dot(N, L), 0.0);
+        float spec = diff > 0.0 ? pow(max(dot(N, H), 0.0), 32.0) : 0.0;
+        float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0) * 0.35;
+        gl_FragColor = vec4(0.25 * uColor + 0.75 * diff * uColor + vec3(0.9) * spec * 0.8 + rim * uColor, 1.0);
+      }`;
+
+    function compile(type, src) {
+      const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s;
+    }
+    const prog = gl.createProgram();
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER, vsSource));
+    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fsSource));
+    gl.linkProgram(prog); gl.useProgram(prog);
+
+    const aPos = gl.getAttribLocation(prog, "aPos");
+    const aNorm = gl.getAttribLocation(prog, "aNorm");
+    const uModel = gl.getUniformLocation(prog, "uModel");
+    const uViewProj = gl.getUniformLocation(prog, "uViewProj");
+    const uNormMat = gl.getUniformLocation(prog, "uNormMat");
+    const uColor = gl.getUniformLocation(prog, "uColor");
+    const uLight = gl.getUniformLocation(prog, "uLight");
+    const uEye = gl.getUniformLocation(prog, "uEye");
+
+    gl.enableVertexAttribArray(aPos);
+    gl.enableVertexAttribArray(aNorm);
+
+    function createBuffer(arr) {
+      const b = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, b);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr), gl.STATIC_DRAW);
+      return b;
+    }
+
+    function createCylinder(segs) {
+      const pos = [], norm = [];
+      for (let i = 0; i < segs; i++) {
+        const t1 = (i / segs) * Math.PI * 2, t2 = ((i + 1) / segs) * Math.PI * 2;
+        const x1 = Math.cos(t1), z1 = Math.sin(t1), x2 = Math.cos(t2), z2 = Math.sin(t2);
+        pos.push(x1, -0.5, z1,  x1, 0.5, z1,  x2, 0.5, z2,  x1, -0.5, z1,  x2, 0.5, z2,  x2, -0.5, z2);
+        norm.push(x1, 0, z1,   x1, 0, z1,   x2, 0, z2,   x1, 0, z1,   x2, 0, z2,   x2, 0, z2);
+      }
+      return { pos: createBuffer(pos), norm: createBuffer(norm), count: pos.length / 3 };
+    }
+
+    function createSphere(latS, lonS) {
+      const pos = [], norm = [];
+      for (let i = 0; i < latS; i++) {
+        const t1 = (i / latS) * Math.PI - Math.PI / 2, t2 = ((i + 1) / latS) * Math.PI - Math.PI / 2;
+        const y1 = Math.sin(t1), r1 = Math.cos(t1), y2 = Math.sin(t2), r2 = Math.cos(t2);
+        for (let j = 0; j < lonS; j++) {
+          const p1 = (j / lonS) * Math.PI * 2, p2 = ((j + 1) / lonS) * Math.PI * 2;
+          const x11 = r1 * Math.cos(p1), z11 = r1 * Math.sin(p1), x12 = r1 * Math.cos(p2), z12 = r1 * Math.sin(p2);
+          const x21 = r2 * Math.cos(p1), z21 = r2 * Math.sin(p1), x22 = r2 * Math.cos(p2), z22 = r2 * Math.sin(p2);
+          pos.push(x11, y1, z11,  x21, y2, z21,  x22, y2, z22,  x11, y1, z11,  x22, y2, z22,  x12, y1, z12);
+          norm.push(x11, y1, z11, x21, y2, z21,  x22, y2, z22,  x11, y1, z11, x22, y2, z22,  x12, y1, z12);
+        }
+      }
+      return { pos: createBuffer(pos), norm: createBuffer(norm), count: pos.length / 3 };
+    }
+
+    const cylinder = createCylinder(16);
+    const sphere = createSphere(10, 16);
+
+    const EYE = [14.0, 10.5, 16.5];
+    const TARGET = [2.2, -0.4, -1.0];
+    const UP = [0.0, 1.0, 0.0];
+    gl.uniform3fv(uLight, [0.55, 0.82, 0.65]);
+    gl.uniform3fv(uEye, EYE);
+
+    function calcViewProj() {
+      const fov = 46 * Math.PI / 180, aspect = 1280 / 800, near = 0.5, far = 100.0;
+      const f = 1.0 / Math.tan(fov / 2);
+      const proj = new Float32Array([
+        f / aspect, 0, 0, 0,
+        0, f, 0, 0,
+        0, 0, (far + near) / (near - far), -1,
+        0, 0, (2 * far * near) / (near - far), 0
+      ]);
+
+      let z0 = EYE[0] - TARGET[0], z1 = EYE[1] - TARGET[1], z2 = EYE[2] - TARGET[2];
+      let len = 1 / Math.hypot(z0, z1, z2); z0 *= len; z1 *= len; z2 *= len;
+      let x0 = UP[1] * z2 - UP[2] * z1, x1 = UP[2] * z0 - UP[0] * z2, x2 = UP[0] * z1 - UP[1] * z0;
+      len = 1 / Math.hypot(x0, x1, x2); x0 *= len; x1 *= len; x2 *= len;
+      let y0 = z1 * x2 - z2 * x1, y1 = z2 * x0 - z0 * x2, y2 = z0 * x1 - z1 * x0;
+
+      const view = new Float32Array([
+        x0, y0, z0, 0,
+        x1, y1, z1, 0,
+        x2, y2, z2, 0,
+        -(x0 * EYE[0] + x1 * EYE[1] + x2 * EYE[2]),
+        -(y0 * EYE[0] + y1 * EYE[1] + y2 * EYE[2]),
+        -(z0 * EYE[0] + z1 * EYE[1] + z2 * EYE[2]), 1
+      ]);
+
+      const vp = new Float32Array(16);
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          vp[j * 4 + i] = proj[i] * view[j * 4] + proj[4 + i] * view[j * 4 + 1] + proj[8 + i] * view[j * 4 + 2] + proj[12 + i] * view[j * 4 + 3];
+        }
+      }
+      return vp;
+    }
+    gl.uniformMatrix4fv(uViewProj, false, calcViewProj());
+
+    function normalMat(m) {
+      const a00 = m[0], a01 = m[1], a02 = m[2], a10 = m[4], a11 = m[5], a12 = m[6], a20 = m[8], a21 = m[9], a22 = m[10];
+      const b01 = a22 * a11 - a12 * a21, b11 = -a22 * a10 + a12 * a20, b21 = a21 * a10 - a11 * a20;
+      let d = a00 * b01 + a01 * b11 + a02 * b21;
+      if (!d) return new Float32Array(9);
+      d = 1.0 / d;
+      return new Float32Array([
+        b01 * d, (-a22 * a01 + a02 * a21) * d, (a12 * a01 - a02 * a11) * d,
+        b11 * d, (a22 * a00 - a02 * a20) * d, (-a12 * a00 + a02 * a10) * d,
+        b21 * d, (-a21 * a00 + a01 * a20) * d, (a11 * a00 - a01 * a10) * d
+      ]);
+    }
+
+    const PALETTES = [
+      [0.00, 0.72, 1.00], [0.95, 0.22, 0.12], [0.28, 0.86, 0.22],
+      [0.98, 0.76, 0.14], [0.65, 0.48, 1.00], [0.94, 0.25, 0.62],
+      [0.86, 0.88, 0.95], [0.00, 0.84, 0.76], [1.00, 0.46, 0.12]
+    ];
+
+    const STEP = 2.0;
+    const PIPE_RADIUS = 0.36;
+    const JOINT_RADIUS = 0.42;
+    const BOUNDS = { minX: -6, maxX: 8, minY: -5, maxY: 5, minZ: -6, maxZ: 6 };
+    const DIRS = [
+      { dx: 1, dy: 0, dz: 0, axis: "x" }, { dx: -1, dy: 0, dz: 0, axis: "x" },
+      { dx: 0, dy: 1, dz: 0, axis: "y" }, { dx: 0, dy: -1, dz: 0, axis: "y" },
+      { dx: 0, dy: 0, dz: 1, axis: "z" }, { dx: 0, dy: 0, dz: -1, axis: "z" }
+    ];
+
+    let occupied = new Set();
+    let pipes = [];
+    let totalSegments = 0;
+    const MAX_SEGMENTS = 500;
+    let resetting = false;
+
+    function renderMesh(mesh, m, col) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, mesh.pos);
+      gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, mesh.norm);
+      gl.vertexAttribPointer(aNorm, 3, gl.FLOAT, false, 0, 0);
+      gl.uniformMatrix4fv(uModel, false, m);
+      gl.uniformMatrix3fv(uNormMat, false, normalMat(m));
+      gl.uniform3fv(uColor, col);
+      gl.drawArrays(gl.TRIANGLES, 0, mesh.count);
+    }
+
+    function drawSphereJoint(gx, gy, gz, col) {
+      const m = new Float32Array(16);
+      m[0] = JOINT_RADIUS; m[5] = JOINT_RADIUS; m[10] = JOINT_RADIUS; m[15] = 1;
+      m[12] = gx * STEP; m[13] = gy * STEP; m[14] = gz * STEP;
+      renderMesh(sphere, m, col);
+    }
+
+    // Connects adjacent grid points seamlessly without gaps
+    function drawCylinderSegment(fromG, toG, axis, col) {
+      const mx = (fromG.x + toG.x) * 0.5 * STEP;
+      const my = (fromG.y + toG.y) * 0.5 * STEP;
+      const mz = (fromG.z + toG.z) * 0.5 * STEP;
+      const m = new Float32Array(16);
+      m[15] = 1; m[12] = mx; m[13] = my; m[14] = mz;
+
+      if (axis === "x") {
+        // Map cylinder Y length to world X
+        m[1] = PIPE_RADIUS;
+        m[4] = STEP;
+        m[10] = PIPE_RADIUS;
+      } else if (axis === "y") {
+        // Standard cylinder along Y
+        m[0] = PIPE_RADIUS;
+        m[5] = STEP;
+        m[10] = PIPE_RADIUS;
+      } else {
+        // Map cylinder Y length to world Z
+        m[0] = PIPE_RADIUS;
+        m[6] = STEP;
+        m[9] = PIPE_RADIUS;
+      }
+
+      renderMesh(cylinder, m, col);
+    }
+
+    function spawn() {
+      for (let i = 0; i < 40; i++) {
+        const gx = Math.floor(Math.random() * (BOUNDS.maxX - BOUNDS.minX + 1)) + BOUNDS.minX;
+        const gy = Math.floor(Math.random() * (BOUNDS.maxY - BOUNDS.minY + 1)) + BOUNDS.minY;
+        const gz = Math.floor(Math.random() * (BOUNDS.maxZ - BOUNDS.minZ + 1)) + BOUNDS.minZ;
+        const key = `${gx},${gy},${gz}`;
+        if (!occupied.has(key)) {
+          occupied.add(key);
+          const col = PALETTES[Math.floor(Math.random() * PALETTES.length)];
+          drawSphereJoint(gx, gy, gz, col);
+          pipes.push({ gx, gy, gz, dir: DIRS[Math.floor(Math.random() * DIRS.length)], col, straights: 0, alive: true });
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function step(p) {
+      if (!p.alive) return;
+      const valid = DIRS.filter(d => {
+        if (d.dx === -p.dir.dx && d.dy === -p.dir.dy && d.dz === -p.dir.dz) return false;
+        const nx = p.gx + d.dx, ny = p.gy + d.dy, nz = p.gz + d.dz;
+        if (nx < BOUNDS.minX || nx > BOUNDS.maxX || ny < BOUNDS.minY || ny > BOUNDS.maxY || nz < BOUNDS.minZ || nz > BOUNDS.maxZ) return false;
+        return !occupied.has(`${nx},${ny},${nz}`);
+      });
+
+      if (!valid.length) {
+        p.alive = false;
+        drawSphereJoint(p.gx, p.gy, p.gz, p.col);
+        return;
+      }
+
+      const straightOk = valid.includes(p.dir);
+      const turn = p.straights > 6 || Math.random() < 0.22;
+      let nextDir = p.dir;
+
+      if (!straightOk || turn) {
+        const turns = valid.filter(d => d !== p.dir);
+        if (turns.length) {
+          nextDir = turns[Math.floor(Math.random() * turns.length)];
+          p.straights = 0;
+        } else if (straightOk) {
+          p.straights++;
+        } else {
+          p.alive = false;
+          return;
+        }
+      } else {
+        p.straights++;
+      }
+
+      // Joint at direction turn
+      if (nextDir !== p.dir) {
+        drawSphereJoint(p.gx, p.gy, p.gz, p.col);
+      }
+
+      const prev = { x: p.gx, y: p.gy, z: p.gz };
+      p.dir = nextDir;
+      p.gx += nextDir.dx; p.gy += nextDir.dy; p.gz += nextDir.dz;
+      occupied.add(`${p.gx},${p.gy},${p.gz}`);
+
+      drawCylinderSegment(prev, { x: p.gx, y: p.gy, z: p.gz }, nextDir.axis, p.col);
+      drawSphereJoint(p.gx, p.gy, p.gz, p.col);
+      totalSegments++;
+    }
+
+    function reset() {
+      if (resetting) return;
+      resetting = true;
+      fadeOverlay.classList.add("active");
+      setTimeout(() => {
+        gl.clearColor(0.015, 0.024, 0.04, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        occupied.clear();
+        pipes = [];
+        totalSegments = 0;
+        resetting = false;
+        for (let i = 0; i < 4; i++) spawn();
+        setTimeout(() => fadeOverlay.classList.remove("active"), 80);
+      }, 600);
+    }
+
+    let f = 0;
+    function loop() {
+      f++;
+      if (!resetting && f % 2 === 0) {
+        pipes.forEach(step);
+        pipes = pipes.filter(p => p.alive);
+        // Stop if no free cell turns up, or a crowded grid would spin here forever.
+        while (pipes.length < 4 && totalSegments < MAX_SEGMENTS) {
+          if (!spawn()) break;
+        }
+        if (totalSegments >= MAX_SEGMENTS || (pipes.length === 0 && totalSegments > 60)) reset();
+      }
+      requestAnimationFrame(loop);
+    }
+
+    gl.clearColor(0.015, 0.024, 0.04, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    for (let i = 0; i < 4; i++) spawn();
+    requestAnimationFrame(loop);
+  })();
+</script>

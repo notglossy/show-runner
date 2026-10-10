@@ -1,3 +1,4 @@
+import { readdirSync } from 'node:fs';
 import path from 'node:path';
 
 import { BUILTIN_SCREENS, type BuiltinScreen } from './screens';
@@ -20,4 +21,12 @@ export function builtinExamples(): { screen: BuiltinScreen; folder: string }[] {
     if (!folder) throw new Error(`No example folder for ${screen.id}`);
     return { screen, folder };
   });
+}
+
+/** Every example folder on disk: the built-ins plus contributed screens that aren't seeded. */
+export function allExampleFolders(): string[] {
+  return readdirSync(EXAMPLES_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
 }
