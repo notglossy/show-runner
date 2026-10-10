@@ -3,8 +3,9 @@ name: AI PR Review
 description: >-
   Reviews same-repo, non-draft pull requests for correctness, security and over-engineering.
   Runs GitHub Copilot CLI through gh-aw's sandbox, with inference routed to OpenRouter (BYOK):
-  no Copilot subscription is used. Edit this file, then `gh aw compile pr-review` and commit
-  both this file and pr-review.lock.yml.
+  no Copilot subscription is used. Installed from notglossy/agentic-workflows with `gh aw add`;
+  pull new versions with `gh aw update pr-review` and commit this file and pr-review.lock.yml.
+  Per-repository review notes go in .github/ai-review-instructions.md (optional).
 
 # `pull_request`, not `pull_request_target`: gh-aw refuses fork PRs by default and the
 # agent job never holds a write token (writes go through safe-outputs), so untrusted
@@ -98,6 +99,7 @@ max-turn-cache-misses: 120
 # has a cancelled agent job with no usage accounting, which a new push causes every time
 # via cancel-in-progress. The fixed per-run max-ai-credits cap above still applies.
 max-daily-ai-credits: -1
+source: notglossy/agentic-workflows/workflows/pr-review.md@2cf60f0da64d3d2f5d0aebb9c0ebdceaae35e286
 ---
 
 # AI PR Review
@@ -137,6 +139,17 @@ review it by reading it.
 
 Every command costs a turn and the budget is small. Read a whole file with `cat` in one turn
 rather than paging through it in slices, and combine related lookups into one command.
+
+## Masked tool output
+
+Everything you read (`cat`, `grep`, `git show`, the PR diff and file tools) passes through the
+sandbox's secret masking first. It replaces anything shaped like a credential with `******` or
+`***`. In particular, the HTTP authorization scheme word `Bearer` followed by a space and any
+value is masked as a whole, in source code and tests alike. So a line that appears to say
+`put("Authorization", "******")` or `assertEquals("******", ...)` is the masking, not the
+committed code. Never report a masked value as a literal, a placeholder or a broken header.
+Judge such lines by their context (the variable in the template, the test name, the contract
+on the other side) and move on.
 
 ## How to work
 
